@@ -1,0 +1,69 @@
+html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+body {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.outer-wrapper {
+  text-align: center;
+  padding-top: 33px;
+}
+
+.inner-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+#verify-image {
+  display: inline-block;
+}
+
+.to-verify {
+  position: absolute;
+  font-size: 1.25em;
+  font-weight: bold;
+  border: 1px solid black;
+  cursor: pointer;
+  background-color: rgba(127, 127, 127, 0.8);
+  width: 127px;
+}
+
+.to-verify.active {
+  height:  127px;
+  background-color: rgba(225, 225, 225, 0.25);
+}
+
+.to-verify.accepted {
+  background-color: rgba(16, 225, 16, 0.69);
+}
+
+.to-verify.rejected {
+  background-color: rgba(225, 225, 225, 0.25);
+  cursor: auto;
+}
+
+#verify-action-wrapper img {
+  width:  128px;
+  height: 128px;
+}
+
+#next-button {
+  margin-top: 63px;
+  font-size: 1.25em;
+}
+
+#switch-button {
+  margin-top: 31px;
+  margin-bottom: 15px;
+  font-size: 1.25em;
+}
+
+#countdown {
+  font-size: 1.33em;
+  color: #f00f0f;
+}

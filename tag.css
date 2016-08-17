@@ -1,0 +1,106 @@
+html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+body {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.outer-wrapper {
+  text-align: center;
+  padding-top: 33px;
+}
+
+.inner-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+#tag-image {
+  display: inline-block;
+}
+
+.tag-frame {
+  position: absolute;
+  font-size: 1.05em;
+  font-weight: bold;
+  width: 131px;
+}
+
+.tag-frame input {
+  display: block;
+  width: 123px;
+  font-size: 1.25em;
+  padding-left: 2px;
+  padding-right: 2px;
+  padding-top: 2px;
+  border-left: 2px inset black;
+  border-right: 2px inset black;
+  border-top: 2px inset black;
+  
+}
+
+.tag-frame .blank-space {
+  width: 127px;
+  height: 127px;
+  cursor: move;
+  border: 2px dotted black;
+}
+
+.tag-frame .accept-cancel {
+  width: 127px;
+  height: 31px;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+  border-bottom: 2px solid black;
+}
+
+.tag-frame .accept-cancel .accept {
+  width: 63px;
+  height: 31px;
+  background-color: #0ff00f;
+  border-right: 1px solid black;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.tag-frame .accept-cancel .cancel {
+  width: 62px;
+  height: 31px;
+  background-color: #f00f0f;
+  border-left: 1px solid black;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.tag {
+  position: absolute;
+  font-size: 1.25em;
+  font-weight: bold;
+  border: 1px solid black;
+  background-color: rgba(127, 127, 127, 0.8);
+  width: 127px;
+}
+
+#next-button {
+  margin-top: 63px;
+  font-size: 1.25em;
+}
+
+#finish-button {
+	margin-top: 30px;
+}
+
+#switch-button {
+  margin-top: 31px;
+  margin-bottom: 15px;
+  font-size: 1.25em;
+}
+
+#countdown {
+  font-size: 1.33em;
+  color: #f00f0f;
+}
