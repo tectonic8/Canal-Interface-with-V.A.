@@ -5,6 +5,7 @@
     <style>
 		#bigWrapper {position:fixed; right: 10; bottom: 10; width:700px; height:700px; margin: 0 auto; overflow:hidden; z-index:2}
 		#clockDiv {position:relative; width:50px; height:50px; margin: 0 auto; overflow:hidden; font-size: 20px; z-index:99}
+		#scoreDiv {position:relative; width:200px; height:50px; margin: 0 auto; overflow:hidden; font-size: 20px; z-index:100}
 		#boatSprite1 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
 		#boatSprite2 {position:absolute; top:550px; left: 20px; width:50px; height:35px; transition: none; z-index: 93}
 		#gowanusMap {position:relative; right: 10px; bottom: 10px; width:700px; height:700px; z-index: 4}
@@ -26,6 +27,7 @@
 		<img id="miniSprite2" src="miniSprite2.png">
 	</div>
 	<div id="clockDiv"></div>
+	<div id="scoreDiv"></div>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
@@ -47,7 +49,8 @@
 			miniSprite1: "miniSprite1",
 			miniSprite2: "miniSprite2",
 			divWrapper: "bigWrapper",
-			clock: "clockDiv"
+			clock: "clockDiv",
+			scoreDiv: "scoreDiv"
 		};
 		var EVENTS = {
 			LOAD:      'load',
@@ -60,6 +63,7 @@
 		var gowanusMap = document.getElementById(ELEMENT_IDS.gowanusMap);
 		var divWrapper = document.getElementById(ELEMENT_IDS.divWrapper);
 		var clock = document.getElementById(ELEMENT_IDS.clock);
+		var scoreDiv = document.getElementById(ELEMENT_IDS.scoreDiv);
 		var ctx = canvas.getContext("2d");
 		var minimapContext = minimap.getContext("2d");
 		var canvasTopMargin = -4400;
@@ -112,8 +116,8 @@
 		var accelerationProportion = [0.768, 0.599, 0.644, 0.72];
 		var preferenceData = [0.69, 0.86, 0.82, 0.00, 0.00, 0.27, 0.43, 0.75, 0.91, 0.87, 0.90, 0.47, 0.44, 0.40, 1]; //1 in the last index was made by me, it will not be randomly selected, only used when I want it to 100% verify
 		var startDelayData = [500, 3599, 500, 1200, 801, 499, 890, 700, 900, 2700, 2401, 2598, 800, 800, 2701, 1000, 301, 3700, 4100, 4401, 6300, 4101, 4801, 4500, 2101, 6099, 5299, 5100, 3900, 3100, 6300, 4799, 3801, 4800, 4601, 3703, 5000, 9501, 3903, 5899, 4300, 4700];
-		//var tagTimeData = [26.7, 12.7, 10.4, 27.4, 7.7];
-		var tagTimeData = [6.7, 8, 7, 9, 10];
+		var tagTimeData = [26.7, 12.7, 10.4, 27.4, 7.7];
+		//var tagTimeData = [6.7, 8, 7, 9, 10];
 		var verifyTimeData = [6.2, 2.8, 3.2, 8.8, 3.9];
 		
 		var imageId = 1;
@@ -122,7 +126,7 @@
 		var elapsedTime = 0;
 		var timeSpentTaggingVerifying;
 		var lastTargetIndex = 20;
-
+		var targetsVerified = 0;
 
 		
 		/*
@@ -414,6 +418,7 @@
 			targetTracker = JSON.parse(readCookie("targetTracker"));
 			lastRole = readCookie("lastRole");
 			log = localStorage.getItem("userLog");
+			targetsVerified = parseInt(readCookie("targetsVerified"));
 						
 			var startTime = parseInt(readCookie("startTime"));
 			var temp = new Date().getTime();
@@ -510,10 +515,12 @@
 			vaLog = localStorage.getItem("vaLog");
 			
 			updateClock();
+			updateScore();
 		}
 		else {
 			var startTime = new Date().getTime();
 			updateClock();
+			updateScore();
 			targetInitializer();
 			var va = new VirtualAgent(20, 550);
 			va.start(true);
@@ -732,9 +739,9 @@
 					logger();
 					vaLogger();
 
-					var xhr = new XMLHttpRequest();
+					/*var xhr = new XMLHttpRequest();
 					xhr.open("GET", "/tagRedirect");
-					xhr.send(null);
+					xhr.send(null);*/
 					window.location.href = "http://localhost:3000/tag.html";
 				}
 			}
@@ -745,14 +752,16 @@
 					targetTracker[i] = 3;
 					lastRole = "verifying";
 					imageId++;
+					targetsVerified++;
+					updateScore();
 					logCookie();
 					logger();
 					vaLogger();
 					
 					
-					var xhr = new XMLHttpRequest();
+					/*var xhr = new XMLHttpRequest();
 					xhr.open("GET", "/verifyRedirect");
-					xhr.send(null);
+					xhr.send(null);*/
 					window.location.href = "http://localhost:3000/verify.html";
 				}
 			}
@@ -832,6 +841,7 @@
 					targetSprites[va.target.index].setAttribute("id", "miniTarget" + va.target.index);
 					divWrapper.appendChild(targetSprites[va.target.index]);
 					new Target(targetsCoords[va.target.index][0], targetsCoords[va.target.index][1], "userVerifyTarget", va.target.index, targetTracker[va.target.index]);
+					updateTargets();
 					
 					va.lastRole = "tagging";
 					va.initialize(true);
@@ -840,6 +850,9 @@
 					vaVerifyTargets[va.target.index].remove();
 					targetSprites[va.target.index].remove();
 					targetTracker[va.target.index] = 3;
+					targetsVerified++;
+					updateScore();
+					updateTargets();
 					
 					va.lastRole = "verifying";
 					va.initialize(true);
@@ -855,7 +868,7 @@
 		function ultraRecorder() {
 			endTime = new Date();
 			elapsedTime = endTime - startTime;
-			log += '\n' + truncate(gpRecorder[0], 1) + "," + truncate(gpRecorder[1], 1) + "," + truncate(elapsedTime, 1) + "," + lastRole + "," + sessionStorage.getItem("num-tags") + "," + sessionStorage.getItem("num-verified-tags");
+			log += '\n' + truncate(gpRecorder[0], 1) + "," + truncate(gpRecorder[1], 1) + "," + targetsVerified + "," + truncate(elapsedTime, 1) + "," + lastRole + "," + sessionStorage.getItem("num-tags") + "," + sessionStorage.getItem("num-verified-tags");
 
 			localStorage.setItem("userLog", log);
 			window.setTimeout(ultraRecorder, 100);
@@ -903,6 +916,7 @@
 				document.cookie = "miniSprite2coords1=" + miniSprite2coords[1] + ";";
 				document.cookie = "targetTracker=" + "[" + targetTracker.join(",") + "]";
 				document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
+				document.cookie = "targetsVerified=" + targetsVerified + ";";
 				document.cookie = "vaPosX=" + va.position.x + ";";
 				document.cookie = "vaPosY=" + va.position.y + ";";
 				document.cookie = "imageId=" + imageId + ";";
@@ -924,9 +938,12 @@
 		
 		function updateClock() {
 			//this doesn't actually work around the 60 or 00 second mark.
-			var minutes = 6 - (Math.floor(elapsedTime / 60000));
-			var seconds = 60 - (Math.floor(elapsedTime / 1000)%60);
-			if (seconds == 60) seconds = 0;
+			var minutes = 6 - Math.floor((elapsedTime / 1000)/60);
+			var seconds = 60 - Math.floor((elapsedTime / 1000) % 60);
+			if (seconds == 60) {
+				seconds = 0;
+				minutes++;
+			}
 			if (seconds >= 10) {
 				clock.innerHTML = '' + minutes + ':' + seconds;
 			}
@@ -934,6 +951,9 @@
 				clock.innerHTML = '' + minutes + ':0' + seconds;
 			}
 			window.setTimeout(updateClock, 1000);
+		}
+		function updateScore() {
+			scoreDiv.innerHTML = "Verified images: " + targetsVerified;
 		}
 		
 		})(window, document);
