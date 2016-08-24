@@ -1,15 +1,29 @@
-var express = require('express');
-var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var fs = require("fs")
+var express    = require('express');
+var app        = express();
+var http       = require('http').Server(app);
+var io         = require('socket.io')(http);
+var fs         = require("fs")
 var bodyParser = require('body-parser');
-var pug = require("pug");
+var pug        = require("pug");
+var sessions   = require('client-sessions');
 
 var imageCount = 1;
 
 app.use(bodyParser.json({limit: "50mb"}));
 app.use(bodyParser.urlencoded({limit: "50mb", extended: false }));
+
+app.use(sessions({
+  cookieName: 'session',
+  secret: 'B62lCMTsdZmqNLP5zfllQElQo9I6ImhZ1ODg4I4o4JkVmeQbgwgPJpAmMmfRPNL',
+  duration: 30 * 60 * 1000,
+  activeDuration: 3 * 60 * 1000,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    ephermeral: false
+  }
+}));
+
 app.use(express.static('./'));
 
 app.set("views", "./views");
@@ -34,18 +48,205 @@ app.get('/verifyRedirect', function (req, res) {
 });
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+  return res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/survey', function(req, res) {
+  return res.render('survey.pug');
+});
+
+app.get('/survey2', function(req, res) {
+  return res.render('survey2.pug');
+});
+
+app.get('/app-practice', function(req, res) {
+  return res.sendFile(__dirname + '/app-practice.html');
+});
+
+app.get('/verify-practice', function(req, res) {
+  return res.sendFile(__dirname + '/verify-practice.html');
+});
+
+app.get('/verify-preference', function(req, res) {
+  var imageId = 1;
+  if (undefined !== req.session.verifyImageId) {
+    imageId = req.session.verifyImageId;
+  }
+  res.render('verify-preference', {imgSrc: './images/img' + imageId + '.png'});
+//  return res.sendFile(__dirname + '/verify-preference.html');
+});
+
+app.get('/reset', function(req, res) {
+  req.session.reset();
+  res.status(404).send('not found');
+});
+
+app.get('/tag-practice', function(req, res) {
+  return res.sendFile(__dirname + '/tag-practice.html');
+});
+
+app.get('/tag-preference', function(req, res) {
+  var imageId = 60;
+  if (undefined !== req.session.tagImageId) {
+    imageId = req.session.tagImageId;
+  }
+  res.render('tag-preference', {imgSrc: './images/img' +imageId + '.png'});
+//  return res.sendFile(__dirname + '/tag-preference.html');
+});
+
+app.get('/initialtime', function(req, res) {
+  if (undefined === req.session.timeRemaining) {
+    res.write('' + 120);
+  } else {
+    res.write('' + req.session.timeRemaining);    
+  }
+  return res.end();
+});
+
+app.post('/survey', function(req, res) {
+  req.session.q1_1 = req.body.q1;
+  req.session.q2_1 = req.body.q2;
+  req.session.q3_1 = req.body.q3;
+  res.redirect('/tag-practice');
+});
+
+app.post('/survey2', function(req, res) {
+  req.session.q1_2 = req.body.q1;
+  req.session.q2_2 = req.body.q2;
+  req.session.q3_2 = req.body.q3;
+  req.session.q4_2 = req.body.q4;
+  
+  str = req.session.q1_1 + ', ' + req.session.q2_1 + ', ' + req.session.q3_1 + ', ' + req.session.q1_2 + ', ' + req.session.q2_2 + ', ' + req.session.q3_2 + ', ' + req.session.q4_2;  
+  fs.writeFile('pref-test.txt', str);
+  
+  return res.redirect('/thanks');
 });
 
 app.post('/save', function(req, res) {
 	handleSave(req.body.record, 0);
-	return res.send();
+	return res.end();
 }); 
 
 app.post('/vaSave', function(req, res) {
 	handleSave(req.body.vaRecord, 1);
-	return res.send();
-}); 
+	return res.redirect('/survey2');
+});
+
+app.post('/savetagged', function(req, res) {
+  if (undefined === req.session.numTags) {
+    req.session.numTags = req.body.numTags;
+  } else {
+    req.session.numTags += req.body.numTags;
+  }
+  
+  if (undefined === req.session.numImagesTagged) {
+    req.session.numImagesTagged = req.body.numImagesTagged;
+  } else {
+    req.session.numImagesTagged += req.body.numImagesTagged;
+  }
+  
+  if (undefined === req.session.timeTagging) {
+    req.session.timeTagging = req.body.timeTagging;
+  } else {
+    req.session.timeTagging += req.body.timeTagging;
+  }
+  
+  req.session.tagImageId = req.body.imageId;
+  
+  if (undefined === req.session.numSwitches) {
+    req.session.numSwitches = req.body.switched ? 1 : 0;
+  } else {
+    req.session.numSwitches += req.body.switched ? 1 : 0;
+  }
+  res.end();
+});
+
+app.post('/saveverified', function(req, res) {
+  if (undefined === req.session.numVerifiedTags) {
+    req.session.numVerifiedTags = req.body.numVerifiedTags;
+  } else {
+    req.session.numVerifiedTags += req.body.numVerifiedTags;
+  }
+  
+  if (undefined === req.session.numImagesVerified) {
+    req.session.numImagesVerified = req.body.numImagesVerified;
+  } else {
+    req.session.numImagesVerified += req.body.numImagesVerified;
+  }
+  
+  if (undefined === req.session.timeVerifying) {
+    req.session.timeVerifying = req.body.timeVerifying;
+  } else {
+    req.session.timeVerifying += req.body.timeVerifying;
+  }
+  
+  req.session.verifyImageId = req.body.imageId;
+  
+  if (undefined === req.session.numSwitches) {
+    req.session.numSwitches = req.body.switched ? 1 : 0;
+  } else {
+    req.session.numSwitches += req.body.switched ? 1 : 0;
+  }
+  res.end();
+});
+
+app.post('/savetime', function(req, res) {
+  req.session.timeRemaining = req.body.timeRemaining;
+  if (undefined !== req.body.timeVerifying) {
+    req.session.timeVerifying += req.body.timeVerifying;
+  }
+  if (undefined !== req.body.timeTagging) {
+    req.session.timeTagging += req.body.timeTagging;
+  }
+  res.end();
+});
+
+app.post('/write', function(req, res) {
+  str = '';
+  if (undefined === req.session.numTags) {
+    str += '0'
+  } else {
+    str += req.session.numTags;
+  }
+  str += ', ';
+  
+  if (undefined === req.session.numImagesTagged) {
+    str += '0';
+  } else {
+    str += req.session.numImagesTagged;
+  }
+  str += ', ';
+  
+  if (undefined === req.session.timeTagging) {
+    str += '0';
+  } else {
+    str += req.session.timeTagging;
+  }
+  str += ', ';
+  
+  if (undefined === req.session.numVerifiedTags) {
+    str += '0';
+  } else {
+    str += req.session.numVerifiedTags;
+  }
+  str += ', ';
+  
+  if (undefined === req.session.numImagesVerified) {
+    str += '0';
+  } else {
+    str += req.session.numImagesVerified;
+  }
+  str += ', ';
+  
+  if (undefined === req.session.timeVerifying) {
+    str += '0';
+  } else {
+    str += req.session.timeVerifying;
+  }
+  
+  fs.writeFile('pref-test.txt', str);
+  return res.end();
+});
 
 http.listen(3000, function(){
   console.log('listening on *:3000');

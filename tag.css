@@ -91,7 +91,8 @@ body {
 }
 
 #finish-button {
-	margin-top: 30px;
+	margin-top: 63px;
+  font-size: 1.25em;
 }
 
 #switch-button {

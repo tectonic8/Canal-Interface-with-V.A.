@@ -57,6 +57,11 @@ body {
   font-size: 1.25em;
 }
 
+#finish-button {
+  margin-top: 63px;
+  font-size: 1.25em;
+}
+
 #switch-button {
   margin-top: 31px;
   margin-bottom: 15px;

@@ -1,0 +1,472 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Objective One</title>
+    <style>
+		#bigWrapper {position:relative; right: 10; bottom: 10; width:700px; height:700px; margin: 0 auto; overflow:hidden; z-index:2}
+		#boatSprite1 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
+		#gowanusMap {position:relative; right: 10px; bottom: 10px; width:700px; height:700px; z-index: 4}
+		#canvas {width:5100px; height:6600px; transition: none; z-index:1}
+		#minimap {width:200px, height:228px; position:absolute; left:500px; top: 500px; border:1px solid #000000; z-index:79}
+		#miniSprite1 {position:absolute; left:500px; top:690px; width:20px; height:20px; z-index:86}
+		.target {position: absolute; z-index:83}
+	</style>
+  </head>
+  <body>
+	<div id="bigWrapper">
+		<canvas id="minimap" width="200" height="228"></canvas>
+		<canvas id="canvas" width="5100" height="6600"></canvas>
+		<img id="gowanusMap" src="canal3.png" alt="canalMap">
+		<img id="boatSprite1" src="boatSprite1.png" alt="boatIcon">
+		<img id="miniSprite1" src="miniSprite1.png">
+	</div>
+  <div>
+    <button id="finish-button">finish</button>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      (function(window, document) {
+        var socket = io();
+        socket.on('connect', function() { //this was used to give unique ids for each user. I haven't actually removed it from every part of the code, so if you open up two windows on index.html, it'll often break for a while.
+          socket.emit("users", function(data) {
+            clientContainer[0] = data[0];
+            clientContainer[1] = data[1];
+          });
+        });
+        var clientContainer = [];
+        var ELEMENT_IDS = {
+          button: 'finish-button',
+          canvas: "canvas",
+          minimap: "minimap",
+          userSprite: "boatSprite1",
+          gowanusMap: "gowanusMap",
+          miniSprite1: "miniSprite1",
+          divWrapper: "bigWrapper",
+        };
+        var EVENTS = {
+          CLICK:              'click',
+          DOM_CONTENT_LOADED: 'DOMContentLoaded',
+          LOAD:               'load',
+          MOUSEDOWN:          'mousedown',
+          MOUSEMOVE:          'mousemove',
+          MOUSEUP:            'mouseup'
+        };
+        var canvas = document.getElementById(ELEMENT_IDS.canvas);
+        var minimap = document.getElementById(ELEMENT_IDS.minimap);
+        var gowanusMap = document.getElementById(ELEMENT_IDS.gowanusMap);
+        var divWrapper = document.getElementById(ELEMENT_IDS.divWrapper);
+        var button = document.getElementById(ELEMENT_IDS.button);
+        var ctx = canvas.getContext("2d");
+        var minimapContext = minimap.getContext("2d");
+        var canvasTopMargin = -4400; //The map is scrolled by changing the top and left margins.
+        var canvasLeftMargin = 0;
+        
+        var deleteCookies = function() {
+          var cookies = document.cookie.split(';');
+          var cookie  = ''; 
+          var eqPos   = -1;
+          var name    = '';
+          for (var idx = 0; idx < cookies.length; ++idx) {
+            cookie = cookies[idx];
+            eqPos  = cookie.indexOf('=');
+            name   = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          }
+        };
+        
+        button.addEventListener(EVENTS.CLICK, function(event) {
+          deleteCookies();
+          window.location.replace('index.html');
+        });
+        
+        gowanusMap.addEventListener(EVENTS.LOAD, function(event) {
+          ctx.drawImage(this, 0, 0); 
+          canvas.style.marginTop = canvasTopMargin + "px";
+          minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
+        });
+        document.addEventListener(EVENTS.DOM_CONTENT_LOADED, function(event) {//not sure why it doesn't work without this part
+          ctx.drawImage(gowanusMap, 0, 0);
+          minimapContext.drawImage(canvas, 0, 480, 4066, 5000, 0, 0, 200, 228);
+        });
+        var userSprite = document.getElementById(ELEMENT_IDS.userSprite);
+        var miniSprite1 = document.getElementById(ELEMENT_IDS.miniSprite1);
+        var canalTriacontapentagon = [[0, 2318], [84, 2318], [430, 1755], [552, 1617], [656, 1533], [812, 1499], [1055, 1531], [1292, 1583], [1495, 1265], [1510, 1067], [1899, 327], [1972, 365], [1584, 1101], [1580, 1286], [1623, 1319], [1527, 1474], [1483, 1445], [1344, 1663], [1370, 1754], [1611, 1909], [1566, 1975], [1311, 1817], [1279, 1683], [906, 1583], [766, 1579], [1098, 1797], [1050, 1863], [675, 1626], [569, 1721], [809, 1878], [770, 1948], [525, 1793], [75, 2480], [144, 2626], [0, 2655]]; //this is the polygon of the canal. The tolerance might be a little too high, since I didn't go exactly around the perimeter.
+        for (var i = 0; i<= 34; i++) {//The coordinates are multiplied because they were recorded for the map image that was half the size.
+          canalTriacontapentagon[i][0] *= 2;
+          canalTriacontapentagon[i][1] *= 2;
+        }
+        var miniSprite1coords = [500, 690];
+        var rotate = 0;
+        
+        var targetsCoords = [[227, 4694], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
+        var tagTargets = [];//One array for each type of target. One array for the minimap sprites.
+        var userVerifyTargets = [];
+        var vaVerifyTargets = [];
+        var targetSprites = [];
+        for (var i = 0; i<= 19; i++) { //this is necessary because the targets are appended to the wrapper, not the document body so they are a little offset I thnk.
+          targetsCoords[i][0] -= 9;
+          targetsCoords[i][1] -= 9;
+        }
+        var targetTracker = [3, 0, 0, 3, 1, 1, 3, 3, 3, 3, 1, 1, 3, 3, 0, 3, 0, 1, 1, 0]; //0 means untagged, 1 means user verifies, 2 means va verifies, 3 means nonexistant
+        
+        var imageId = 15; //This is used to tell the tag and verify html which image to load, instead of using an html template system.
+    //		var lastRole = "null";
+      
+        class Target {
+          constructor(x, y, id, index, type) { //type is 0, 1, or 2, representing tagged, user verify, and va verify.
+            var target = document.getElementById(id + index);
+            target.setAttribute("width", 50);
+            target.setAttribute("height", 50);
+            target.setAttribute("class", "target");
+            target.xPos = x - 14;
+            target.yPos = y - 4412;
+            target.style.left = target.xPos + "px";
+            target.style.top = target.yPos + "px";
+            
+            var targetSprite = document.getElementById("miniTarget" + index);
+            targetSprite.setAttribute("width", 15);
+            targetSprite.setAttribute("height", 15);
+            targetSprite.setAttribute("class", "target");
+            targetSprite.style.left = (x-107)*0.048 + 501 + "px";
+            targetSprite.style.top = (y-4864)*0.046 + 691 + "px";
+            if (type == 0) {
+              target.setAttribute("src", "target.png");
+              targetSprite.setAttribute("src", "miniTarget.png");
+            }
+            if (type == 1) {
+              target.setAttribute("src", "target2.png");
+              targetSprite.setAttribute("src", "target2.png");
+            }
+            if (type == 2) {
+              target.setAttribute("src", "target3.png");
+              targetSprite.setAttribute("src", "target3.png");
+            }
+          }
+        }
+
+        var interval; //All the gamepad variables are initialized here.
+        var stick = [0, 0];
+        var aButton = false;
+        var accelButton = false;
+        var gamepads = [];
+        var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
+        var gpSpriteCoords = [50, 470];
+        var magnitude = 0;
+        var direction = [0, 0];
+        var saveDirection = [0,0];
+        var angle = 1.57;
+        
+        /* TODO: replace with data from server. */
+        if (readCookie("gpRecorder0") != null) { //this if-else handles saving the game using cookie. It only follows the cookies path if the user moved, not if there are cookies in general.
+          console.log("there be cookies");
+          gpRecorder[0] = parseInt(readCookie("gpRecorder0"));
+          gpRecorder[1] = parseInt(readCookie("gpRecorder1")); 
+          gpRecorder[2] = parseInt(readCookie("gpRecorder2")); 
+          gpRecorder[3] = parseInt(readCookie("gpRecorder3")); 
+          gpSpriteCoords[0] = parseInt(readCookie("gpSpriteCoords0"));
+          gpSpriteCoords[1] = parseInt(readCookie("gpSpriteCoords1"));
+          canvasLeftMargin = parseInt(readCookie("canvasLeftMargin"));
+          canvasTopMargin = parseInt(readCookie("canvasTopMargin"));
+          miniSprite1coords[0] = parseInt(readCookie("miniSprite1coords0"));
+          miniSprite1coords[1] = parseInt(readCookie("miniSprite1coords1"));			
+//          miniSprite2coords[0] = parseInt(readCookie("miniSprite2coords0"));
+//          miniSprite2coords[1] = parseInt(readCookie("miniSprite2coords1"));
+          lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastforwarding
+          imageId = parseInt(readCookie("imageId")); 
+          targetTracker = JSON.parse(readCookie("targetTracker"));
+          lastRole = readCookie("lastRole"); //this is for the log I think.
+          log = localStorage.getItem("userLog"); //Cookies can't save things that are multiple lines, so I use localStorage instead.
+          targetsVerified = parseInt(readCookie("targetsVerified"));
+          tagCount = parseInt(readCookie("tagCount"));
+          verifyCount = parseInt(readCookie("verifyCount"));
+                
+          var startTime = parseInt(readCookie("startTime")); //startTime is always the time when the entire program first start.
+          var temp = new Date().getTime();
+          var temp2 = parseInt(readCookie("elapsedTime"));
+          timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
+          var estimatedTimeLeft = parseInt(readCookie("vaEstimatedTimeLeft"))*1000; //Va time to target. Underestimated. I don't use this anymore.
+          
+          targetInitializer(); //targetInitializer creates the targets.
+          updateTargets(); //updateTargets draws the targets.
+        } else { //if there are no cookies:
+          var startTime = new Date().getTime();
+          targetInitializer();
+          updateTargets();
+        }
+        
+        function targetInitializer() { //I never really figured out how to use the Target class properly, so now I just use this method in conjunction with the class.
+          for (var i = 0; i <= 19; i++) { //The way this is set up, each of the three target arrays are all length 20, they are just blank in the indices for which there is no target of that type. This is important for how the arrays are handled in other functions.
+            if (targetTracker[i] == 0) {
+              tagTargets[i] = document.createElement("IMG");
+              tagTargets[i].setAttribute("id", "tagTarget" + i);
+              divWrapper.appendChild(tagTargets[i]);
+              targetSprites[i] = document.createElement("IMG");
+              targetSprites[i].setAttribute("id", "miniTarget" + i);
+              divWrapper.appendChild(targetSprites[i]); //If you attach it to the document body, it goes under the canvas, so I attached it to the div.
+              new Target(targetsCoords[i][0], targetsCoords[i][1], "tagTarget", i, targetTracker[i]);
+            }				
+            else if (targetTracker[i] == 1) {
+              userVerifyTargets[i] = document.createElement("IMG");
+              userVerifyTargets[i].setAttribute("id", "userVerifyTarget" + i);
+              divWrapper.appendChild(userVerifyTargets[i]);
+              targetSprites[i] = document.createElement("IMG");
+              targetSprites[i].setAttribute("id", "miniTarget" + i);
+              divWrapper.appendChild(targetSprites[i]);
+              new Target(targetsCoords[i][0], targetsCoords[i][1], "userVerifyTarget", i, targetTracker[i]);
+            }				
+            else if (targetTracker[i] == 2) {
+              vaVerifyTargets[i] = document.createElement("IMG");
+              vaVerifyTargets[i].setAttribute("id", "vaVerifyTarget" + i);
+              divWrapper.appendChild(vaVerifyTargets[i]);
+              targetSprites[i] = document.createElement("IMG");
+              targetSprites[i].setAttribute("id", "miniTarget" + i);
+              divWrapper.appendChild(targetSprites[i]);
+              new Target(targetsCoords[i][0], targetsCoords[i][1], "vaVerifyTarget", i, targetTracker[i]);
+            }
+            else if (targetTracker[i] == 3) continue;
+          }
+          updateTargets();
+        }
+        userSprite.style.left = gpSpriteCoords[0] + "px";
+        userSprite.style.top = gpSpriteCoords[1] + "px";
+        canvas.style.marginLeft = canvasLeftMargin + "px";
+        canvas.style.marginTop = canvasTopMargin + "px";
+        miniSprite1.style.left = miniSprite1coords[0] + "px";
+        miniSprite1.style.top = miniSprite1coords[1] + "px";
+        //All the initializing is done at this point.
+        
+        if (!('ongamepadconnected' in window)) {
+          interval = setInterval(pollGamepads, 500);
+        }
+        function pollGamepads() { //This searches for the gamepad at multiple indices. For some reason it isn't always at index 0.
+          gamepads = navigator.getGamepads();
+          for (var i = 0; i < gamepads.length; i++) {
+            var gp = gamepads[i];
+            if (gp) {
+              console.log("Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.");
+              clearInterval(interval);
+            }
+          }
+          if ((gamepads[0]) != "undefined") { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
+            updateGP();
+            gameLoop();
+          }
+        }
+        function updateGP() {//this loops independently at 30fps. I think this was done back when we were trying to do the frame buffering. It could probably go back into gameLoop.
+            gamepads = navigator.getGamepads(); //in chrome, it needs to do this any time it wants input. The entire syntax for handling these gamepads seems to differ a lot between browsers.
+            stick[0] = ((gamepads[0]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
+            stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
+            aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
+            accelButton = (gamepads[0]).buttons[5].pressed;
+            setTimeout(updateGP, (1000/30));
+        }
+      
+        function gameLoop() {
+          if (accelButton) {
+            magnitude += 0.03;
+          }
+          else{
+            if (magnitude < 0.01) magnitude = 0;
+            else magnitude -= 0.03;
+          }
+           
+          if ((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5)) { //it checks for larger values so you really have to move the stick to move it. It's super sensitive so it would look weird without this.
+            direction[0] = saveDirection[0];
+            direction[1] = saveDirection[1];
+          }
+          else {
+            direction[0] = stick[0] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1])); //The direction array is components of the angle. This is slightly different from the stick array. If I used the stick array, I could slow down by pressing the stick forward only a little.
+            direction[1] = stick[1] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]));
+            saveDirection[0] = direction[0]; //Save direction allows the inertial movement when you stop moving the stick.
+            saveDirection[1] = direction[1];
+          }
+          
+          angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
+          if (direction[1] > 0) angle *= -1;
+
+          handleTargets(); 
+          
+          if (inside([(gpRecorder[0] + magnitude*2*direction[0]), (gpRecorder[1] + magnitude*2*direction[1])], canalTriacontapentagon)){ //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
+            logCookie();
+            socket.emit('gpMove', {x1: gpRecorder[0], y1: gpRecorder[1]});
+          }
+          else 
+            magnitude = 1; //If it hits the canal edge, magnitude is reset to 1.
+          window.setTimeout(gameLoop, (1000/60));
+        }
+
+        socket.on('gpUpdateMap', function(msg) { //I don't really use the msg from the server. It's sort of a vestige from the dragging form of the program. You probably don't need to emit this either, since there's only one user. 
+          function gpShifter() { //This shifts the canvas based on the local coordinates of the user. It shifts direction depending on what edge or corner you're on.
+          if (gpSpriteCoords[0] > 400  &&  gpSpriteCoords[1] < 300)
+            gpHandleShift(magnitude*Math.abs(direction[0]), magnitude*Math.abs(direction[1]));
+          else if (gpSpriteCoords[0] > 400)
+            gpHandleShift(magnitude*Math.abs(direction[0]), 0);
+          else if (gpSpriteCoords[1] < 300)
+            gpHandleShift(0, magnitude*Math.abs(direction[1]));
+          if ((gpSpriteCoords[0] < 300)  &&  (gpSpriteCoords[1] > 400))
+            gpHandleShift(-magnitude*Math.abs(direction[0]), -magnitude*Math.abs(direction[1]));
+          else if (gpSpriteCoords[0] < 300)
+            gpHandleShift(-magnitude*Math.abs(direction[0]), 0);
+          else if (gpSpriteCoords[1] > 400)
+            gpHandleShift(0, -magnitude*Math.abs(direction[1]));
+          }
+          function gpHandleShift(x, y) {
+            gpRecorder[2] += x; //gpRecorder 2 and 3 are the total x and y shift of the canvas. 
+            gpRecorder[3] -= y;
+            gpSpriteCoords[0] -= x;
+            gpSpriteCoords[1] += y;
+            gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2]; //I only just noticed this adds up to 0. This should get deleted.			
+            gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
+            if (socket.io.engine.id == clientContainer[0]) {
+              canvasLeftMargin -= x;
+              canvasTopMargin += y;
+              canvas.style.marginLeft = canvasLeftMargin + "px";
+              canvas.style.marginTop = canvasTopMargin + "px";
+              userSprite.style.left = gpSpriteCoords[0] + "px";
+              userSprite.style.top = gpSpriteCoords[1] + "px";
+              updateTargets();
+            }
+            else if (socket.io.engine.id == clientContainer[1]) {//vestigial from when there were multiple users.
+              userSprite.style.left = gpSpriteCoords[0] - gpRecorder[2] - recorder2[2] + "px";
+              userSprite.style.top = gpSpriteCoords[1] - gpRecorder[3] - recorder2[3]+ "px";
+            }
+          }
+          gpShifter();
+          gpSpriteCoords[0] += magnitude * direction[0];
+          gpSpriteCoords[1] += magnitude * direction[1];
+          gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2];	//local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)		
+          gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
+          if (socket.io.engine.id == clientContainer[0]) {
+            userSprite.style.left = gpSpriteCoords[0] + 'px';
+            userSprite.style.top = gpSpriteCoords[1] + 'px';
+          }
+          else if (socket.io.engine.id == clientContainer[1]) {//vestigial
+            userSprite.style.left = gpRecorder[0] - recorder2[2] + "px";
+            userSprite.style.top = gpRecorder[1] - recorder2[3] + "px";
+          }
+          userSprite.style.transform = "rotate(" + angle*-2 +"deg)"; 
+          miniSprite1coords[0] += (magnitude*direction[0]*0.047); //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
+          miniSprite1coords[1] += (magnitude*direction[1]*0.045);
+          miniSprite1.style.left = miniSprite1coords[0] + "px";
+          miniSprite1.style.top = miniSprite1coords[1] + "px";
+        });
+
+        function updateTargets (x, y) { //draws the targets.
+          for (var i = 0; i<=19; i++) {
+            if (targetTracker[i] == 3) continue;
+            if (targetTracker[i] == 0) {
+              tagTargets[i].style.left = tagTargets[i].xPos - gpRecorder[2] + "px";
+              tagTargets[i].style.top = tagTargets[i].yPos - gpRecorder[3] + "px";
+            }
+            else if (targetTracker[i] == 1) {
+              userVerifyTargets[i].style.left = userVerifyTargets[i].xPos - gpRecorder[2] + "px";
+              userVerifyTargets[i].style.top = userVerifyTargets[i].yPos - gpRecorder[3] + "px";						
+            }
+            else if (targetTracker[i] == 2) {
+              vaVerifyTargets[i].style.left = vaVerifyTargets[i].xPos - gpRecorder[2] + "px";
+              vaVerifyTargets[i].style.top = vaVerifyTargets[i].yPos - gpRecorder[3] + "px";	
+            }				
+          }
+        }
+
+        function handleTargets() { //This handles clicking on the targets.
+          for (var i = 0; i <= 19; i++) {
+            if ((targetTracker[i] == 0)  &&  (Math.abs(gpRecorder[0] - tagTargets[i].xPos) < 50)  &&  (Math.abs(gpRecorder[1] - tagTargets[i].yPos) < 50)  &&  (magnitude<1)  &&  (aButton)) { //If it's a tag target, and you're close, and moving slow, and pressing the a button, it executes.
+              tagTargets[i].remove();
+              targetSprites[i].remove();
+              targetTracker[i] = 2; //The target at this index will load as a va verifies target when it restarts.
+              lastTargetIndex = i; 
+              imageId++;
+              tagCount++; //Used in the log
+              logCookie();
+    //					logger(); //It also logs before targets, not just at the end of the 7 minutes.
+    //					vaLogger();
+
+              window.location.replace('tag2.html'); //I stopped using server requests since I stopped using html templates.
+            }
+          }
+          for (var i = 0; i <= 19; i++) {
+            if ((targetTracker[i] == 1)  &&  (Math.abs(gpRecorder[0] - userVerifyTargets[i].xPos) < 50)  &&  (Math.abs(gpRecorder[1] - userVerifyTargets[i].yPos) < 50)  &&  (magnitude<1)  &&  (aButton)) {
+              userVerifyTargets[i].remove();
+              targetSprites[i].remove();
+              targetTracker[i] = 3;
+              lastRole = "verifying";
+              imageId++;
+              targetsVerified++;
+              verifyCount++;
+              logCookie();
+    //					logger();
+    //					vaLogger();
+              
+              window.location.replace('verify2.html');
+            }
+          }
+        }
+        
+        
+        function inside(point, polygon) { //This function checks if a point (array with x and y coordinate) is in a polygon (two-dimensional array). I copied it straight from stack overflow and have no idea how it works. 
+          var boatX = point[0]+15, boatY = point[1]+4400; //The coordinates of the boat are for the top left corner I think, not the center, so they are tweaked a little from the (+14, +4412). Probably not tweaked well but still. 
+          var inside = false;
+          for (var i=0, j=polygon.length-1; i<polygon.length; j=i++) {
+            var xi = polygon[i][0], yi = polygon[i][1];
+            var xj = polygon[j][0], yj = polygon[j][1];
+          
+            var intersect = (((yi>boatY) != (yj>boatY)) && (boatX<(xj-xi)*(boatY-yi)/(yj-yi)+xi));
+            if (intersect) 
+              inside = !inside;
+          }
+          return inside;
+        }
+        
+        function logger() {
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "/save");
+          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+          xhr.send("record=" +  log);
+        }
+        function vaLogger() {
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "/vaSave");
+          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+          xhr.send("vaRecord=" +  vaLog);
+        }
+        function logCookie() {
+            document.cookie = "gpRecorder0=" + gpRecorder[0] + ";";
+            document.cookie = "gpRecorder1=" + gpRecorder[1] + ";";
+            document.cookie = "gpRecorder2=" + gpRecorder[2] + ";";
+            document.cookie = "gpRecorder3=" + gpRecorder[3] + ";";
+            document.cookie = "gpSpriteCoords0=" + gpSpriteCoords[0] + ";";
+            document.cookie = "gpSpriteCoords1=" + gpSpriteCoords[1] + ";";
+            document.cookie = "canvasLeftMargin=" + canvasLeftMargin + ";";
+            document.cookie = "canvasTopMargin=" + canvasTopMargin + ";";		
+            document.cookie = "miniSprite1coords0=" + miniSprite1coords[0] + ";";		
+            document.cookie = "miniSprite1coords1=" + miniSprite1coords[1] + ";";
+//            document.cookie = "miniSprite2coords0=" + miniSprite2coords[0] + ";";		
+//            document.cookie = "miniSprite2coords1=" + miniSprite2coords[1] + ";";
+            document.cookie = "targetTracker=" + "[" + targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
+            document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
+            document.cookie = "targetsVerified=" + targetsVerified + ";";
+            document.cookie = "tagCount=" + tagCount + ";";
+            document.cookie = "verifyCount=" + verifyCount + ";";
+//            document.cookie = "vaPosX=" + va.position.x + ";";
+//            document.cookie = "vaPosY=" + va.position.y + ";";
+            document.cookie = "imageId=" + imageId + ";";
+            document.cookie = "lastRole=" + lastRole + ";"; 
+//            document.cookie = "vaLastRole=" + va.lastRole + ";"; 
+//            document.cookie = "startTime=" + startTime + ";";
+//            document.cookie = "elapsedTime=" + elapsedTime + ";";
+//            document.cookie = "vaOnTarget=" + va.onTarget + ";";
+//            document.cookie = "vaTargetX=" + va.target.x + ";";
+//            document.cookie = "vaTargetY=" + va.target.y + ";";
+//            document.cookie = "vaTargetIndex=" + va.target.index + ";";
+//            document.cookie = "vaTask=" + va.task + ";";
+//            document.cookie = "vaEstimatedTimeLeft=" + va.estimatedTimeLeft + ";";
+        }
+        function readCookie(key){ //reads the cookie as a string. This was also copied straight from stack overflow so I don't know how it works. But it do.
+          var result;
+          return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+        }
+      })(window, document);
+    </script>
+  </body>
+</html>

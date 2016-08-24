@@ -1,0 +1,70 @@
+html, body { height: 100%; }
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+  color: #fff;
+}
+
+.box {
+  padding-top: 20px;
+  padding-left: 10%;
+  padding-right: 10%;
+  width: 50%;
+//  max-width: 60%;
+//  max-height: 30%;
+  background-color: #000;
+  overflow-y: auto;
+  
+  position: absolute;
+  top: 25%;
+//  bottom: 0;
+  left: 15%;
+//  right: 0;
+//  margin: auto;
+}
+
+.box h1 {
+  margin: 0;
+}
+
+.box h2 {
+  margin-top: 0;
+  margin-bottom: 10%;
+  text-indent: 1.2em;
+  font-size: 1.2em;
+  font-weight: normal;
+  text-align: justify;
+}
+
+.box h3 {
+  font-size: 1.1em;
+  font-weight: normal;
+}
+
+.box .form {
+  overflow: auto;
+  padding-bottom: 10%;
+}
+
+#survey-form .likert {
+  list-style: none;
+}
+
+#survey-form .likert:before {
+  content: "";
+  background-color: #fefefe;
+  height: 4px;
+}
+
+#survey-form .likert li{
+  display: inline-block;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+#survey-form textarea {
+  display: block;
+  width: 50%;
+}
