@@ -1,0 +1,68 @@
+include head-layout.jade
+
+body
+  div.box
+    h1 Thanks for volunteering!
+    h2.
+      Before you begin, we would like to test your awareness on environmental issues.
+    h3 Please indicate your interest regarding the following statements (1 - not very interested, 7 - very interested).
+    div.form
+      form#survey-form(action="/survey", method="POST")
+        fieldset#q1-buttons
+          label.statement(for="q1-buttons") When you hear a general environmental issue, you feel...
+          ul.likert
+            span 1
+            li
+              input(type="radio", name="q1", value="1")
+            li
+              input(type="radio", name="q1", value="2")
+            li
+              input(type="radio", name="q1", value="3")
+            li
+              input(type="radio", name="q1", value="4")
+            li
+              input(type="radio", name="q1", value="5")
+            li
+              input(type="radio", name="q1", value="6")
+            li
+              input(type="radio", name="q1", value="7")
+            span 7
+        fieldset#q2-buttons
+          label.statement(for="q2-buttons") When you hear an environmental issue related to the are where you live, you feel...
+          ul.likert
+            span 1
+            li
+              input(type="radio", name="q2", value="1")
+            li
+              input(type="radio", name="q2", value="2")
+            li
+              input(type="radio", name="q2", value="3")
+            li
+              input(type="radio", name="q2", value="4")
+            li
+              input(type="radio", name="q2", value="5")
+            li
+              input(type="radio", name="q2", value="6")
+            li
+              input(type="radio", name="q2", value="7")
+            span 7
+        fieldset#q3-buttons
+          label.statement(for="q1-buttons") When you know your effort can be beneficial to an environmental issue, you feel...
+          ul.likert
+            span 1
+            li
+              input(type="radio", name="q3", value="1")
+            li
+              input(type="radio", name="q3", value="2")
+            li
+              input(type="radio", name="q3", value="3")
+            li
+              input(type="radio", name="q3", value="4")
+            li
+              input(type="radio", name="q3", value="5")
+            li
+              input(type="radio", name="q3", value="6")
+            li
+              input(type="radio", name="q3", value="7")
+            span 7
+        input(type="submit" value="Submit")

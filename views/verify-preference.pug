@@ -1,0 +1,18 @@
+doctype html
+html(lang="en-us")
+  head
+    meta(charset="UTF-8")
+    link(href="verify.css", rel="stylesheet")
+    script(src="verify-preference.js", type="text/javascript")
+    title Verify This!
+  
+  body
+    div.outer-wrapper
+      div#wrapper.inner-wrapper
+        img#verify-image(src=imgSrc, alt="Patience...")
+        div#verify-action-wrapper.outer-wrapper
+        div.next
+          button#next-button Next Image
+        button#switch-button Switch Tasks
+        div
+          span#countdown
