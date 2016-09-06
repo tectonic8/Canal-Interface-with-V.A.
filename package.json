@@ -1,0 +1,32 @@
+{
+  "name": "civa",
+  "version": "1.0.0",
+  "description": "canal interface wit virtual agent",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tectonic8/Canal-Interface-with-V.A..git"
+  },
+  "keywords": [
+    "brooklyn",
+    "atlantis",
+    "citizen",
+    "science"
+  ],
+  "author": "Hartek Sabharwal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tectonic8/Canal-Interface-with-V.A./issues"
+  },
+  "homepage": "https://github.com/tectonic8/Canal-Interface-with-V.A.#readme",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "client-sessions": "^0.7.0",
+    "express": "^4.14.0",
+    "pug": "^2.0.0-beta5",
+    "socket.io": "^1.4.8"
+  }
+}

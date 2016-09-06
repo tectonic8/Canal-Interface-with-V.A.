@@ -72,6 +72,7 @@
             name   = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
             document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
           }
+		  document.cookie = 'deleted=true;';
         };
         
         button.addEventListener(EVENTS.CLICK, function(event) {
@@ -171,7 +172,7 @@
           miniSprite1coords[1] = parseInt(readCookie("miniSprite1coords1"));			
 //          miniSprite2coords[0] = parseInt(readCookie("miniSprite2coords0"));
 //          miniSprite2coords[1] = parseInt(readCookie("miniSprite2coords1"));
-          lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastforwarding
+//          lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastforwarding
           imageId = parseInt(readCookie("imageId")); 
           targetTracker = JSON.parse(readCookie("targetTracker"));
           lastRole = readCookie("lastRole"); //this is for the log I think.
@@ -186,12 +187,18 @@
           timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
           var estimatedTimeLeft = parseInt(readCookie("vaEstimatedTimeLeft"))*1000; //Va time to target. Underestimated. I don't use this anymore.
           
+		  if (isNaN(targetsVerified)) { targetsVerified = 0; }
+		  if (isNaN(tagCount)) { tagCount = 0; }
+		  if (isNaN(verifyCount)) { verifyCount = 0; }
+		  
           targetInitializer(); //targetInitializer creates the targets.
           updateTargets(); //updateTargets draws the targets.
         } else { //if there are no cookies:
           var startTime = new Date().getTime();
           targetInitializer();
           updateTargets();
+		  targetsVerified = 0;
+		  tagCount = 0;
         }
         
         function targetInitializer() { //I never really figured out how to use the Target class properly, so now I just use this method in conjunction with the class.
@@ -327,8 +334,13 @@
               updateTargets();
             }
             else if (socket.io.engine.id == clientContainer[1]) {//vestigial from when there were multiple users.
-              userSprite.style.left = gpSpriteCoords[0] - gpRecorder[2] - recorder2[2] + "px";
-              userSprite.style.top = gpSpriteCoords[1] - gpRecorder[3] - recorder2[3]+ "px";
+              canvasLeftMargin -= x;
+              canvasTopMargin += y;
+              canvas.style.marginLeft = canvasLeftMargin + "px";
+              canvas.style.marginTop = canvasTopMargin + "px";
+              userSprite.style.left = gpSpriteCoords[0] + "px";
+              userSprite.style.top = gpSpriteCoords[1] + "px";
+              updateTargets();
             }
           }
           gpShifter();
@@ -341,8 +353,8 @@
             userSprite.style.top = gpSpriteCoords[1] + 'px';
           }
           else if (socket.io.engine.id == clientContainer[1]) {//vestigial
-            userSprite.style.left = gpRecorder[0] - recorder2[2] + "px";
-            userSprite.style.top = gpRecorder[1] - recorder2[3] + "px";
+            userSprite.style.left = gpSpriteCoords[0] + 'px';
+            userSprite.style.top = gpSpriteCoords[1] + 'px';
           }
           userSprite.style.transform = "rotate(" + angle*-2 +"deg)"; 
           miniSprite1coords[0] += (magnitude*direction[0]*0.047); //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
@@ -375,7 +387,7 @@
               tagTargets[i].remove();
               targetSprites[i].remove();
               targetTracker[i] = 2; //The target at this index will load as a va verifies target when it restarts.
-              lastTargetIndex = i; 
+//              lastTargetIndex = i; 
               imageId++;
               tagCount++; //Used in the log
               logCookie();
@@ -444,7 +456,7 @@
 //            document.cookie = "miniSprite2coords0=" + miniSprite2coords[0] + ";";		
 //            document.cookie = "miniSprite2coords1=" + miniSprite2coords[1] + ";";
             document.cookie = "targetTracker=" + "[" + targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
-            document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
+            document.cookie = "lastTargetIndex=0;";// + lastTargetIndex + ";";
             document.cookie = "targetsVerified=" + targetsVerified + ";";
             document.cookie = "tagCount=" + tagCount + ";";
             document.cookie = "verifyCount=" + verifyCount + ";";
@@ -461,6 +473,10 @@
 //            document.cookie = "vaTargetIndex=" + va.target.index + ";";
 //            document.cookie = "vaTask=" + va.task + ";";
 //            document.cookie = "vaEstimatedTimeLeft=" + va.estimatedTimeLeft + ";";
+
+			if (isNaN(imageId)) {
+				imageId = 15;
+			}
         }
         function readCookie(key){ //reads the cookie as a string. This was also copied straight from stack overflow so I don't know how it works. But it do.
           var result;

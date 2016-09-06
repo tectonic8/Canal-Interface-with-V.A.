@@ -48,7 +48,9 @@ app.get('/verifyRedirect', function (req, res) {
 });
 
 app.get('/', function(req, res){
-  return res.sendFile(__dirname + '/index.html');
+//  return res.sendFile(__dirname + '/index.html');
+	console.log('HONK h0nk');
+	return res.redirect('/survey');
 });
 
 app.get('/survey', function(req, res) {
@@ -56,6 +58,10 @@ app.get('/survey', function(req, res) {
 });
 
 app.get('/survey2', function(req, res) {
+  return res.render('survey2.pug');
+});
+
+app.get('/survey2.html', function(req, res) {
   return res.render('survey2.pug');
 });
 
@@ -74,6 +80,10 @@ app.get('/verify-preference', function(req, res) {
   }
   res.render('verify-preference', {imgSrc: './images/img' + imageId + '.png'});
 //  return res.sendFile(__dirname + '/verify-preference.html');
+});
+
+app.get('/thanks', function(req, res) {
+	return res.render('thanks.pug');
 });
 
 app.get('/reset', function(req, res) {
@@ -107,6 +117,8 @@ app.post('/survey', function(req, res) {
   req.session.q1_1 = req.body.q1;
   req.session.q2_1 = req.body.q2;
   req.session.q3_1 = req.body.q3;
+  req.session.q4_1 = req.body.q4;
+  req.session.q5_1 = req.body.q5;
   res.redirect('/tag-practice');
 });
 
@@ -115,9 +127,12 @@ app.post('/survey2', function(req, res) {
   req.session.q2_2 = req.body.q2;
   req.session.q3_2 = req.body.q3;
   req.session.q4_2 = req.body.q4;
+  req.session.q5_2 = req.body.q5;
+  req.session.q6_2 = req.body.q6;
   
-  str = req.session.q1_1 + ', ' + req.session.q2_1 + ', ' + req.session.q3_1 + ', ' + req.session.q1_2 + ', ' + req.session.q2_2 + ', ' + req.session.q3_2 + ', ' + req.session.q4_2;  
-  fs.writeFile('pref-test.txt', str);
+  str  = req.session.q1_1 + ', ' + req.session.q2_1 + ', ' + req.session.q3_1 + ', ' + req.session.q4_1 + ', ' + req.session.q5_1 + '\n';
+  str += req.session.q1_2 + ', ' + req.session.q2_2 + ', ' + req.session.q3_2 + ', ' + req.session.q4_2 + ', ' + req.session.q5_2 + ', ' + req.session.q6_2; 
+  fs.writeFile('survey-results.txt', str);
   
   return res.redirect('/thanks');
 });
@@ -129,7 +144,7 @@ app.post('/save', function(req, res) {
 
 app.post('/vaSave', function(req, res) {
 	handleSave(req.body.vaRecord, 1);
-	return res.redirect('/survey2');
+	return res.end();
 });
 
 app.post('/savetagged', function(req, res) {
