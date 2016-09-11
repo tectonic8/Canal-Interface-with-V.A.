@@ -101,13 +101,6 @@
   var scoreDiv    = null;
   var userSprite  = null;
   
-  /* The boats. */
-  var user = null;
-  var va   = null;
-  
-  /* Null target (for when no targets are available). */
-  var NULL_TARGET = null;
-  
   /* Contexts for the canvas elements. */
   var ctx            = null;
   var minimapContext = null;
@@ -259,7 +252,7 @@
    */
   var lastTargetIndex           = null;
   /* collaborative score */
-  var targetsVerified           = 0;
+  var targetsVerified            = 0;
   var tagCount                  = 0;
   var verifyCount               = 0;
   var startTime                 = new Date().getTime();
@@ -277,14 +270,12 @@
   var canvasShiftY   =   0;
   var gpSpriteX      =  50;
   var gpSpriteY      = 470;
+  var magnitude      =   0;
   var directionX     =   0;
   var directionY     =   0;
-//  var saveDirectionX =   0;
-//  var saveDirectionY =   0;
+  var saveDirectionX =   0;
+  var saveDirectionY =   0;
   var angle          =   1.57;
-  
-  /* Current image (so each user sees the same sequence). */
-  var imageId = 1;
   
   /* objects for the user agent, virtual agent, and targets. */
   var user    = null;
@@ -311,7 +302,7 @@
     lastTargetIndex  = parseInt(readCookie("lastTargetIndex")); 
     imageId          = parseInt(readCookie("imageId")); 
     targetTracker    = JSON.parse(readCookie("targetTracker"));
-    userLastRole     = readCookie("lastRole");
+    lastRole         = readCookie("lastRole");
     targetsVerified  = parseInt(readCookie("targetsVerified"));
     tagCount         = parseInt(readCookie("tagCount"));
     verifyCount      = parseInt(readCookie("verifyCount"));
@@ -319,7 +310,6 @@
     vaBehavior       = parseInt(readCookie("behavior"));
     vaMagnitude      = parseInt(readCookie("magnitude"));
     vaAcceleration   = parseInt(readCookie("acceleration"));
-    vaLastRole       = readCookie("vaLastRole");
     
     if (isNaN(targetsVerified)) { targetsVerified = 0; }
     if (isNaN(tagCount)) { tagCount = 0; }
@@ -351,88 +341,73 @@
      * for handling these gamepads seems to differ a lot between browsers.
      */
     var gamepads = navigator.getGamepads();
-    var gamepadIdx = -1;
-    for (var idx = 0; idx < gamepads.length; ++idx) {
-      if (gamepads[idx] !== undefined) {
-        gamepadIdx = idx;
-        break;
-      }
+    
+    /* Gamepad axis 0 varies from -1 to 1. 1 is all the way to the right. */
+    var stickX =  gamepads[0].axes[0];
+    /* Gamepad axis 1 is the y-axis. 1 is all the way down. */
+    var stickY = -gamepads[0].axes[1];
+    
+    /* These are boolean values. */
+    var accelButton = gamepads[0].buttons[5].pressed;
+    aButton = gamepads[0].buttons[0].pressed;
+    
+    if (accelButton) { user.acceleration = 0.03; }
+    else {
+      if (user.magnitude < 0.01) { user.acceleration = 0; }
+      else { user.acceleration = -0.03; }
     }
     
-    if (gamepadIdx > -1) {
-      /* Gamepad axis 0 varies from -1 to 1. 1 is all the way to the right. */
-      var stickX = gamepads[gamepadIdx].axes[0];
-      /* Gamepad axis 1 is the y-axis. 1 is all the way down. */
-      var stickY = gamepads[gamepadIdx].axes[1];
-      
-      /* These are boolean values. */
-      var accelButton = gamepads[gamepadIdx].buttons[5].pressed;
-      aButton = gamepads[gamepadIdx].buttons[0].pressed;
-      
-      if (accelButton) {
-        user.acceleration = 0.03;
-        user.magnitude += user.acceleration;
-      } else {
-        if (user.magnitude < 0.01) {
-          user.acceleration = 0;
-          user.magnitude = 0;
-        } else {
-          user.acceleration = -0.03;
-          user.magnitude += user.acceleration;
-        }
-      }
-      
-      /* Check for larger values so you really have to move the stick to move
-       * the sprite. The stick is super sensitive so it would look weird without
-       * this.
+    /* Check for larger values so you really have to move the stick to move the
+     * sprite. The stick is super sensitive so it would look weird without this.
+     */
+    if ((stickX < 0.5 && stickX > -0.5) && (stickY < 0.5 && stickY > -0.5)) {
+      directionX = saveDirectionX;
+      directionY = saveDirectionY;
+    } else {
+      /* The direction array is components of the angle. This is slightly
+       * different from the stick array. If I used the stick array, I could slow
+       * down by pressing the stick forward only a little.
        */
-      if ((stickX < 0.5 && stickX > -0.5) && (stickY < 0.5 && stickY > -0.5)) {
-        directionX = user.saveDirection.x;
-        directionY = user.saveDirection.y;
-      } else {
-        /* The direction array is components of the angle. This is slightly
-         * different from the stick array. If I used the stick array, I could
-         * slow down by pressing the stick forward only a little.
-         */
-        directionX = stickX / (Math.sqrt(stickX * stickX + stickY * stickY));
-        directionY = stickY / (Math.sqrt(stickX * stickX + stickY * stickY));
-        
-        /* Save direction allows the inertial movement when you stop moving the
-         * stick.
-         */
-        user.saveDirection = {x: directionX, y: directionY};
-      }
+      directionX = stickX / (Math.sqrt(stickX * stickX + stickY * stickY));
+      directionY = stickY / (Math.sqrt(stickX * stickX + stickY * stickY));
       
-      angle = Math.atan2(-directionY, directionX) * 180 / Math.PI;      
-      handleTargets();
-      
-      /* The significance of doing it this way instead of just using gpRecorder0
-       * and gpRecorder1 as arguments is this way, it can never leave the canal.
-       * It asks if it would be in the canal after taking one more step, not
-       * whether it is in the canal right now.
+      /* Save direction allows the inertial movement when you stop moving the
+       * stick.
        */
-      var nextX        = gpRecorder[0] + user.magnitude * directionX;
-      var nextY        = gpRecorder[1] + user.magnitude * directionY;
-      var nextPosition = [nextX, nextY];
-      if (inside(nextPosition, canalTriacontapentagon)){
-        logCookie();
-        gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
-      } else {
-        /* If it hits the canal edge, magnitude is reset to 1. */
-        user.magnitude = 0;
-        user.acceleration = 0;
-      }
-      
-      ultraRecorder();
-      
-      /* Data is logged at the end of the seven minutes. */
-      if (elapsedTime > sevenMinutesInMillis) {
-        elapsedTime = sevenMinutesInMillis + 1;
-        logger();
-        vaLogger(true);
-      } else {
-        window.setTimeout(gameLoop, framesPerSecond60);
-      }
+      saveDirectionX = directionX;
+      saveDirectionY = directionY;
+    }
+    
+    angle = Math.atan2(directionY, directionX);
+    
+    handleTargets();
+    
+    /* The significance of doing it this way instead of just using gpRecorder0
+     * and gpRecorder1 as arguments is this way, it can never leave the canal.
+     * It asks if it would be in the canal after taking one more step, not
+     * whether it is in the canal right now.
+     */
+    var nextX        = gpRecorder[0] + magnitude * directionX;
+    var nextY        = gpRecorder[1] + magnitude * directionY;
+    var nextPosition = [nextX, nextY];
+    if (inside(nextPosition, canalTriacontapentagon)){
+      logCookie();
+      gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
+    } else {
+      /* If it hits the canal edge, magnitude is reset to 1. */
+      magnitude = 0;
+      user.acceleration = 0;
+    }
+    
+    ultraRecorder();
+    
+    /* Data is logged at the end of the seven minutes. */
+    if (elapsedTime > sevenMinutesInMillis) {
+      elapsedTime = sevenMinutesInMillis + 1;
+      logger();
+      vaLogger(true);
+    } else {
+      window.setTimeout(gameLoop, framesPerSecond60);
     }
   };
   
@@ -443,73 +418,58 @@
      */
     var gpShifter = function() {
       if (gpSpriteX> 400 && gpSpriteY < 300) {
-        gpHandleShift(
-          user.magnitude * Math.abs(directionX),
-          user.magnitude * Math.abs(directionY)
-        );
+        gpHandleShift(magnitude * Math.abs(directionX), magnitude * Math.abs(directionY));
       } else if (gpSpriteX > 400) {
-        gpHandleShift(user.magnitude * Math.abs(directionX), 0);
+        gpHandleShift(magnitude * Math.abs(directionX, 0));
       } else if (gpSpriteY < 300) {
-        gpHandleShift(0, user.magnitude * Math.abs(directionY));
+        gpHandleShift(0, magnitude * Math.abs(directionY));
       }
       
       if (gpSpriteX < 300 && gpSpriteY > 400) {
-        gpHandleShift(
-          -user.magnitude * Math.abs(directionX),
-          -user.magnitude * Math.abs(directionY)
-        );
+        gpHandleShift(-magnitude * Math.abs(directionX), -magnitude * Math.abs(directionY));
       } else if (gpSpriteX < 300) {
-        gpHandleShift(-user.magnitude * Math.abs(directionX), 0);
+        gpHandleShift(-magnitude * Math.abs(directionX, 0));
       } else if (gpSpriteY > 400) {
-        gpHandleShift(0, -user.magnitude * Math.abs(directionY));
+        gpHandleShift(0, -magnitude * Math.abs(directionY));
       }
-    };
-    var gpHandleShift = function(x, y) {
-      canvasShiftX += x;
-      canvasShiftY -= y;
-      gpSpriteX    -= x;
-      gpSpriteY    += y;
       
+      var gpHandleShift = function(x, y) {
+        canvasShiftX += x;
+        canvasShiftY -= y;
+        gpSpriteX    -= x;
+        gpSpriteY    += y;
+        
+        gpRecorder[0] = gpSpriteX + canvasShiftX;
+        gpRecorder[1] = gpSpriteY + canvasShiftY;
+        
+        canvasLeftMargin -= x;
+        canvasTopMargin  += y;
+        
+        canvas.style.marginLeft = canvasLeftMargin + STRINGS.PX;
+        canvas.style.marginTop  = canvasTopMargin  + STRINGS.PX;
+        userSprite.style.left   = gpSpriteX        + STRINGS.PX;
+        userSprite.style.top    = gpSpriteY        + STRINGS.PX;
+        
+        updateTargets();
+      };
+      
+      gpShifter();
+      gpSpriteX += magnitude * directionX;
+      gpSpriteY += magnitude * directionY;
+      
+      /* Local coordinates + canvas offset = relatively global coordinates
+       * (+14, +4412 offset).
+       */
       gpRecorder[0] = gpSpriteX + canvasShiftX;
       gpRecorder[1] = gpSpriteY + canvasShiftY;
       
-      canvasLeftMargin -= x;
-      canvasTopMargin  += y;
-      
-      canvas.style.marginLeft = canvasLeftMargin + STRINGS.PX;
-      canvas.style.marginTop  = canvasTopMargin  + STRINGS.PX;
-      
-      user.position.x = gpSpriteX;
-      user.position.y = gpSpriteY;
-      
-      user.setPosition();
-      
-//        userSprite.style.left   = gpSpriteX        + STRINGS.PX;
-//        userSprite.style.top    = gpSpriteY        + STRINGS.PX;
-      
-      updateTargets();
+      userSprite.style.left      = gpSpriteX + STRINGS.PX;
+      userSprite.style.top       = gpSpriteY + STRINGS.PX;
+      userSprite.style.transform = STRINGS.ROTATE + '(' + -2 * angle +
+         STRINGS.DEGREES + ')';
+         
+     // TODO: Update minisprite coordinates. */
     };
-      
-    gpShifter();
-    gpSpriteX += user.magnitude * directionX;
-    gpSpriteY += user.magnitude * directionY;
-    
-    /* Local coordinates + canvas offset = relatively global coordinates
-     * (+14, +4412 offset).
-     */
-    gpRecorder[0] = gpSpriteX + canvasShiftX;
-    gpRecorder[1] = gpSpriteY + canvasShiftY;
-    
-    user.position.x = gpSpriteX;
-    user.position.y = gpSpriteY;
-    user.miniPosition.x += user.magnitude * directionX * 0.047;
-    user.miniPosition.y += user.magnitude * directionY * 0.045;
-    user.setPosition();
-    
-//      userSprite.style.left      = gpSpriteX + STRINGS.PX;
-//      userSprite.style.top       = gpSpriteY + STRINGS.PX;
-    user.element.style.transform = STRINGS.ROTATE + '(' + -angle +
-       STRINGS.DEGREES + ')';
   };
   
   /* Update the target sprite positions. */
@@ -527,7 +487,7 @@
       var vaOnTarget  = target === va.target && va.onTarget;
       var closeEnough = Math.abs(gpRecorder[0] - target.xPos) < 50 &&
         Math.abs(gpRecorder[1] - target.yPos) < 50;
-      var slowEnough = user.magnitude < 1;
+      var slowEnough = magnitude < 1;
       
       /* If the virtual agent is not working on the arget, you're close enough,
        * moving slow enough, and pressing the a button, it executes.
@@ -592,14 +552,10 @@
   };
   
   function vaUpdateMap(msg) {
-    va.position.x     -= canvasShiftX;
-    va.position.y     -= canvasShiftY;
-    va.miniPosition.x += msg.x * 0.047;
-    va.miniPosition.y -= msg.y * 0.045;
-    va.setPosition();
- 
-//    va.sprite.style.left = (va.position.x - canvasShiftX) + STRINGS.PX;
-//    va.sprite.style.top  = (va.position.y - canvasShiftY) + STRINGS.PX;
+    va.sprite.style.left = (va.position.x - canvasShiftX) + STRINGS.PX;
+    va.sprite.style.top  = (va.position.y - canvasShiftY) + STRINGS.PX;
+    
+    // TODO: update minimap sprite for the virtual agent.
     
     /* Virtual agent does not rotate, but it does not look good with the current
      * sprite.
@@ -607,16 +563,8 @@
   };
   
   function ultraRecorder() {
-    var endTime = new Date().getTime();
+    var endTime = new Date();
     elapsedTime = endTime - startTime;
-    var entry = {
-      x:            user.position.x,
-      y:            user.position.y,
-      acceleration: user.acceleration,
-      action:       'navigating',
-      time:         elapsedTime
-    };
-    user.log.append(entry);
     // TODO: log data to user agent.
   };
   
@@ -625,14 +573,13 @@
     elapsedTime = endTime - startTime;
     
     var entry = {
-      x:             va.position.x,
-      y:             va.position.y,
-      acceleration:  va.acceleration,
-      action:        va.lastRole,
-      behavior:      va.behavior,
+      x:      va.position.x,
+      y:      va.position.y,
+      accel:  va.accel,
+      action: va.lastRole,
       time:   elapsedTime
     };
-    va.log.append(entry);
+    
     // TODO: log data to virtual agent.
   };
   
@@ -666,6 +613,7 @@
   };
   
   function logCookie() {
+    return;
     document.cookie = "gpRecorder0=" + gpRecorder[0] + ";";
     document.cookie = "gpRecorder1=" + gpRecorder[1] + ";";
     document.cookie = "gpRecorder2=" + canvasShiftX + ";";
@@ -674,10 +622,10 @@
     document.cookie = "gpSpriteCoords1=" + gpSpriteY + ";";
     document.cookie = "canvasLeftMargin=" + canvasLeftMargin + ";";
     document.cookie = "canvasTopMargin=" + canvasTopMargin + ";";		
-    document.cookie = "miniSprite1coords0=" + user.miniPosition.x + ";";
-    document.cookie = "miniSprite1coords1=" + user.miniPosition.y + ";";
-    document.cookie = "miniSprite2coords0=" + va.miniPosition.x + ";";
-    document.cookie = "miniSprite2coords1=" + va.miniPosition.y + ";";
+    document.cookie = "miniSprite1coords0=" + miniSprite1coords[0] + ";";		
+    document.cookie = "miniSprite1coords1=" + miniSprite1coords[1] + ";";
+    document.cookie = "miniSprite2coords0=" + miniSprite2coords[0] + ";";		
+    document.cookie = "miniSprite2coords1=" + miniSprite2coords[1] + ";";
     /* This is to store an array in a cookie. JSON parse to read it. */
     document.cookie = "targetTracker=" + "[" + targetTracker.join(",") + "]"; 
     document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
@@ -687,7 +635,7 @@
     document.cookie = "vaPosX=" + va.position.x + ";";
     document.cookie = "vaPosY=" + va.position.y + ";";
     document.cookie = "imageId=" + imageId + ";";
-    document.cookie = "lastRole=" + user.lastRole + ";"; 
+    document.cookie = "lastRole=" + lastRole + ";"; 
     document.cookie = "vaLastRole=" + va.lastRole + ";"; 
     document.cookie = "startTime=" + startTime + ";";
     document.cookie = "elapsedTime=" + elapsedTime + ";";
@@ -727,8 +675,6 @@
     } else {
       clock.innerHTML = '' + minutes + ':0' + seconds;
     }
-    
-    window.setTimeout(updateClock, 1000);
   };
   
   function updateScore() {
@@ -743,6 +689,8 @@
     if (!(STRINGS.ON_GAMEPAD_CONNECTED in window)) {
       interval = setInterval(pollGamepads, 500);
     }
+    /* Fast forward virtual agent. */
+    //TODO: fastforward va.
   });
   
   window.addEventListener(EVENTS.DOM_CONTENT_LOADED, function(event) {
@@ -761,17 +709,14 @@
     ctx            = canvas.getContext(STRINGS.TWO_D);
     minimapContext = minimap.getContext(STRINGS.TWO_D);
     
-//    ctx.drawImage(gowanusMap, 0, 0);
-//    minimapContext.drawImage(canvas, 0, 480, 4066, 5000, 0, 0, 200, 228);
+    ctx.drawImage(gowanusMap, 0, 0);
+    minimapContext.drawImage(canvas, 0, 480, 4066, 5000, 0, 0, 200, 228);
     
     gowanusMap.addEventListener(EVENTS.LOAD, function(event) {
       ctx.drawImage(this, 0, 0);
-      canvas.style.marginTop  = canvasTopMargin  + STRINGS.PX;
-      canvas.style.marginLeft = canvasLeftMargin + STRINGS.PX;
+      canvas.style.marginTop = canvasTopMargin + STRINGS.PX;
       minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
     });
-    
-    NULL_TARGET = new Target(1000, 3500, -1, -1);
     
     /* Initialize the virtual agent. */
     // TODO: initialize virtual agent.
@@ -781,10 +726,9 @@
       vaMiniInitialX,
       vaMiniInitialY,
       vaMagnitude,
-      vaAcceleration,
       vaBehavior);
     // TODO: Choose target, initialize, and update. */
-    va.start();
+//    va.update();
     
     /* Initialize user agent. */
     user = new UserAgent(
@@ -793,6 +737,7 @@
       userMiniInitialX,
       userMiniInitialY
     );
+    //TODO: initialize user agent.
     
     /* Initialize targets. */
     //TODO: initialize targets.
@@ -838,15 +783,13 @@
   };
   
   class Target {
-    constructor(x, y, index, type) {
+    constructor(x, y, id, index, type) {
       this.element = document.createElement(ELEMENTS.IMG);
       this.element.setAttribute(ATTRIBUTES.WIDTH , 50);
       this.element.setAttribute(ATTRIBUTES.HEIGHT, 50);
       this.element.classList.add(CLASSES.TARGET);
       this.xPos = x - 14;
       this.yPos = y - 14;
-      this.index = index;
-      
       this.element.style.left = this.xPos + STRINGS.PX;
       this.element.style.top  = this.yPos + STRINGS.PX; 
       this.miniElement = document.createElement(ELEMENTS.IMG);
@@ -880,25 +823,21 @@
       this.miniPosition = {x: mx, y: my};
       this.magnitude = 0;
       this.acceleration = 0;
-      this.lastRole = 'navigating';
       this.log = new Log();
     }
     
-    setPosition() {
-      this.element.style.left     = this.position.x     + STRINGS.PX;
-      this.element.style.top      = this.position.y     + STRINGS.PX;
-      this.miniElement.style.left = this.miniPosition.x + STRINGS.PX;
-      this.miniElement.style.top  = this.miniPosition.y + STRINGS.PX;
+    initializee() {
+      this.counter = 0; // TODO: check if this is necessary
+      this.theta = 0;
+      this.saveSpeed = 0;
+      this.rotate = 0;
     }
   };
   
   class UserAgent extends Agent {
-    constructor(x, y, mx, my) {
-      super(x, y, mx, my);
-      this.saveDirection = {x: 0, y: 0};
+    constructor(x, y) {
+      super(x, y);
       this.element = userSprite;
-      this.miniElement = miniSprite1;
-      this.setPosition();
     }
   };
   
@@ -906,22 +845,16 @@
     constructor(x, y, mx, my, magnitude, acceleration, behavior) {
       super(x, y, mx, my);
       this.behavior     = behavior;
-      this.element      = buddySprite;
-      this.miniElement  = miniSprite1;
+      this.sprite       = buddySprite;
       this.initialized  = false;
       this.magnitude    = magnitude;
       this.acceleration = acceleration;
       this.target       = null;
-      this.setPosition();
       // TODO: fast forward behavior.
     }
     
     initialize(addDelay) {
-      this.counter = 0; // TODO: check if this is necessary
-      this.theta = 0;
-      this.saveSpeed = 0;
-      this.rotate = 0;
-      
+      super.initialize();
       var now = new Date().getTime();
       this.onTarget = false;
       this.randomTaggingVerifyingTimeIndex = Math.floor(Math.random() * 5);
@@ -977,10 +910,10 @@
         }
       } else {
         this.element.visibility           = STYLES.VISIBLE;
-        this.miniElement.style.visibility = STYLES.VISIBLE;
+        this.miniElement.style.visibility = STYLE.VISIBLE;
       }
     
-      window.setTimeout(this.handleFlash.bind(this), 500);
+      window.setTimeout(handleFlash, 500);
     }
     
     /* Handle the targets for the virtual agent. */
@@ -1047,7 +980,7 @@
       /* Just a random location to go when it's done. Otherwise it will search
        * for targets until it breaks.
        */
-      if (noTargetsAvailable) { vaTarget = NULL_TARGET; }
+      if (noTargetsAvailable) { vaTarget = [1000, 3500, 0]; }
       else {
         tagTarget = this.closestTag();
         verifyTarget = this.closestVerify();
@@ -1059,7 +992,6 @@
           vaTarget = verifyTarget;
         }
       }
-      if (null === vaTarget) { vaTarget = NULL_TARGET; }
       this.target = vaTarget;
       
       if (targetTracker[this.target.index] === 0) this.task = 0;
@@ -1092,7 +1024,7 @@
       var verifyTarget = null;
       var leastDistance = 10000;
       var nextDistance = 0;
-      for (var idx = 0; idx < targets.length; ++idx) {
+      for (var idx = 0; idx < tagets.length; ++idx) {
         /* don't go after the new verifying point if you're fast forwarding. */
         if (!this.fastForward || idx !== lastTargetIndex) {
           if (targetTracker[idx] === 2) {

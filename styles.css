@@ -1,5 +1,7 @@
 #bigWrapper {
   position: fixed;
+  right:    10px;
+  bottom:   10px;
   width:    700px;
   height:   700px;
   margin:   0 auto;
