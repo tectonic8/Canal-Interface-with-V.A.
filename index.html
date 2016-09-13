@@ -66,6 +66,23 @@
 				minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
 			});
 			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
+				
+				va.fastForward = true;
+				var frameCount = timeSpentTaggingVerifying * 60/1000;
+				for (var t = 0; t < frameCount; ++t) {
+					va.update(); //fastforwarding
+					if (t == Math.floor(frameCount)) { // flag for myself
+						continue;
+					}
+				}
+				va.fastForward = false;
+				vaLogger();
+				delete window.localStorage["vaLog"]
+				vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+
+				//va.chooseTarget();
+				va.update();
+
 				ctx.drawImage(gowanusMap, 0, 0);
 				minimapContext.drawImage(canvas, 0, 480, 4066, 5000, 0, 0, 200, 228);
 			});
@@ -296,11 +313,12 @@
 					/* Decide whether or not to accelerate and decide what direction to
 					   go.
 					 */
+
 					var endTime3 = new Date().getTime();
 					if ((this.counter == 0) && ((endTime3 - this.startDelayStart) < (this.startDelay)) && (!this.fastForward)) { //this handles the delay.
 						window.setTimeout(this.update.bind(this), (1000/60));
 						vaUpdateMap({x: 0, y: 0});
-	//					socket.emit('vaMove', {x: 0, y: 0}); //If it isn't constantly emitting no change, it will not update properly when the user moves.
+			//					socket.emit('vaMove', {x: 0, y: 0}); //If it isn't constantly emitting no change, it will not update properly when the user moves.
 						
 						return;
 					}
@@ -332,7 +350,8 @@
 						this.saveSpeed = this.magnitude;
 						this.position.x += this.magnitude * Math.cos(this.angle);
 						this.position.y -= this.magnitude * Math.sin(this.angle);
-	//					socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+			//					socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+						//moves.push({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
 						vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
 						this.onTarget = false;
 					}				
@@ -345,7 +364,8 @@
 							if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
 							this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
 							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
-	//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
+			//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
+							//moves.push({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
 							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz) + cosFuzz), y: this.magnitude * (Math.sin(this.angle + fuzz) + cosFuzz)});
 							this.onTarget = false;
 							this.theta += 0.04; //the higher this value, the curvier its path. Obviously this is a terrible, robotic way of doing it, but I don't know how to make a fuzzy curved path.
@@ -354,18 +374,21 @@
 					else if (currentDistanceToTarget < 35  &&  inside([this.position.x, this.position.y], vaCanalTriacontapentagon)) {
 						this.onTarget = true;
 						vaUpdateMap({x: 0, y: 0});
-	//					socket.emit('vaMove', {x: 0, y: 0});
+			//					socket.emit('vaMove', {x: 0, y: 0});
 					}
-					if (!this.fastForward) {
+					/*if (!this.fastForward) {
 						window.setTimeout(this.update.bind(this), (1000/60)); //60 fps
 						console.log("updating");
 					}
 					else if (this.fastForward) {
 						window.setTimeout(this.update.bind(this), (1000/600));
 						console.log("fastforward updating");
-					}
-	//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
+					}*/
+			//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
 					vaUltraRecorder();
+					if (!this.fastForward) {
+						window.setTimeout(this.update.bind(this), (1000/60));
+					}
 				}
 			}
 
@@ -412,12 +435,16 @@
 				
 				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), readCookie("behavior")); //it is drawn onto the old position.
 				va.start(false); //false meaning don't start with a delay.
+
+
 				targetInitializer(); //targetInitializer creates the targets.
 				updateTargets(); //updateTargets draws the targets.
-				
-				
 
-				window.onload = function(){
+
+				
+				
+				
+				/*window.onload = function(){
 					setTimeout(function(){
 						loadTime = window.performance.timing.domContentLoadedEventEnd - window.performance.timing.connectStart;
 						console.log(loadTime + timeSpentTaggingVerifying);
@@ -426,7 +453,7 @@
 						window.setTimeout(function() {va.fastForward = false}, ((loadTime + timeSpentTaggingVerifying)/3.3) + 100); ///Ideally, it would fast forward for a tenth of the time it took to verify + load, because frame rate is 10 times faster but everything is messed up so I just did this weird regression thing that gets it kinda close.
 					}, 0);
 				}
-				va.update(); //now it loops on its own, since va.fastForward is false.
+				va.update(); //now it loops on its own, since va.fastForward is false.*/
 
 				va.lastRole = readCookie("vaLastRole"); //used in the log, I think.
 				vaLog = localStorage.getItem("vaLog");
