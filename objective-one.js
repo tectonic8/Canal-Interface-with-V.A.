@@ -89,6 +89,14 @@
     VISIBLE: 'visible'
   };
   
+  var TARGET_TYPES = {
+    TAG:         0,
+    USER_VERIFY: 1,
+    VA_VERIFY:   2,
+    VERIFIED:    3,
+    NULL:       -1
+  }
+  
   /* "Global" variables used by the application. */
   var buddySprite = null;
   var canvas      = null;
@@ -515,8 +523,8 @@
   /* Update the target sprite positions. */
   function updateTargets() {
     targets.forEach(function(target, idx, arr) {
-      target.style.left = (target.xPos - canvasShiftX) + STRINGS.PX;
-      target.style.top  = (target.yPos - canvasShiftY) + STRINGS.PX;
+      target.element.style.left = (target.xPos - canvasShiftX) + STRINGS.PX;
+      target.element.style.top  = (target.yPos - canvasShiftY) + STRINGS.PX;
     });
   };
   
@@ -630,7 +638,7 @@
       acceleration:  va.acceleration,
       action:        va.lastRole,
       behavior:      va.behavior,
-      time:   elapsedTime
+      time:          elapsedTime
     };
     va.log.append(entry);
     // TODO: log data to virtual agent.
@@ -740,9 +748,9 @@
       window.performance.timing.connectStart;
     
     /* Polyfill for gamepadconnected event. */
-    if (!(STRINGS.ON_GAMEPAD_CONNECTED in window)) {
-      interval = setInterval(pollGamepads, 500);
-    }
+//    if (!(STRINGS.ON_GAMEPAD_CONNECTED in window)) {
+//      interval = setInterval(pollGamepads, 500);
+//    }
   });
   
   window.addEventListener(EVENTS.DOM_CONTENT_LOADED, function(event) {
@@ -769,6 +777,8 @@
       canvas.style.marginTop  = canvasTopMargin  + STRINGS.PX;
       canvas.style.marginLeft = canvasLeftMargin + STRINGS.PX;
       minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
+      updateClock();
+      gameLoop();
     });
     
     NULL_TARGET = new Target(1000, 3500, -1, -1);
@@ -795,9 +805,16 @@
     );
     
     /* Initialize targets. */
-    //TODO: initialize targets.
-    
-    updateClock();
+    for (var idx = 0; idx < 20; idx++) {
+      if (targetTracker[idx] !== 3) {
+        targets.push(new Target(
+          targetsCoords[idx].x,
+          targetsCoords[idx].y,
+          idx,
+          TARGET_TYPES.TAG
+        ));
+      }
+    }
     updateScore();
   });
   
@@ -839,16 +856,18 @@
   
   class Target {
     constructor(x, y, index, type) {
-      this.element = document.createElement(ELEMENTS.IMG);
+      this.xPos  = x -   14;
+      this.yPos  = y - 4412;
+      this.index = index;
+      this.type  = type;
+
+      this.element = document.createElement(ELEMENTS.IMG);      
       this.element.setAttribute(ATTRIBUTES.WIDTH , 50);
       this.element.setAttribute(ATTRIBUTES.HEIGHT, 50);
       this.element.classList.add(CLASSES.TARGET);
-      this.xPos = x - 14;
-      this.yPos = y - 14;
-      this.index = index;
-      
       this.element.style.left = this.xPos + STRINGS.PX;
       this.element.style.top  = this.yPos + STRINGS.PX; 
+      
       this.miniElement = document.createElement(ELEMENTS.IMG);
       this.miniElement.setAttribute(ATTRIBUTES.WIDTH , 15);
       this.miniElement.setAttribute(ATTRIBUTES.HEIGHT, 15);
@@ -856,7 +875,7 @@
       this.miniElement.style.left = ((x -  107) * 0.048 + 501) + STRINGS.PX;
       this.miniElement.style.top  = ((y - 4864) * 0.046 + 691) + STRINGS.PX;
       
-      switch (type) {
+      switch (this.type) {
         case 0:
           this.element.src     = IMAGES.TAG_TARGET;
           this.miniElement.src = IMAGES.MINI_TARGET;
@@ -869,6 +888,9 @@
           this.element.src     = IMAGES.VA_VERIFY_TARGET;
           this.miniElement.src = IMAGES.VA_VERIFY_TARGET;
       }
+      
+      divWrapper.appendChild(this.element);
+      divWrapper.appendChild(this.miniElement);
     }
   };
   
