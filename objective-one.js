@@ -1303,5 +1303,4 @@
       }
     }
   };
-  
 })(window, document);
