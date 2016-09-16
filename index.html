@@ -76,8 +76,10 @@
 					}
 				}
 				va.fastForward = false;
+
 				vaLogger();
 				delete window.localStorage["vaLog"]
+				va.start(false);
 				//vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
 
 				//va.chooseTarget();
@@ -434,7 +436,7 @@
 				timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
 				
 				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), readCookie("behavior")); //it is drawn onto the old position.
-				va.start(false); //false meaning don't start with a delay.
+				//va.start(false); //false meaning don't start with a delay.
 
 
 				targetInitializer(); //targetInitializer creates the targets.
