@@ -78,7 +78,7 @@
 				va.fastForward = false;
 				vaLogger();
 				delete window.localStorage["vaLog"]
-				vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+				//vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
 
 				//va.chooseTarget();
 				va.update();
@@ -366,7 +366,7 @@
 							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
 			//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
 							//moves.push({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
-							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz) + cosFuzz), y: this.magnitude * (Math.sin(this.angle + fuzz) + cosFuzz)});
+							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
 							this.onTarget = false;
 							this.theta += 0.04; //the higher this value, the curvier its path. Obviously this is a terrible, robotic way of doing it, but I don't know how to make a fuzzy curved path.
 						}
