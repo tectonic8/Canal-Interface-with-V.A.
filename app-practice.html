@@ -190,6 +190,7 @@
 		  if (isNaN(targetsVerified)) { targetsVerified = 0; }
 		  if (isNaN(tagCount)) { tagCount = 0; }
 		  if (isNaN(verifyCount)) { verifyCount = 0; }
+      if (isNaN(imageId)) { imageId = 15; }
 		  
           targetInitializer(); //targetInitializer creates the targets.
           updateTargets(); //updateTargets draws the targets.
@@ -473,10 +474,6 @@
 //            document.cookie = "vaTargetIndex=" + va.target.index + ";";
 //            document.cookie = "vaTask=" + va.task + ";";
 //            document.cookie = "vaEstimatedTimeLeft=" + va.estimatedTimeLeft + ";";
-
-			if (isNaN(imageId)) {
-				imageId = 15;
-			}
         }
         function readCookie(key){ //reads the cookie as a string. This was also copied straight from stack overflow so I don't know how it works. But it do.
           var result;
