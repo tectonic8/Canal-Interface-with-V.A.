@@ -404,8 +404,11 @@
 				verifyCount = parseInt(readCookie("verifyCount"));
 				
 				if (isNaN(targetsVerified)) { targetsVerified = 0; }
-				if (isNaN(imageId)) { imageId = 15; }
-				var startTime = parseInt(readCookie("startTime")); //startTime is always the time when the entire program first start.
+				if (isNaN(tagCount)) { tagCount = 0; }
+        if (isNaN(verifyCount)) { verifyCount = 0; }
+        if (isNaN(imageId)) { imageId = 15; }
+				
+        var startTime = parseInt(readCookie("startTime")); //startTime is always the time when the entire program first start.
 				var temp = new Date().getTime();
 				var temp2 = parseInt(readCookie("elapsedTime"));
 				timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
@@ -563,7 +566,8 @@
 				}
 				
 				ultraRecorder();
-				lastRole = "navigating"
+				lastRole = 'navigating';
+        
 				if (elapsedTime > 420000) { //data is only logged at the end of the 7 minutes.
 					elapsedTime = 420000;
 					logger();
@@ -782,7 +786,8 @@
 			function ultraRecorder() {
 				endTime = new Date();
 				elapsedTime = endTime - startTime;
-				log += truncate(elapsedTime, 1) + ","  + truncate(gpRecorder[0], 1) + "," + truncate(gpRecorder[1], 1) + "," + targetsVerified + "," + lastRole + "," + accelButton + '\n';
+        var iAccel = accelButton ? 0.03 : -0.03;
+				log += truncate(elapsedTime, 1) + ","  + truncate(gpRecorder[0], 1) + "," + truncate(gpRecorder[1], 1) + "," + iAccel + "," + lastRole + "," + sessionStorage.getItem("num-tags") + "," + sessionStorage.getItem("num-verified-tags") + '\n';
 				//the += "/n" part allows it to write on a new line each time.
 				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
 	//			window.setTimeout(ultraRecorder, 100);
@@ -790,7 +795,7 @@
 			function vaUltraRecorder() {
 				var endTime2 = new Date();
 				elapsedTime = endTime2 - startTime;
-				vaLog += '\n' + truncate(va.position.x, 1) + "," + truncate(va.position.y, 1) + ", " + truncate(va.accel), + "," + truncate(elapsedTime, 1) + "," + va.lastRole;
+				vaLog += truncate(elapsedTime, 1) + "," + truncate(va.position.x, 1) + "," + truncate(va.position.y, 1) + ", " + va.accel, + "," + va.lastRole + "," + va.behavior + '\n';
 				
 				localStorage.setItem("vaLog", vaLog);
 	//			window.setTimeout(vaUltraRecorder, 100);
@@ -877,7 +882,7 @@
 				window.setTimeout(updateClock, 1000);
 			}
 			function updateScore() {
-				scoreDiv.innerHTML = "Verified images: " + targetsVerified;
+				scoreDiv.innerHTML = "Verified tags: " + targetsVerified;
 			}
 		})(window, document);
     </script>
