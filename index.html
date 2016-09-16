@@ -760,6 +760,8 @@
 			function vaTagAndVerify() { //This handle the targets for the va
 				if (!va.onTarget) {
 					va.TagAndVerifyDelayStart = new Date().getTime(); //this time is constantly updated if you are not on the target so you get the exact start time when it is on the target
+          
+          va.lastRole = "navigating";
 				}
 				else if (va.onTarget) {
 					var endTime2 = new Date().getTime();
