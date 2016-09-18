@@ -73,6 +73,12 @@
     VA_SAVE: '/vaSave',
     VERIFY:  'verify.html'
   };
+
+  var ROLES = {
+    NAVIGATING: 'navigating',
+    TAGGING:    'tagging',
+    VERIFYING:  'verifying'
+  }
   
   var STRINGS = {
     DEGREES:              'deg',
@@ -130,9 +136,10 @@
   var vaMiniInitialX = 500;
   var vaMiniInitialY = 690;
   var vaMagnitude    =   0;
-  var vaLastRole     = 'navigating';
-  var vaBehavior     = Math.random() < 0.5;
   var vaAcceleration =   0;
+  
+  var vaLastRole     = '';
+  var vaBehavior     = (Math.random() < 0.5) ? 0 : 1;
   
   /* Starting coordinates for the user agent. */
   var userInitialX     =  50;
@@ -214,14 +221,6 @@
     targetsCoords[i].x -= 9;
     targetsCoords[i].y -= 9;
   }
-  
-  /* One array for each type of target (tag and verify). One additional array
-   * forr the minimap sprites.
-   */
-  var tagTargets        = [];
-  var userVerifyTargets = [];
-  var varVerifyTargets  = [];
-  var targetSprites     = [];
   
   /* 0 means untagged, 1 means user verifies, 2 means va verifies, 3 means
    * nonexistant.
@@ -441,6 +440,8 @@
       } else {
         window.setTimeout(gameLoop, framesPerSecond60);
       }
+    } else {
+      window.setTimeout(gameLoop, framesPerSecond60);
     }
   };
   
@@ -552,7 +553,7 @@
         targetTracker[idx] = 2;
         
         /* Used in the log. */
-        lastRole = 'tagging';
+        user.lastRole = ROLES.TAGGING;
         lastTargetIndex = idx;
         imageId += 1;
         tagCount += 1; // TODO: Update this on return from tagging.
@@ -560,7 +561,7 @@
         window.location.replace(LOCATIONS.TAG);
       } else if (targetClicked.type === 1) {
         targetTracker[idx] = 3;
-        lastRole = 'verifying';
+        user.lastRole = ROLES.VERIFYING;
         imageId += 1;
         targetsVerified += 1;
         verifyCount += 1;
@@ -568,6 +569,8 @@
         logCookie();
         window.location.replace(LOCATIONS.VERIFY);
       }
+    } else {
+      user.lastRole = ROLES.NAVIGATING;
     }
   };
   
@@ -621,11 +624,10 @@
       x:            user.position.x,
       y:            user.position.y,
       acceleration: user.acceleration,
-      action:       'navigating',
+      action:       user.lastRole,
       time:         elapsedTime
     };
     user.log.append(entry);
-    // TODO: log data to user agent.
   };
   
   function vaUltraRecorder() {
@@ -641,7 +643,6 @@
       time:          elapsedTime
     };
     va.log.append(entry);
-    // TODO: log data to virtual agent.
   };
   
   function logger() {
@@ -700,12 +701,12 @@
     document.cookie = "startTime=" + startTime + ";";
     document.cookie = "elapsedTime=" + elapsedTime + ";";
     document.cookie = "vaOnTarget=" + va.onTarget + ";";
-    document.cookie = "vaTargetX=" + va.target.x + ";";
-    document.cookie = "vaTargetY=" + va.target.y + ";";
+    document.cookie = "vaTargetX=" + va.target.xPos + ";";
+    document.cookie = "vaTargetY=" + va.target.yPos + ";";
     document.cookie = "vaTargetIndex=" + va.target.index + ";";
     document.cookie = "vaTask=" + va.task + ";";
-    document.cookie = "behavior= " + va.behavior + ";";
-    document.cookie = "magnitude= " + va.magnitude + ";";
+    document.cookie = "behavior=" + va.behavior + ";";
+    document.cookie = "magnitude=" + va.magnitude + ";";
     document.cookie = "acceleration=" + va.acceleration + ";";
   };
   
@@ -778,13 +779,26 @@
       canvas.style.marginLeft = canvasLeftMargin + STRINGS.PX;
       minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
       updateClock();
+      va.start();
+      va.update();
       gameLoop();
     });
     
     NULL_TARGET = new Target(1000, 3500, -1, -1);
     
+    /* Initialize targets. */
+    for (var idx = 0; idx < 20; idx++) {
+      if (targetTracker[idx] !== 3) {
+        targets.push(new Target(
+          targetsCoords[idx].x,
+          targetsCoords[idx].y,
+          idx,
+          targetTracker[idx]
+        ));
+      }
+    }
+    
     /* Initialize the virtual agent. */
-    // TODO: initialize virtual agent.
     va = new VirtualAgent(
       vaInitialX,
       vaInitialY,
@@ -792,9 +806,9 @@
       vaMiniInitialY,
       vaMagnitude,
       vaAcceleration,
-      vaBehavior);
-    // TODO: Choose target, initialize, and update. */
-    va.start();
+      vaBehavior,
+      vaLastRole
+    );
     
     /* Initialize user agent. */
     user = new UserAgent(
@@ -804,17 +818,6 @@
       userMiniInitialY
     );
     
-    /* Initialize targets. */
-    for (var idx = 0; idx < 20; idx++) {
-      if (targetTracker[idx] !== 3) {
-        targets.push(new Target(
-          targetsCoords[idx].x,
-          targetsCoords[idx].y,
-          idx,
-          TARGET_TYPES.TAG
-        ));
-      }
-    }
     updateScore();
   });
   
@@ -902,7 +905,7 @@
       this.miniPosition = {x: mx, y: my};
       this.magnitude = 0;
       this.acceleration = 0;
-      this.lastRole = 'navigating';
+      this.lastRole = ROLES.NAVIGATING;
       this.log = new Log();
     }
     
@@ -925,7 +928,7 @@
   };
   
   class VirtualAgent extends Agent {
-    constructor(x, y, mx, my, magnitude, acceleration, behavior) {
+    constructor(x, y, mx, my, magnitude, acceleration, behavior, lastRole) {
       super(x, y, mx, my);
       this.behavior     = behavior;
       this.element      = buddySprite;
@@ -934,15 +937,16 @@
       this.magnitude    = magnitude;
       this.acceleration = acceleration;
       this.target       = null;
+      if ('' !== lastRole) { this.lastRole = lastRole; }
       this.setPosition();
       // TODO: fast forward behavior.
     }
     
     initialize(addDelay) {
-      this.counter = 0; // TODO: check if this is necessary
       this.theta = 0;
       this.saveSpeed = 0;
       this.rotate = 0;
+      this.counter = 0;
       
       var now = new Date().getTime();
       this.onTarget = false;
@@ -979,7 +983,6 @@
      */
     start(addDelay) {
       if (!this.initialized) { this.initialize(addDelay); }
-      this.lastRole = 'navigating';
       this.handleFlash();
       this.tagAndVerify();
       if (addDelay) { this.update(); }
@@ -991,8 +994,8 @@
     handleFlash() {
       if (this.onTarget) {
         if (this.element.style.visibility === STYLES.HIDDEN) {
-          this.element.style.visibility     = STYLE.VISIBLE;
-          this.miniElement.style.visibility = STYLE.VISIBLE;
+          this.element.style.visibility     = STYLES.VISIBLE;
+          this.miniElement.style.visibility = STYLES.VISIBLE;
         } else {
           this.element.style.visibility     = STYLES.HIDDEN;
           this.miniElement.style.visibility = STYLES.HIDDEN;
@@ -1008,11 +1011,12 @@
     /* Handle the targets for the virtual agent. */
     tagAndVerify() {
       var now = new Date().getTime();
-      if (!va.onTarget) {
+      if (!this.onTarget) {
         /* This time is constantly updated if you are not on the target so you
          * get  the exact start time when it is on the target.
          */
         this.tagAndVerifyDelayStart = now;
+        this.lastRole = ROLES.NAVIGATING;
       } else {
         var endTime = now;
         /* There is only one random index for both of these because both arrays
@@ -1021,21 +1025,16 @@
         var timeToTag =
           tagTimeData[this.randomTaggingVerifyingTimeIndex] * 1000;
         
-        // TODO: fastfowarding
         if (this.task === 0 && 
           endTime - this.tagAndVerifyDelayStart >= timeToTag) {
           /* This becomes a user verifies target. */
           targetTracker[this.target.index] = 1;
           
-          //targets[this.target.index].element.src = IMAGES.USER_VERIFY_TARGET;
-          //targets[this.target.index].miniElement.src = 
-          //  IMAGES.USER_VERIFY_TARGET;
-          //setAttribute(
-          //  ATTRIBUTES.ID, STRINGS.USER_VERIFY_TARGET + va.target.index
-          //);
-          // TODO: minimap targets.
           updateTargets();
-          this.lastRole = 'tagging';
+          this.target.element.src = IMAGES.VERIFY_TARGET;
+          this.target.miniElement.src = IMAGES.VERIFY_TARGET;
+          
+          this.lastRole = ROLES.TAGGING;
           /* Refreshes all the values for the va, but doesn't restart any of the
            * main functions. True means add the delay. But if it's
            * fastforwarding it won't add the delay (see if statement on line
@@ -1045,18 +1044,15 @@
           this.initialize(true);
         } else if (this.task === 1 && 
           endTime - this.tagAndVerifyDelayStart >= timeToVerify) {
-            delete targetTracker[this.target.index];
+            targetTracker[this.target.index] = 3;
             targetsVerified += 1;
             updateScore();
             updateTargets();
-            
-            this.lastRole = 'verifying';
+            this.target.element.parentNode.removeChild(this.target.element);
+            this.target.miniElement.parentNode.removeChild(this.target.miniElement);
+            this.lastRole = ROLES.VERIFYING;
             this.initialize(true);
         }
-        
-        // TODO: fastforwarding
-        /* Tag and verify at ten fps. */
-        window.setTimeout(vaTagAndVerify, 100);
       }
     }
     
@@ -1064,7 +1060,9 @@
       var vaTarget           = null;
       var tagTarget          = null;
       var verifyTarget       = null;
-      var noTargetsAvailable = targetTracker.length === 0;
+      var noTargetsAvailable = targets.every(function(target, index, arr) {
+        target.index === 1;
+      });
       
       /* Just a random location to go when it's done. Otherwise it will search
        * for targets until it breaks.
@@ -1073,22 +1071,26 @@
       else {
         tagTarget = this.closestTag();
         verifyTarget = this.closestVerify();
-        if (Math.random() < preferenceData[this.behavior] &&
-          null !== tagTarget) {
-          vaTarget = tagTarget;
-        }
-        else {
-          vaTarget = verifyTarget;
+        if (Math.random() < preferenceData[this.behavior]) vaTarget = tagTarget;
+        else vaTarget = verifyTarget;
+        
+        if (null === vaTarget) {
+          if (null === tagTarget && null !== verifyTarget) {
+            vaTarget = verifyTarget;
+          } else if (null !== tagTarget && null === verifyTarget) {
+            vaTarget = tagTarget;
+          } else {
+            vaTarget = NULL_TARGET;
+          }
         }
       }
-      if (null === vaTarget) { vaTarget = NULL_TARGET; }
       this.target = vaTarget;
       
       if (targetTracker[this.target.index] === 0) this.task = 0;
       else if (targetTracker[this.target.index] === 2) this.task = 1;
       
       this.startingDistanceToTarget = this.distance(
-        this.position.x, this.position.y, this.target.x, this.target.y
+        this.position.x, this.position.y, this.target.xPos, this.target.yPos
       );
     }
     
@@ -1099,7 +1101,7 @@
       for (var idx = 0; idx < targets.length; ++idx) {
         if (targetTracker[idx] === 0) {
           nextDistance = this.distance(
-            this.position.x, this.position.y, targets[idx].x, targets[idx].y
+            this.position.x, this.position.y, targets[idx].xPos, targets[idx].yPos
           );
           if (nextDistance < leastDistance) {
             leastDistance = nextDistance;
@@ -1119,7 +1121,7 @@
         if (!this.fastForward || idx !== lastTargetIndex) {
           if (targetTracker[idx] === 2) {
             nextDistance = this.distance(
-              this.position.x, this.position.y, targets[idx].x, targets[idx].y
+              this.position.x, this.position.y, targets[idx].xPos, targets[idx].yPos
             );
             if (nextDistance < leastDistance) {
               leastDistance = nextDistance;
@@ -1138,15 +1140,15 @@
        * canvas starts at roughly that offset.
        */
       return Math.atan2(
-        this.target.y + (this.position.y + 4412),
-        this.target.x - (this.position.x +   14)
+        -this.target.yPos + this.position.y,
+         this.target.xPos - this.position.x
       );
     }
     
     findPath() {
       var options = [];
       var startDistance = this.distance(
-        this.position.x, this.position.y, this.target.x, this.target.y
+        this.position.x, this.position.y, this.target.xPos, this.target.yPos
       );
       /* if close to target, just go to the target, don't navigate through
        * canal.
@@ -1160,12 +1162,12 @@
        * those 24 directions.
        */
       for (var direction = 0; direction < 24; ++direction) {
-        for (var steps = 0; steps < 1000; steps += 10) {
+        for (var steps = 1; steps < 1001; steps += 10) {
           var x = this.position.x + steps * Math.cos(direction * Math.PI / 12);
           var y = this.position.y - steps * Math.sin(direction * Math.PI / 12);
           if (inside([x, y], vaCanalTriacontapentagon)) {
-            if (endDistance < startDistance) options[tryDirection] = steps; 
-            var endDistance = this.distance(x, y, this.target.x, this.target.y);
+            if (endDistance < startDistance) options[direction] = steps; 
+            var endDistance = this.distance(x, y, this.target.xPos, this.target.yPos);
             /* if it takes va closer, save it. */
             if (endDistance < startDistance) {
               options[direction] = steps;
@@ -1184,8 +1186,8 @@
     
     /* just distance formula. */
     distance(x1, y1, x2, y2) {
-      x1 +=   14;
-      y1 += 4412;
+//      x1 +=   14;
+//      y1 += 4412;
       return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
     
@@ -1194,7 +1196,7 @@
       var now = new Date().getTime();
       var endTime = now;
       if (this.counter === 0 && 
-        endTime - this.StartDelayStart < this.startDelay &&
+        endTime - this.startDelayStart < this.startDelay &&
         !this.fastForward) {
         window.setTimeout(this.update.bind(this), framesPerSecond60);
           
@@ -1204,7 +1206,7 @@
         vaUpdateMap({x: 0, y: 0});
       } else {
         var currentDistanceToTarget = this.distance(
-          this.position.x, this.position.y, this.target.x, this.target.y
+          this.position.x, this.position.y, this.target.xPos, this.target.yPos
         );
         var progress = 
           1 - currentDistanceToTarget / this.startingDistanceToTarget;
@@ -1212,7 +1214,7 @@
         /* since the data is a list of proportions at which there is switch,
          * this code figure out if it is supposed to acc or decel.
          */
-        if (progress < accelerationData[this.randomAccelIndex][this.counter]) {
+        if (progress <= accelerationData[this.randomAccelIndex][this.counter]) {
           this.acceleration  = 0.03 * (this.counter % 2 === 0 ? 1 : -1);
           this.magnitude    += this.acceleration;
         } else {
@@ -1261,8 +1263,8 @@
          */
         } else if (currentDistanceToTarget <= 85 && this.killDistance > 4) {
           this.counter = accelerationData[this.randomAccelIndex].length - 1;
-          var dx = this.magnitude * Math.cos(this.angle + fuzz + cosFuzz);
-          var dy = this.magnitude * Math.sin(this.angle + fuzz + cosFuzz);
+          var dx = this.magnitude * (Math.cos(this.angle + fuzz) + cosFuzz);
+          var dy = this.magnitude * (Math.sin(this.angle + fuzz) + cosFuzz);
           var x  = this.position.x + dx;
           var y  = this.position.y - dy;
           /* without this va would only bounce back when it is past 85 pixels
@@ -1278,10 +1280,12 @@
             /* go directly to target. */
             if (currentDistanceToTarget > 35 && this.killDistance <= 85) {
               this.angle = this.chooseDirection();
+              dx =  this.magnitude * (Math.cos(this.angle + fuzz) + cosFuzz);
+              dy =  this.magnitude * (Math.sin(this.angle + fuzz) + cosFuzz);
             }
-          
-            this.position.x += dx;
-            this.position.y -= dy;
+                      
+            this.position.x +=  dx
+            this.position.y -=  dy
           
             vaUpdateMap({x: dx, y: dy});
           
@@ -1290,7 +1294,10 @@
              * terrible, robotic way of doing it, but I don't know how to make a
              * fuzzy curved path.
              */
-            this.theta += Math.random() - 0.333;
+            //this.theta += Math.random() - 0.333;
+            this.theta += 0.04;
+          } else {
+            vaUpdateMap({x: 0, y: 0});
           }
         } else if (currentDistanceToTarget < 35 &&
           inside([this.position.x, this.position.y], vaCanalTriacontapentagon)) {
@@ -1298,6 +1305,7 @@
           vaUpdateMap({x: 0, y: 0});
         }
         
+        this.tagAndVerify();
         window.setTimeout(this.update.bind(this), framesPerSecond60);
         vaUltraRecorder();
       }
