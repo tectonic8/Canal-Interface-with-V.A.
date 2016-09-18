@@ -47,6 +47,10 @@ app.get('/verifyRedirect', function (req, res) {
   imageCount++;
 });
 
+app.get('', function(req, res) {
+  return res.redirect('/survey');
+});
+
 app.get('/', function(req, res){
 //  return res.sendFile(__dirname + '/index.html');
 	console.log('HONK h0nk');
