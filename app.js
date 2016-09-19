@@ -92,7 +92,7 @@ app.get('/thanks', function(req, res) {
 
 app.get('/reset', function(req, res) {
   req.session.reset();
-  res.status(404).send('not found');
+  return res.sendFile(__dirname + '/reset.html');
 });
 
 app.get('/tag-practice', function(req, res) {

@@ -260,8 +260,10 @@
       window.location.replace('index.html');
     };
     
-    document.getElementById(ELEMENT_IDS.FINISH_BUTTON).addEventListener(EVENTS.CLICK, handleFinish.bind(this));
-    
+    var finish = document.getElementById(ELEMENT_IDS.FINISH_BUTTON);
+    if (null !== finish) {
+      finish.addEventListener(EVENTS.CLICK, handleFinish.bind(this));
+    }
   };
   
   Wrapper.prototype.handleClick = function(event) {

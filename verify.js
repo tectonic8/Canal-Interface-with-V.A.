@@ -392,10 +392,13 @@
       this.element.appendChild(tagToVerify.element);
     }
     
-    document.getElementById(ELEMENT_IDS.FINISH_BUTTON).addEventListener(EVENTS.CLICK, (function(event) {
-      document.cookie = "numVerifiedTags=" + this.numVerifiedTags + ";";
-      window.location.replace('index.html');
-    }).bind(this));
+    var finish = document.getElementById(ELEMENT_IDS.FINISH_BUTTON);
+    if (null !== finish) {
+      finish.addEventListener(EVENTS.CLICK, (function(event) {
+        document.cookie = "numVerifiedTags=" + this.numVerifiedTags + ";";
+        window.location.replace('index.html');
+      }).bind(this));
+    }
     
     events.subscribe(TOPICS.ACCEPT, this.updateVerifiedTags.bind(this));
     events.subscribe(TOPICS.ACCEPT_EDIT, this.updateVerifiedTags.bind(this));
