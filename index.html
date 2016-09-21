@@ -14,6 +14,7 @@
 		#miniSprite1 {position:absolute; left:500px; top:690px; width:20px; height:20px; z-index:86}
 		#miniSprite2 {position:absolute; left:500px; top:690px; width:20px; height:20px; z-index:85}
 		.target {position: absolute; z-index:83}
+    button {position: relative; z-index: 101; margin: 0 auto; font-size: 20px; font-family: Arial, Helvetica, sans-serif;}
 	</style>
   </head>
   <body>
@@ -65,26 +66,26 @@
 				canvas.style.marginTop = canvasTopMargin + "px";
 				minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
 			});
-			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
-        va.initialize(false)
-				va.fastForward = true;
-				var frameCount = timeSpentTaggingVerifying * 60/1000;
-				for (var t = 0; t < frameCount; ++t) {
-					va.update(); //fastforwarding
-					if (t == Math.floor(frameCount)) { // flag for myself
-						continue;
-					}
-				}
-				va.fastForward = false;
 
-				vaLogger();
-				delete window.localStorage["vaLog"];
-        va.start(false);
-				va.update();
 
-				ctx.drawImage(gowanusMap, 0, 0);
-				minimapContext.drawImage(canvas, 0, 480, 4066, 5000, 0, 0, 200, 228);
-			});
+      if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
+  			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
+          va.initialize(false)
+		  		va.fastForward = true;
+			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
+				  for (var t = 0; t < frameCount; ++t) {
+					  va.update(); //fastforwarding
+				  }
+				  va.fastForward = false;
+
+				  vaLogger();
+//				    delete window.localStorage["vaLog"];
+          va.start(false);
+				  va.update();
+        });
+//				ctx.drawImage(gowanusMap, 0, 0);
+//				minimapContext.drawImage(canvas, 0, 480, 4066, 5000, 0, 0, 200, 228);
+			}
 			var userSprite = document.getElementById(ELEMENT_IDS.userSprite);
 			var buddySprite = document.getElementById(ELEMENT_IDS.buddySprite);
 			var miniSprite1 = document.getElementById(ELEMENT_IDS.miniSprite1);
@@ -175,7 +176,7 @@
 				
 				initialize(addDelay) {
 					this.magnitude = 0;
-					this.onTarget = false;
+//					this.onTarget = false;
 					this.counter = 0;
 					this.randomTaggingVerifyingTimeIndex = Math.floor(Math.random()*5);
 					this.tagAndVerifyDelayStart = new Date().getTime();
@@ -195,13 +196,14 @@
 					else if (this.randomAccelIndex >= 44  &&  this.randomAccelIndex <= 47)
 						this.randomAccelIndex = 3;
 						
-					this.chooseTarget();
+//					this.chooseTarget();
 				}
 				start(addDelay) {
 				/* Choose the first target, then wait for a random amount of time,
 				 * before moving toward the target. For now, just wait 500 ms.
 				 */
 					this.initialize(addDelay); //delay is optional, depending on when the va is being started. it's a boolean.
+          this.chooseTarget();
 					handleFlash();
 					vaTagAndVerify();
 					if (addDelay) this.update();
@@ -396,7 +398,8 @@
 			var aButton = false;
 			var accelButton = false;
 			var gamepads = [];
-			var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
+			var gpIdx = -1;
+      var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
 			var gpSpriteCoords = [50, 470];
 			var magnitude = 0;
 			var direction = [0, 0];
@@ -442,7 +445,12 @@
 				
 				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), readCookie("behavior")); //it is drawn onto the old position.
 				//va.start(false); //false meaning don't start with a delay.
-
+        var vaTargetX = parseFloat(readCookie("vaTargetX"));
+        var vaTargetY = parseFloat(readCookie("vaTargetY"));
+        var vaTargetIndex = parseInt(readCookie("vaTargetIndex"));
+        var vaOnTarget = readCookie("vaOnTarget") === 'true' ? true : false
+        va.target = {x: vaTargetX, y: vaTargetY, index: vaTargetIndex};
+        va.onTarget = vaOnTarget;
 
 				targetInitializer(); //targetInitializer creates the targets.
 				updateTargets(); //updateTargets draws the targets.
@@ -467,16 +475,26 @@
 				
 				updateClock();
 				updateScore();
+        pollGamepads();
 			}
 			else { //if there are no cookies:
-				document.cookie = 'deleted=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
-				var startTime = new Date().getTime();
-				updateClock();
-				updateScore();
-				targetInitializer();
-				var behavior = (Math.random() < 0.5) ? 0 : 1;
-				var va = new VirtualAgent(20, 550, behavior);
-				va.start(true);//true meaning start with the delay.
+				var va = null;
+        var startTime = 0;
+        document.cookie = 'deleted=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        var button = document.createElement('button');
+        button.addEventListener('click', function(event) {
+          button.parentElement.removeChild(button);
+          startTime = new Date().getTime();
+          updateClock();
+          updateScore();
+          targetInitializer();
+          var behavior = (Math.random() < 0.5) ? 0 : 1;
+          va = new VirtualAgent(20, 550, behavior);
+          va.start(true);//true meaning start with the delay.
+          pollGamepads();
+        });
+        button.textContent = 'start';
+        document.body.appendChild(button);        
 			}
 			
 			function targetInitializer() { //I never really figured out how to use the Target class properly, so now I just use this method in conjunction with the class.
@@ -528,9 +546,9 @@
 
 			
 			
-			if (!('ongamepadconnected' in window)) {
-				interval = setInterval(pollGamepads, 500);
-			}
+			//if (!('ongamepadconnected' in window)) {
+			//	interval = setInterval(pollGamepads, 500);
+			//}
 			function pollGamepads() { //This searches for the gamepad at multiple indices. For some reason it isn't always at index 0.
 				gamepads = navigator.getGamepads();
 				for (var i = 0; i < gamepads.length; i++) {
@@ -539,8 +557,13 @@
 						console.log("Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.");
 						clearInterval(interval);
 					}
+          if (gp.id.indexOf('STANDARD GAMEPAD Vendor: 046d') !== -1 && gp.id.indexOf("Product: c216") !== -1) {
+            gpIdx = i;
+          }
 				}
-				if ((gamepads[0]) != "undefined") { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
+
+
+				if (gpIdx !== -1) { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
 	//				updateGP();
 					gameLoop();
 	//				ultraRecorder();
@@ -558,10 +581,10 @@
 		
 			function gameLoop() {
 				gamepads = navigator.getGamepads(); //in chrome, it needs to do this any time it wants input. The entire syntax for handling these gamepads seems to differ a lot between browsers.
-				stick[0] = ((gamepads[0]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
-				stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
-				aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
-				accelButton = (gamepads[0]).buttons[5].pressed;
+				stick[0] = ((gamepads[gpIdx]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
+				stick[1] = ((gamepads[gpIdx]).axes[1]); //This is the y-axis. 1 is all the way down.
+				aButton = (gamepads[gpIdx]).buttons[0].pressed; //this is a boolean
+				accelButton = (gamepads[gpIdx]).buttons[5].pressed;
 				
 				if (accelButton) {
 					magnitude += 0.03;
@@ -698,6 +721,7 @@
 						//logger(); //It also logs before targets, not just at the end of the 7 minutes.
 						//vaLogger();
 
+            localStorage.setItem("userLog", log);
 						window.location.replace('tag.html'); // = "http://localhost:3000/tag.html"; //I stopped using server requests since I stopped using html templates.
 					}
 				}
@@ -714,7 +738,7 @@
 						logCookie();
 						//logger();
 						//vaLogger();
-						
+						localStorage.setItem("vaLog", vaLog);
 						window.location.replace('verify.html'); // = "http://localhost:3000/verify.html";
 					}
 				}
@@ -774,10 +798,10 @@
 					var endTime2 = new Date().getTime();
 					var timeToTag = tagTimeData[va.randomTaggingVerifyingTimeIndex]*1000; //there is only one random index for both of these because both arrays are the same size.
 					var timeToVerify = verifyTimeData[va.randomTaggingVerifyingTimeIndex]*1000;
-					if (va.fastForward) {
-						timeToTag = timeToTag/10; //Cuts the delay if fast forwarding.
-						timeToVerify = timeToVerify/10;
-					}
+//					if (va.fastForward) {
+//						timeToTag = timeToTag/10; //Cuts the delay if fast forwarding.
+//						timeToVerify = timeToVerify/10;
+//					}
 					if ((va.task == 0)  &&  ((endTime2 - va.TagAndVerifyDelayStart) >= (timeToTag))) {
 						if (tagTargets[va.target.index]) { tagTargets[va.target.index].remove(); }
 						if (targetSprites[va.target.index]) { targetSprites[va.target.index].remove(); }
@@ -807,10 +831,9 @@
 						va.initialize(true);
 					}
 				}
-				if(va.fastForward)
-					window.setTimeout(vaTagAndVerify, 10); //100fps if fastforwarding
-				else 
+				if(!va.fastForward) {
 					window.setTimeout(vaTagAndVerify, 100); //10fps
+        }
 			}
 
 			
@@ -820,7 +843,7 @@
         var iAccel = accelButton ? 0.03 : -0.03
 				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + iAccel + ", " + lastRole + ", " + targetsVerified + ", " + sessionStorage.getItem("num-tags") + ", " + sessionStorage.getItem("num-verified-tags") + '\n';
 				//the += "/n" part allows it to write on a new line each time.
-				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
+//				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
 	//			window.setTimeout(ultraRecorder, 100);
 			}
 			function vaUltraRecorder() {
@@ -828,7 +851,7 @@
 				elapsedTime = endTime2 - startTime;
 				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + va.accel + ", "+ va.lastRole + ", " + va.behavior + '\n';
 				
-				localStorage.setItem("vaLog", vaLog);
+//				localStorage.setItem("vaLog", vaLog);
 	//			window.setTimeout(vaUltraRecorder, 100);
 			}
 			function truncate (num, digits) {
