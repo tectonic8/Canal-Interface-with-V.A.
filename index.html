@@ -556,9 +556,10 @@
 					if (gp) {
 						console.log("Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.");
 						clearInterval(interval);
-					}
-          if (gp.id.indexOf('STANDARD GAMEPAD Vendor: 046d') !== -1 && gp.id.indexOf("Product: c216") !== -1) {
-            gpIdx = i;
+					
+            if (gp.id.indexOf('STANDARD GAMEPAD Vendor: 046d') !== -1 && gp.id.indexOf("Product: c216") !== -1) {
+              gpIdx = i;
+            }
           }
 				}
 
