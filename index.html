@@ -65,6 +65,17 @@
 				ctx.drawImage(this, 0, 0); 
 				canvas.style.marginTop = canvasTopMargin + "px";
 				minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
+        var button = document.createElement('button');
+        button.addEventListener('click', function(event) {
+          button.parentElement.removeChild(button);
+          startTime = new Date().getTime();
+          var behavior = (Math.random() < 0.5) ? 0 : 1;
+          va = new VirtualAgent(20, 550, behavior);
+          va.start(true);//true meaning start with the delay.
+          pollGamepads();
+        });
+        button.textContent = 'start';
+        document.body.appendChild(button);
 			});
 
 
@@ -481,20 +492,10 @@
 				var va = null;
         var startTime = 0;
         document.cookie = 'deleted=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        var button = document.createElement('button');
-        button.addEventListener('click', function(event) {
-          button.parentElement.removeChild(button);
-          startTime = new Date().getTime();
-          updateClock();
-          updateScore();
-          targetInitializer();
-          var behavior = (Math.random() < 0.5) ? 0 : 1;
-          va = new VirtualAgent(20, 550, behavior);
-          va.start(true);//true meaning start with the delay.
-          pollGamepads();
-        });
-        button.textContent = 'start';
-        document.body.appendChild(button);        
+        updateClock();
+				updateScore();
+        targetInitializer(); //targetInitializer creates the targets.
+				updateTargets(); //updateTargets draws the targets.
 			}
 			
 			function targetInitializer() { //I never really figured out how to use the Target class properly, so now I just use this method in conjunction with the class.
@@ -818,7 +819,9 @@
 						updateTargets();
 						
 						va.lastRole = "tagging";
+            va.onTarget = false;
 						va.initialize(true); //refreshes all the values for the va, but doesn't restart any of the main functions. True means add the delay. But if it's fastforwarding it won't add the delay (see if statement on line 320). In hindsight, it should still add the delay, just divided by 10.
+            va.chooseTarget();
 					}
 					else if ((va.task == 1)  &&  ((endTime2 - va.TagAndVerifyDelayStart) >= (timeToVerify))) {
 						vaVerifyTargets[va.target.index].remove();
@@ -829,7 +832,9 @@
 						updateTargets();
 						
 						va.lastRole = "verifying";
+            va.onTarget = false;
 						va.initialize(true);
+            va.chooseTarget();
 					}
 				}
 				if(!va.fastForward) {
