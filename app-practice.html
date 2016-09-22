@@ -249,17 +249,19 @@
           interval = setInterval(pollGamepads, 500);
         }
         function pollGamepads() { //This searches for the gamepad at multiple indices. For some reason it isn't always at index 0.
-          gamepads = navigator.getGamepads();
-          for (var i = 0; i < gamepads.length; i++) {
-            var gp = gamepads[i];
-            if (gp) {
-              console.log("Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.");
-              clearInterval(interval);
-            }
-          }
-          if ((gamepads[0]) != "undefined") { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
-            updateGP();
-            gameLoop();
+          while(gamepads[0] === undefined) {
+              gamepads = navigator.getGamepads();
+              for (var i = 0; i < gamepads.length; i++) {
+                var gp = gamepads[i];
+                if (gp) {
+                  console.log("Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.");
+                  clearInterval(interval);
+                }
+              }
+              if ((gamepads[0]) != "undefined") { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
+                updateGP();
+                gameLoop();
+              }
           }
         }
         function updateGP() {//this loops independently at 30fps. I think this was done back when we were trying to do the frame buffering. It could probably go back into gameLoop.

@@ -76,7 +76,9 @@
             var behavior = (Math.random() < 0.5) ? 0 : 1;
             va = new VirtualAgent(20, 550, behavior);
             va.start(true);//true meaning start with the delay.
-            pollGamepads();
+            while (gpIdx === -1) {
+              pollGamepads();
+            }
           });
           button.textContent = 'start';
           document.body.appendChild(button);
