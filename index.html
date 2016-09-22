@@ -76,9 +76,7 @@
             var behavior = (Math.random() < 0.5) ? 0 : 1;
             va = new VirtualAgent(20, 550, behavior);
             va.start(true);//true meaning start with the delay.
-            while (gpIdx === -1) {
-              pollGamepads();
-            }
+            interval = setInterval(pollGamepads, 500);
           });
           button.textContent = 'start';
           document.body.appendChild(button);
@@ -94,8 +92,11 @@
             vaTagAndVerify();
 				  }
 				  va.fastForward = false;
-
+          
 				  vaLogger();
+          
+          updateTargets();
+          
           va.startDelayStart = new Date().getTime();
           va.tagAndVerifyDelayStart = new Date().getTime();
 				  va.update();
@@ -464,7 +465,7 @@
 				}
 			}
 
-			var interval; //All the gamepad variables are initialized here.
+			var interval = null; //All the gamepad variables are initialized here.
 			var stick = [0, 0];
 			var aButton = false;
 			var accelButton = false;
@@ -518,13 +519,13 @@
         va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
 
 				targetInitializer(); //targetInitializer creates the targets.
-				updateTargets(); //updateTargets draws the targets.
+//				updateTargets(); //updateTargets draws the targets.
 
 				vaLog = localStorage.getItem("vaLog");
 				
 				updateClock();
 				updateScore();
-        pollGamepads();
+        interval = setInterval(pollGamepads, 500);;
 			}
 			else { //if there are no cookies:
 				var va = null;
@@ -588,14 +589,13 @@
 					var gp = gamepads[i];
 					if (gp) {
 						console.log("Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.");
-						clearInterval(interval);
 					
             if (gp.id.indexOf('STANDARD GAMEPAD Vendor: 046d') !== -1 && gp.id.indexOf("Product: c216") !== -1) {
               gpIdx = i;
+              clearInterval(interval);
             }
           }
 				}
-
 
 				if (gpIdx !== -1) { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
 					gameLoop();
