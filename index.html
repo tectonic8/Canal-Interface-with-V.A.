@@ -310,7 +310,7 @@
 					var leastDistance = 10000;
 					var nextDistance = 0;
 					for (var i = 0; i <= 19; i++) {
-            if (i == lastTargetIndex  && this.fastforward) continue; // don't go after a point the user is tagging.
+            if (i == lastTargetIndex) continue; // don't go after a point the user is tagging.
 						if (targetTracker[i] == 0) {
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
 							if (nextDistance < leastDistance) {
@@ -733,7 +733,9 @@
 						logCookie();
 						//logger(); //It also logs before targets, not just at the end of the 7 minutes.
 						//vaLogger();
-
+            if (va.target.index === i) {
+              va.chooseTarget();
+            }
             localStorage.setItem("userLog", log);
 						window.location.replace('tag.html'); //I stopped using server requests since I stopped using html templates.
 					}
