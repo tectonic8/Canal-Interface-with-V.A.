@@ -85,6 +85,7 @@
 
       if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
   			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
+          targetInitializer(); //targetInitializer creates the targets.
 		  		va.fastForward = true;
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
 				  for (var t = 0; t < frameCount; ++t) {
@@ -458,6 +459,7 @@
 			//					socket.emit('vaMove', {x: 0, y: 0});
 					}
 			//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
+          vaUpdateMap({x: 0, y: 0});
 					vaUltraRecorder();
 					if (!this.fastForward) {
 						window.setTimeout(this.update.bind(this), (1000/60));
@@ -518,7 +520,7 @@
 				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), readCookie("vaBehavior")); //it is drawn onto the old position.
         va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
 
-				targetInitializer(); //targetInitializer creates the targets.
+//				targetInitializer(); //targetInitializer creates the targets.
 //				updateTargets(); //updateTargets draws the targets.
 
 				vaLog = localStorage.getItem("vaLog");
@@ -568,7 +570,7 @@
 					}
 					else if (targetTracker[i] == 3) continue;
 				}
-				updateTargets();
+//				updateTargets();
 			}
 			userSprite.style.left = gpSpriteCoords[0] + "px";
 			userSprite.style.top = gpSpriteCoords[1] + "px";
