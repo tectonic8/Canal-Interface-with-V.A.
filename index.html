@@ -93,6 +93,9 @@
             vaTagAndVerify();
 				  }
 				  va.fastForward = false;
+
+					if (targetTracker[va.target.index] == 0) va.task = 0;
+					else if (targetTracker[va.target.index] == 2) va.task = 1;
           
 				  vaLogger();
           
