@@ -86,15 +86,30 @@
       if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
   			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
           targetInitializer(); //targetInitializer creates the targets.
+
 		  		va.fastForward = true;
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
-				  for (var t = 0; t < frameCount; ++t) {
-					  va.update(); //fastforwarding
-            vaTagAndVerify();
+			  	stopFrames = 0;
+			  	// "tag target taken fix"
+          		if (targetTracker[va.target.index] != lastTargetState) { // User tagged VA's tag target, we need to stop and pick a new target
+          			va.accel = -0.1;
+          			for ( ;(stopFrames < frameCount) || (va.magnitude > 0 ); stopFrames++) {
+          				va.stop(); // If VA has to stop() more than "frameCount" times, it will continue stopping in 60 fps and (should) come back here when its magnitude is 0
+          			}
+          			// choose a new target that isnt the one taken
+          			va.chooseTarget(va.target.index); // Choose a target that isn't the one it wanted previously
+          		}
+
+          		frameCount -= stopFrames;
+          		if (frameCount == 0) va.fastForward = false;
+
+				for (var t = 0; t < frameCount; ++t) {
+					va.update(); //fastforwarding
+            		vaTagAndVerify();
 				  }
 				  va.fastForward = false;
 
-					if (targetTracker[va.target.index] == 0) va.task = 0;
+					if (targetTracker[va.target.index] == 0) va.task = 0; // May not need this after "tag target taken" fix
 					else if (targetTracker[va.target.index] == 2) va.task = 1;
           
 				  vaLogger();
@@ -282,21 +297,21 @@
 					if (addDelay) this.update();
 				}
 				
-				chooseTarget() {
+				chooseTarget(takenTarget = -1) {
 				/* Choose the current target for the virtual agent. */
 					var vaTarget = null;
 					var tagTarget = null;
 					var verifyTarget = null;
 					var thereAreNoAvailableTargets = true;
 					for (var i = 0; i <= 19; i++) {
-						if ((targetTracker[i] == 0) || (targetTracker[i] == 2)) thereAreNoAvailableTargets = false;
+						if ((i != takenTarget) && ((targetTracker[i] == 0) || (targetTracker[i] == 2))) thereAreNoAvailableTargets = false;
 					}
 					if (thereAreNoAvailableTargets) {
 						vaTarget = [1000, 3500, 0]; //Just a random location to go when it's done. Otherwise it will search for targets until it breaks.
 					}
 					else {
-						tagTarget = this.closestTag();
-						verifyTarget = this.closestVerify();
+						tagTarget = this.closestTag(takenTarget);
+						verifyTarget = this.closestVerify(takenTarget);
 						if (Math.random() < preferenceData[this.behavior]) {
 							vaTarget = tagTarget;
 						} else {
@@ -309,11 +324,12 @@
 					this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
 				}
 				
-				closestTag() {
+				closestTag(takenTarget = -1) {
 					var tagTarget = null;
 					var leastDistance = 10000;
 					var nextDistance = 0;
 					for (var i = 0; i <= 19; i++) {
+						if (i == takenTarget) continue;
             if (i == lastTargetIndex) continue; // don't go after a point the user is tagging.
 						if (targetTracker[i] == 0) {
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
@@ -331,11 +347,12 @@
 					}
 				}
 								
-				closestVerify() {
+				closestVerify(takenTarget = -1) {
 					var verifyTarget = null;
 					var leastDistance = 10000;
 					var nextDistance = 0;
 					for (var i = 0; i <= 19; i++) {
+						if (i == takenTarget) continue;
 						if (i == lastTargetIndex && this.fastForward) continue; //don't go after the new verifying point if you're fast forwarding
 						if (targetTracker[i] == 2) {
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
@@ -383,6 +400,25 @@
 					vaY += 4412;
 					return Math.sqrt((vaX - targetX)*(vaX - targetX) + (vaY - targetY)*(vaY - targetY));
 				}
+
+				stop() { // "Slam the brakes"
+					if (this.magnitude = 0) return;
+
+					if (this.magnitude < 0.03) {
+						this.magnitude = 0;
+						this.accel = 0;
+					}
+					this.magnitude += this.accel;
+					this.saveSpeed = this.magnitude;
+
+					this.position.x += this.magnitude * Math.cos(this.angle); 
+					this.position.y -= this.magnitude * Math.sin(this.angle);
+					vaUpdateMap({x: this.magnitude * (Math.cos(this.angle)), y: this.magnitude * (Math.sin(this.angle))});
+
+					if (!this.fastForward) {
+						window.setTimeout(this.stop.bind(this), (1000/60));
+					}
+				}
 				
 				update() {
 					/* Decide whether or not to accelerate and decide what direction to
@@ -398,12 +434,12 @@
 						return;
 					}
 
-          if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
-            this.framesElapsedDelay += 1; 
-            return;
-          } else if (this.fastforward) {
-            this.framesElapsedDelay = 0;
-          }
+			          if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
+			            this.framesElapsedDelay += 1; 
+			            return;
+			          } else if (this.fastforward) {
+			            this.framesElapsedDelay = 0;
+			          }
 					
 					var currentDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
 					var progress = 1 - currentDistanceToTarget / this.startingDistanceToTarget;
@@ -497,6 +533,7 @@
 				miniSprite2coords[0] = parseInt(readCookie("miniSprite2coords0"));
 				miniSprite2coords[1] = parseInt(readCookie("miniSprite2coords1"));
 				lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastforwarding
+				lastTargetState = parseInt(readCookie("lastTargetState"));
 				imageId = parseInt(readCookie("imageId")); 
 				targetTracker = JSON.parse(readCookie("targetTracker"));
         tagTracker = JSON.parse(readCookie("tagTracker"));
@@ -954,6 +991,7 @@
 					document.cookie = "targetTracker=" + "[" + targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
 					document.cookie = "tagTracker=" + "[" + tagTracker.join(",") + "]"; // this is to store an array in a cookie. JSON parse to read it.
           document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
+          document.cookie = "lastTargetState=" + targetTracker[va.target.index] + ";"
 					document.cookie = "targetsVerified=" + targetsVerified + ";";
 					document.cookie = "tagCount=" + tagCount + ";";
 					document.cookie = "verifyCount=" + verifyCount + ";";
