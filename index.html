@@ -87,6 +87,13 @@
   			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
           targetInitializer(); //targetInitializer creates the targets.
 		  		va.fastForward = true;
+          /* If the va was trying to tag the same tag as the user, reset the
+           * virtual agent with no delay (essentially let it respond 
+           * instantaneously to the user getting to the tag first).
+           */
+          if (va.target.index === lastTargetIndex) {
+            va.initialize(false, true);
+          }
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
 				  for (var t = 0; t < frameCount; ++t) {
 					  va.update(); //fastforwarding
@@ -479,6 +486,8 @@
       var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
 			var gpSpriteCoords = [50, 470];
 			var magnitude = 0;
+      var xMagnitude = 0;
+      var yMagnitude = 0;
 			var direction = [0, 0];
 			var saveDirection = [0,0];
 			var angle = 1.57;
@@ -615,13 +624,39 @@
 				accelButton = (gamepads[gpIdx]).buttons[5].pressed;
 				
 				if (accelButton) {
+          var stickMagnitude = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
+          if (stick[0] < 0.5 && stick[0] > -0.5) {
+            xMagnitude -= 0.03;
+          } else {
+            var xStick = 0.03 * stick[0] / stickMagnitude;
+            xMagnitude += xStick;
+          }
+          if (stick[1] < 0.5 && stick[1] > -0.5) {
+            yMagnitude -= 0.03;
+          } else {
+            var yStick = 0.03 * stick[1] / stickMagnitude;
+            yMagnitude += yStick;
+          }
 					magnitude += 0.03;
 				}
 				else{
 					if (magnitude < 0.01) magnitude = 0;
 					else magnitude -= 0.03;
+          
+          if (Math.abs(xMagnitude) < 0.01)
+            xMagnitude = 0;
+          else
+            xMagnitude -= 0.03 * saveDirection[0];
+          
+          if (Math.abs(yMagnitude) < 0.01)
+            yMagnitude = 0;
+          else
+            yMagnitude -= 0.03 * saveDirection[1];
 				}
-				 
+				
+        console.log('xMagnitude - ' + xMagnitude);
+        console.log('yMagnitude - ' + yMagnitude);
+        
 				if ((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5)) { //it checks for larger values so you really have to move the stick to move it. It's super sensitive so it would look weird without this.
 					direction[0] = saveDirection[0];
 					direction[1] = saveDirection[1];
@@ -717,7 +752,7 @@
 						userVerifyTargets[i].style.left = userVerifyTargets[i].xPos - gpRecorder[2] + "px";
 						userVerifyTargets[i].style.top = userVerifyTargets[i].yPos - gpRecorder[3] + "px";						
 					}
-					else if (targetTracker[i] == 2) {
+					else if (targetTracker[i] == 2 && vaVerifyTargets[i] !== undefined) {
 						vaVerifyTargets[i].style.left = vaVerifyTargets[i].xPos - gpRecorder[2] + "px";
 						vaVerifyTargets[i].style.top = vaVerifyTargets[i].yPos - gpRecorder[3] + "px";	
 					}				
@@ -738,9 +773,6 @@
 						logCookie();
 						//logger(); //It also logs before targets, not just at the end of the 7 minutes.
 						//vaLogger();
-            if (va.target.index === i) {
-              va.chooseTarget();
-            }
             localStorage.setItem("userLog", log);
 						window.location.replace('tag.html'); //I stopped using server requests since I stopped using html templates.
 					}
