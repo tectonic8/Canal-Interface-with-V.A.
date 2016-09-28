@@ -618,44 +618,59 @@
 		
 			function gameLoop() {
 				gamepads = navigator.getGamepads(); //in chrome, it needs to do this any time it wants input. The entire syntax for handling these gamepads seems to differ a lot between browsers.
-				stick[0] = ((gamepads[gpIdx]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
-				stick[1] = ((gamepads[gpIdx]).axes[1]); //This is the y-axis. 1 is all the way down.
-				aButton = (gamepads[gpIdx]).buttons[0].pressed; //this is a boolean
-				accelButton = (gamepads[gpIdx]).buttons[5].pressed;
-				
-				if (accelButton) {
-          var stickMagnitude = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
-          if (stick[0] < 0.5 && stick[0] > -0.5) {
-            xMagnitude -= 0.03;
-          } else {
-            var xStick = 0.03 * stick[0] / stickMagnitude;
-            xMagnitude += xStick;
-          }
-          if (stick[1] < 0.5 && stick[1] > -0.5) {
-            yMagnitude -= 0.03;
-          } else {
-            var yStick = 0.03 * stick[1] / stickMagnitude;
-            yMagnitude += yStick;
-          }
-					magnitude += 0.03;
-				}
-				else{
-					if (magnitude < 0.01) magnitude = 0;
-					else magnitude -= 0.03;
-          
-          if (Math.abs(xMagnitude) < 0.01)
-            xMagnitude = 0;
-          else
-            xMagnitude -= 0.03 * saveDirection[0];
-          
-          if (Math.abs(yMagnitude) < 0.01)
-            yMagnitude = 0;
-          else
-            yMagnitude -= 0.03 * saveDirection[1];
-				}
-
+        stick[0] = ((gamepads[0]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
+        stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
+        aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
+        accelButton = (gamepads[0]).buttons[5].pressed;
         
-				
+        if (accelButton) {
+          var stickMagnitude = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
+          var xStick = 0.03 * stick[0] / stickMagnitude;
+          var yStick = 0.03 * stick[1] / stickMagnitude;
+          if (stick[0] < 0.5 && stick[0] > -0.5 && stick[1] < 0.5 && stick[1] > -0.5) {
+            xMagnitude += 0.03 * saveDirection[0];
+            yMagnitude += 0.03 * saveDirection[1];
+          } else if (stick[0] < 0.5 && stick[0] > -0.5) {
+            xMagnitude += xMagnitude > 0 ? -0.0424 : 0.0424
+;
+            yMagnitude += yStick;
+            if (Math.abs(xMagnitude) < 0.01) {
+              xMagnitude = 0;
+            }
+          } else if (stick[1] < 0.5 && stick[1] > -0.5) {
+            xMagnitude += xStick;
+            yMagnitude += yMagnitude > 0 ? -0.0424 : 0.0424;
+            if (Math.abs(yMagnitude) < 0.01) {
+              yMagnitude = 0;
+            }
+          } else {
+            xMagnitude += xStick;
+            if (Math.sign(xMagnitude) !== Math.sign(xStick)) {
+              xMagnitude += 3 * xStick;
+            }
+            yMagnitude += yStick;
+            if (Math.sign(yMagnitude) !== Math.sign(yStick)) {
+              yMagnitude += 3 * yStick;
+            }
+          }
+        }
+        else{
+          if (Math.abs(xMagnitude) < 0.027) {
+            xMagnitude = 0;
+          }
+          else {
+            xMagnitude += xMagnitude > 0 ? -0.0424 : 0.0424;
+            //Math.abs(0.03 * saveDirection[0]);;
+          }
+          
+          if (Math.abs(yMagnitude) < 0.027) {
+            yMagnitude = 0;
+          }
+          else {
+            yMagnitude += yMagnitude > 0 ? -0.0424 : 0.0424;
+            // yMagnitude -= 0.03 * saveDirection[1];
+          }
+        }
         console.log('xMagnitude - ' + xMagnitude);
         console.log('yMagnitude - ' + yMagnitude);
         
@@ -693,13 +708,20 @@
 
 				handleTargets(); 
 				
-				if (inside([(gpRecorder[0] + magnitude*2*direction[0]), (gpRecorder[1] + magnitude*2*direction[1])], canalTriacontapentagon)){ //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
+        
+        if (inside([(gpRecorder[0] + xMagnitude), (gpRecorder[1] + yMagnitude)], canalTriacontapentagon)) { //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
+          gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
+        } else {
+          xMagnitude = 0;
+          yMagnitude = 0;
+        }
+//				if (inside([(gpRecorder[0] + magnitude*2*direction[0]), (gpRecorder[1] + magnitude*2*direction[1])], canalTriacontapentagon)){ //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
 //				socket.emit('gpMove', {x1: gpRecorder[0], y1: gpRecorder[1]});
-					gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
-				}
-				else { 
-					magnitude = 1; //If it hits the canal edge, magnitude is reset to 1.
-				}
+//					gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
+//				}
+//				else { 
+//					magnitude = 0; //If it hits the canal edge, magnitude is reset to 1.
+//				}
 				
 				ultraRecorder();
 				
@@ -729,17 +751,22 @@
 			function gpUpdateMap(msg) {
 				function gpShifter() { //This shifts the canvas based on the local coordinates of the user. It shifts direction depending on what edge or corner you're on.
 				if (gpSpriteCoords[0] > 400  &&  gpSpriteCoords[1] < 300)
-					gpHandleShift(magnitude*Math.abs(direction[0]), magnitude*Math.abs(direction[1]));
+					//gpHandleShift(magnitude*Math.abs(direction[0]), magnitude*Math.abs(direction[1]));
+          gpHandleShift(Math.abs(xMagnitude), Math.abs(yMagnitude));
 				else if (gpSpriteCoords[0] > 400)
-					gpHandleShift(magnitude*Math.abs(direction[0]), 0);
+					//gpHandleShift(magnitude*Math.abs(direction[0]), 0);
+          gpHandleShift(Math.abs(xMagnitude), 0);
 				else if (gpSpriteCoords[1] < 300)
-					gpHandleShift(0, magnitude*Math.abs(direction[1]));
+					//gpHandleShift(0, magnitude*Math.abs(direction[1]));
+          gpHandleShift(0, Math.abs(yMagnitude));
 				if ((gpSpriteCoords[0] < 300)  &&  (gpSpriteCoords[1] > 400))
-					gpHandleShift(-magnitude*Math.abs(direction[0]), -magnitude*Math.abs(direction[1]));
+					//gpHandleShift(-magnitude*Math.abs(direction[0]), -magnitude*Math.abs(direction[1]));
+          gpHandleShift(-Math.abs(xMagnitude), -Math.abs(yMagnitude));
 				else if (gpSpriteCoords[0] < 300)
-					gpHandleShift(-magnitude*Math.abs(direction[0]), 0);
+					//gpHandleShift(-magnitude*Math.abs(direction[0]), 0);
+          gpHandleShift(-Math.abs(xMagnitude), 0);
 				else if (gpSpriteCoords[1] > 400)
-					gpHandleShift(0, -magnitude*Math.abs(direction[1]));
+					gpHandleShift(0, -Math.abs(yMagnitude));
 				}
 				function gpHandleShift(x, y) {
 					gpRecorder[2] += x; //gpRecorder 2 and 3 are the total x and y shift of the canvas. 
@@ -757,15 +784,19 @@
 					updateTargets();
 				}
 				gpShifter();
-				gpSpriteCoords[0] += magnitude * direction[0];
-				gpSpriteCoords[1] += magnitude * direction[1];
+				//gpSpriteCoords[0] += magnitude * direction[0];
+        gpSpriteCoords[0] += xMagnitude;
+				//gpSpriteCoords[1] += magnitude * direction[1];
+        gpSpriteCoords[1] += yMagnitude;
 				gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2];	//local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)		
 				gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
 				userSprite.style.left = gpSpriteCoords[0] + 'px';
 				userSprite.style.top = gpSpriteCoords[1] + 'px';
 				userSprite.style.transform = "rotate(" + angle*-2 +"deg)"; 
-				miniSprite1coords[0] += (magnitude*direction[0]*0.047); //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
-				miniSprite1coords[1] += (magnitude*direction[1]*0.045);
+				//miniSprite1coords[0] += (magnitude*direction[0]*0.047); //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
+				miniSprite1coords[0] += (xMagnitude*0.047);
+        //miniSprite1coords[1] += (magnitude*direction[1]*0.045);
+        miniSprite1coords[1] += (yMagnitude*0.045);
 				miniSprite1.style.left = miniSprite1coords[0] + "px";
 				miniSprite1.style.top = miniSprite1coords[1] + "px";
 			};
