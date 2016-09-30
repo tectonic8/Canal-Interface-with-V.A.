@@ -83,33 +83,22 @@
         }
 			});
 
-      if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
+        if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
   			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
-          targetInitializer(); //targetInitializer creates the targets.
+            targetInitializer(); //targetInitializer creates the targets.
 
-		  		va.fastForward = true;
+			if (va.target.index == lastTargetIndex) // User took VA's tag target, so it will have to go for another
+				va.targetValid = false;
+
+		  	va.fastForward = true;
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
-			  	stopFrames = 0;
-			  	// "tag target taken fix"
-          		if (targetTracker[va.target.index] != lastTargetState) { // User tagged VA's tag target, we need to stop and pick a new target
-          			va.accel = -0.1;
-          			for ( ;(stopFrames < frameCount) || (va.magnitude > 0 ); stopFrames++) {
-          				va.stop(); // If VA has to stop() more than "frameCount" times, it will continue stopping in 60 fps and (should) come back here when its magnitude is 0
-          			}
-          			// choose a new target that isnt the one taken
-          			va.chooseTarget(va.target.index); // Choose a target that isn't the one it wanted previously
-          		}
-
-          		frameCount -= stopFrames;
-          		if (frameCount == 0) va.fastForward = false;
-
-				for (var t = 0; t < frameCount; ++t) {
-					va.update(); //fastforwarding
-            		vaTagAndVerify();
+				  for (var t = 0; t < frameCount; ++t) {
+					  va.update(); //fastforwarding
+            vaTagAndVerify();
 				  }
 				  va.fastForward = false;
 
-					if (targetTracker[va.target.index] == 0) va.task = 0; // May not need this after "tag target taken" fix
+					if (targetTracker[va.target.index] == 0) va.task = 0;
 					else if (targetTracker[va.target.index] == 2) va.task = 1;
           
 				  vaLogger();
@@ -209,6 +198,7 @@
 					this.sprite = document.getElementById(ELEMENT_IDS.buddySprite);
 					this.position = {x:x, y:y};
 					this.fastForward = false;
+					this.targetValid = true;
 				}
 				
 				initialize(addDelay, fastForward) {
@@ -234,6 +224,7 @@
 						this.randomAccelIndex = 3;
 						
 					this.chooseTarget();
+					this.targetValid = true;  
 
           if (fastForward) {
             this.framesRequiredDelay = this.startDelay / 1000 * 60;
@@ -297,21 +288,21 @@
 					if (addDelay) this.update();
 				}
 				
-				chooseTarget(takenTarget = -1) {
+				chooseTarget() {
 				/* Choose the current target for the virtual agent. */
 					var vaTarget = null;
 					var tagTarget = null;
 					var verifyTarget = null;
 					var thereAreNoAvailableTargets = true;
 					for (var i = 0; i <= 19; i++) {
-						if ((i != takenTarget) && ((targetTracker[i] == 0) || (targetTracker[i] == 2))) thereAreNoAvailableTargets = false;
+						if ((targetTracker[i] == 0) || (targetTracker[i] == 2)) thereAreNoAvailableTargets = false;
 					}
 					if (thereAreNoAvailableTargets) {
 						vaTarget = [1000, 3500, 0]; //Just a random location to go when it's done. Otherwise it will search for targets until it breaks.
 					}
 					else {
-						tagTarget = this.closestTag(takenTarget);
-						verifyTarget = this.closestVerify(takenTarget);
+						tagTarget = this.closestTag();
+						verifyTarget = this.closestVerify();
 						if (Math.random() < preferenceData[this.behavior]) {
 							vaTarget = tagTarget;
 						} else {
@@ -324,13 +315,13 @@
 					this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
 				}
 				
-				closestTag(takenTarget = -1) {
+				closestTag() {
 					var tagTarget = null;
 					var leastDistance = 10000;
 					var nextDistance = 0;
 					for (var i = 0; i <= 19; i++) {
-						if (i == takenTarget) continue;
-            if (i == lastTargetIndex) continue; // don't go after a point the user is tagging.
+						if (!va.targetValid && i == lastTargetIndex) continue;
+            			//if (i == lastTargetIndex) continue; // don't go after a point the user is tagging.
 						if (targetTracker[i] == 0) {
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
 							if (nextDistance < leastDistance) {
@@ -347,12 +338,12 @@
 					}
 				}
 								
-				closestVerify(takenTarget = -1) {
+				closestVerify() {
 					var verifyTarget = null;
 					var leastDistance = 10000;
 					var nextDistance = 0;
 					for (var i = 0; i <= 19; i++) {
-						if (i == takenTarget) continue;
+						if (!va.targetValid && i == lastTargetIndex) continue;
 						if (i == lastTargetIndex && this.fastForward) continue; //don't go after the new verifying point if you're fast forwarding
 						if (targetTracker[i] == 2) {
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
@@ -400,106 +391,111 @@
 					vaY += 4412;
 					return Math.sqrt((vaX - targetX)*(vaX - targetX) + (vaY - targetY)*(vaY - targetY));
 				}
-
-				stop() { // "Slam the brakes"
-					if (this.magnitude = 0) return;
-
-					if (this.magnitude < 0.03) {
-						this.magnitude = 0;
-						this.accel = 0;
-					}
-					this.magnitude += this.accel;
-					this.saveSpeed = this.magnitude;
-
-					this.position.x += this.magnitude * Math.cos(this.angle); 
-					this.position.y -= this.magnitude * Math.sin(this.angle);
-					vaUpdateMap({x: this.magnitude * (Math.cos(this.angle)), y: this.magnitude * (Math.sin(this.angle))});
-
-					if (!this.fastForward) {
-						window.setTimeout(this.stop.bind(this), (1000/60));
-					}
-				}
 				
 				update() {
 					/* Decide whether or not to accelerate and decide what direction to
 					   go.
-					 */
+					   */
+					if (this.targetValid) { 
+						   var endTime3 = new Date().getTime();
+						if ((this.counter == 0) && ((endTime3 - this.startDelayStart) < (this.startDelay)) && (!this.fastForward)) { //this handles the delay.
+							window.setTimeout(this.update.bind(this), (1000/60));
+							vaUpdateMap({x: 0, y: 0});
+				//					socket.emit('vaMove', {x: 0, y: 0}); //If it isn't constantly emitting no change, it will not update properly when the user moves.
 
-					var endTime3 = new Date().getTime();
-					if ((this.counter == 0) && ((endTime3 - this.startDelayStart) < (this.startDelay)) && (!this.fastForward)) { //this handles the delay.
-						window.setTimeout(this.update.bind(this), (1000/60));
-						vaUpdateMap({x: 0, y: 0});
-			//					socket.emit('vaMove', {x: 0, y: 0}); //If it isn't constantly emitting no change, it will not update properly when the user moves.
+							return;
+						}
+
+						if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
+							this.framesElapsedDelay += 1; 
+							return;
+						} else if (this.fastforward) {
+							this.framesElapsedDelay = 0;
+						}
+
+						var currentDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+						var progress = 1 - currentDistanceToTarget / this.startingDistanceToTarget;
+
+						if (progress <= accelerationData[this.randomAccelIndex][this.counter]) {
+							this.accel = 0.03 * (this.counter % 2 === 0 ? 1 : -1);
+							this.magnitude += this.accel; //since the data is a list of proportions at which there is switch, this code figure out if it is supposed to acc or decel
+						}
+						else this.counter++;
+						if (this.magnitude < 0.03) {
+							this.magnitude = 0;
+							this.accel = 0;
+						}
+						if (this.magnitude > this.saveSpeed) //killDistance handles the excess speed va has at the end.
+							this.killDistance = (this.magnitude * this.magnitude * (100/6)); //Speed divided by deceleration gives the number of frames it would take to decelerate. Speed/2 is average speed going from speed to 0. Frames it would take to decelerate times average speed = distance it would take to get to 0 speed. Formula simplified.
+						else 						
+							this.killDistance -= this.magnitude; //if va starts decelerating,  decrease the amount of distance va needs to slow down.
 						
-						return;
+						
+						var fuzz = Math.random()*0.3;
+						var cosFuzz = Math.cos(this.theta + 1.57);				
+
+						if ((currentDistanceToTarget>85) && (inside([this.position.x + this.magnitude * Math.cos(this.findPath()), this.position.y - this.magnitude * Math.sin(this.findPath())], vaCanalTriacontapentagon))) {
+							//The number above (85) is the distance at which it should bounce back.
+							this.angle = this.findPath();
+							this.saveSpeed = this.magnitude;
+							this.position.x += this.magnitude * Math.cos(this.angle);
+							this.position.y -= this.magnitude * Math.sin(this.angle);
+				//					socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+							vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+							this.onTarget = false;
+						}				
+						else if (currentDistanceToTarget<=85 && this.killDistance > 4) {
+							this.counter = accelerationData[this.randomAccelIndex].length - 1; //If va is near the target, make sure the counter is set so that it's only decelerating at this point.
+							if (this.magnitude > 0.3  &&  !inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
+								this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
+							}
+							if (inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
+								if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
+								this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
+								this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
+				//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
+								vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
+								this.onTarget = false;
+								this.theta += 0.04; //the higher this value, the curvier its path. Obviously this is a terrible, robotic way of doing it, but I don't know how to make a fuzzy curved path.
+							}
+						}
+						else if (currentDistanceToTarget < 35  &&  inside([this.position.x, this.position.y], vaCanalTriacontapentagon)) {
+							this.onTarget = true;
+							if (this.task === 0) {
+								this.lastRole = 'tagging';              
+							} else {
+								this.lastRole = 'verifying';
+							}
+							vaUpdateMap({x: 0, y: 0});
+				//					socket.emit('vaMove', {x: 0, y: 0});
+						}
+						//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
+					}
+					else { // Need to stop and pick a new target
+						this.accel = -0.03;
+						if (this.magnitude < 0.03) {
+							this.magnitude = 0;
+							this.accel = 0;
+							va.initialize(true, this.fastForward);
+						}
+						else { 
+							this.magnitude += this.accel;
+							this.saveSpeed = this.magnitude;
+
+							// If the VA will hit a wall, stop
+							if (!inside([this.position.x + this.magnitude * Math.cos(this.angle), this.position.y - this.magnitude * Math.sin(this.angle)], vaCanalTriacontapentagon)) {
+								this.magnitude = 0;
+							}
+
+							this.position.x += this.magnitude * Math.cos(this.angle); 
+							this.position.y -= this.magnitude * Math.sin(this.angle);
+							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle)), y: this.magnitude * (Math.sin(this.angle))});
+						}
 					}
 
-			          if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
-			            this.framesElapsedDelay += 1; 
-			            return;
-			          } else if (this.fastforward) {
-			            this.framesElapsedDelay = 0;
-			          }
-					
-					var currentDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-					var progress = 1 - currentDistanceToTarget / this.startingDistanceToTarget;
-					
-					if (progress <= accelerationData[this.randomAccelIndex][this.counter]) {
-						this.accel = 0.03 * (this.counter % 2 === 0 ? 1 : -1);
-						this.magnitude += this.accel; //since the data is a list of proportions at which there is switch, this code figure out if it is supposed to acc or decel
-					}
-					else this.counter++;
-					if (this.magnitude < 0.03) {
-						this.magnitude = 0;
-						this.accel = 0;
-					}
-					if (this.magnitude > this.saveSpeed) //killDistance handles the excess speed va has at the end.
-						this.killDistance = (this.magnitude * this.magnitude * (100/6)); //Speed divided by deceleration gives the number of frames it would take to decelerate. Speed/2 is average speed going from speed to 0. Frames it would take to decelerate times average speed = distance it would take to get to 0 speed. Formula simplified.
-					else 						
-						this.killDistance -= this.magnitude; //if va starts decelerating,  decrease the amount of distance va needs to slow down.
-					
-					
-					var fuzz = Math.random()*0.3;
-					var cosFuzz = Math.cos(this.theta + 1.57);				
-									
-					if ((currentDistanceToTarget>85) && (inside([this.position.x + this.magnitude * Math.cos(this.findPath()), this.position.y - this.magnitude * Math.sin(this.findPath())], vaCanalTriacontapentagon))) {
-						//The number above (85) is the distance at which it should bounce back.
-						this.angle = this.findPath();
-						this.saveSpeed = this.magnitude;
-						this.position.x += this.magnitude * Math.cos(this.angle);
-						this.position.y -= this.magnitude * Math.sin(this.angle);
-			//					socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
-						vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
-						this.onTarget = false;
-					}				
-					else if (currentDistanceToTarget<=85 && this.killDistance > 4) {
-						this.counter = accelerationData[this.randomAccelIndex].length - 1; //If va is near the target, make sure the counter is set so that it's only decelerating at this point.
-						if (this.magnitude > 0.3  &&  !inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
-							this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
-						}
-						if (inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
-							if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
-							this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
-							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
-			//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
-							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
-							this.onTarget = false;
-							this.theta += 0.04; //the higher this value, the curvier its path. Obviously this is a terrible, robotic way of doing it, but I don't know how to make a fuzzy curved path.
-						}
-					}
-					else if (currentDistanceToTarget < 35  &&  inside([this.position.x, this.position.y], vaCanalTriacontapentagon)) {
-						this.onTarget = true;
-            if (this.task === 0) {
-              this.lastRole = 'tagging';              
-            } else {
-              this.lastRole = 'verifying';
-            }
-						vaUpdateMap({x: 0, y: 0});
-			//					socket.emit('vaMove', {x: 0, y: 0});
-					}
-			//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
-          vaUpdateMap({x: 0, y: 0});
+					vaUpdateMap({x: 0, y: 0});
 					vaUltraRecorder();
+
 					if (!this.fastForward) {
 						window.setTimeout(this.update.bind(this), (1000/60));
 					}
@@ -515,6 +511,8 @@
       var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
 			var gpSpriteCoords = [50, 470];
 			var magnitude = 0;
+      var xMagnitude = 0;
+      var yMagnitude = 0;
 			var direction = [0, 0];
 			var saveDirection = [0,0];
 			var angle = 1.57;
@@ -533,7 +531,6 @@
 				miniSprite2coords[0] = parseInt(readCookie("miniSprite2coords0"));
 				miniSprite2coords[1] = parseInt(readCookie("miniSprite2coords1"));
 				lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastforwarding
-				lastTargetState = parseInt(readCookie("lastTargetState"));
 				imageId = parseInt(readCookie("imageId")); 
 				targetTracker = JSON.parse(readCookie("targetTracker"));
         tagTracker = JSON.parse(readCookie("tagTracker"));
@@ -646,19 +643,62 @@
 		
 			function gameLoop() {
 				gamepads = navigator.getGamepads(); //in chrome, it needs to do this any time it wants input. The entire syntax for handling these gamepads seems to differ a lot between browsers.
-				stick[0] = ((gamepads[gpIdx]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
-				stick[1] = ((gamepads[gpIdx]).axes[1]); //This is the y-axis. 1 is all the way down.
-				aButton = (gamepads[gpIdx]).buttons[0].pressed; //this is a boolean
-				accelButton = (gamepads[gpIdx]).buttons[5].pressed;
-				
-				if (accelButton) {
-					magnitude += 0.03;
-				}
-				else{
-					if (magnitude < 0.01) magnitude = 0;
-					else magnitude -= 0.03;
-				}
-				 
+        stick[0] = ((gamepads[0]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
+        stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
+        aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
+        accelButton = (gamepads[0]).buttons[5].pressed;
+        
+        if (accelButton) {
+//          var stickMagnitude = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
+//          var xStick = 0.03 * stick[0] / stickMagnitude;
+//          var yStick = 0.03 * stick[1] / stickMagnitude;
+//          if (stick[0] < 0.5 && stick[0] > -0.5 && stick[1] < 0.5 && stick[1] > -0.5) {
+//            xMagnitude += 0.03 * saveDirection[0];
+//            yMagnitude += 0.03 * saveDirection[1];
+//          } else if (stick[0] < 0.5 && stick[0] > -0.5) {
+//            xMagnitude += xMagnitude > 0 ? -0.0424 : 0.0424;
+//            yMagnitude += yStick;
+//            if (Math.abs(xMagnitude) < 0.01) {
+//              xMagnitude = 0;
+//            }
+//          } else if (stick[1] < 0.5 && stick[1] > -0.5) {
+//            xMagnitude += xStick;
+//            yMagnitude += yMagnitude > 0 ? -0.0424 : 0.0424;
+//            if (Math.abs(yMagnitude) < 0.01) {
+//              yMagnitude = 0;
+//            }
+//          } else {
+//            xMagnitude += xStick;
+//            if (Math.sign(xMagnitude) !== Math.sign(xStick)) {
+//              xMagnitude += 3 * xStick;
+//            }
+//            yMagnitude += yStick;
+//            if (Math.sign(yMagnitude) !== Math.sign(yStick)) {
+//              yMagnitude += 3 * yStick;
+//            }
+//          }
+          magnitude += 0.03;
+        }
+        else{
+//          if (Math.abs(xMagnitude) < 0.027) {
+//            xMagnitude = 0;
+//          }
+//          else {
+//            xMagnitude += xMagnitude > 0 ? -0.0424 : 0.0424;
+//          }
+          
+//          if (Math.abs(yMagnitude) < 0.027) {
+//            yMagnitude = 0;
+//          }
+//          else {
+//            yMagnitude += yMagnitude > 0 ? -0.0424 : 0.0424;
+//          }
+          if (magnitude < 0.01) magnitude = 0;
+          else magnitude -= 0.03;
+        }
+//        console.log('xMagnitude - ' + xMagnitude);
+//        console.log('yMagnitude - ' + yMagnitude);
+        
 				if ((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5)) { //it checks for larger values so you really have to move the stick to move it. It's super sensitive so it would look weird without this.
 					direction[0] = saveDirection[0];
 					direction[1] = saveDirection[1];
@@ -669,14 +709,38 @@
 					saveDirection[0] = direction[0]; //Save direction allows the inertial movement when you stop moving the stick.
 					saveDirection[1] = direction[1];
 				}
+        
+                    
+        if (!((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5))) {  // stick being moved
+          //var stickAngle =  Math.atan2(stick[1], stick[0])*180.0/Math.PI;
+          var stickAngle = Math.floor((Math.acos(stick[0] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]))))/0.0349)
+          if (stick[1] > 0) stickAngle *= -1;
+          // is there less distance going left or right?
+          //var diff = ((angle<0)? 180-angle: angle) - ((stickAngle<0)? 180-stickAngle: stickAngle);
+          var diff = angle - stickAngle;
+          if ((diff >= 90) || (diff >= -90 &&  diff < 0)) {
+            rotateUser(0);
+          }
+          else if ((diff < -90) || (diff >= 0 && diff < 90)) {
+            rotateUser(1);
+          }
+        }
 				
-				angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
-				if (direction[1] > 0) angle *= -1;
+				/*angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
+				if (direction[1] > 0) angle *= -1;*/
+        
+        
 
 				handleTargets(); 
 				
+        
+//        if (inside([(gpRecorder[0] + xMagnitude), (gpRecorder[1] + yMagnitude)], canalTriacontapentagon)) { //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
+//          gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
+//        } else {
+//          xMagnitude = 0;
+//          yMagnitude = 0;
+//        }
 				if (inside([(gpRecorder[0] + magnitude*2*direction[0]), (gpRecorder[1] + magnitude*2*direction[1])], canalTriacontapentagon)){ //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
-//				socket.emit('gpMove', {x1: gpRecorder[0], y1: gpRecorder[1]});
 					gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
 				}
 				else { 
@@ -693,22 +757,41 @@
 					window.setTimeout(gameLoop, (1000/60));
 				}
 			}
+      
+      function rotateUser(clockwise) {
+        if  (clockwise) {
+          angle -= 2;
+          if (angle <= -90) angle += 180;
+        }
+        else {
+          //if (angle >= 178)
+          angle += 2;
+          if (angle >= 90) angle -= 180;
+         }
+        //if (angle < 0)  angle += 360;
+      }
 
 	//		socket.on('gpUpdateMap', function(msg) { //I don't really use the msg from the server. It's sort of a vestige from the dragging form of the program. You probably don't need to emit this either, since there's only one user. 
 			function gpUpdateMap(msg) {
 				function gpShifter() { //This shifts the canvas based on the local coordinates of the user. It shifts direction depending on what edge or corner you're on.
 				if (gpSpriteCoords[0] > 400  &&  gpSpriteCoords[1] < 300)
 					gpHandleShift(magnitude*Math.abs(direction[0]), magnitude*Math.abs(direction[1]));
+//          gpHandleShift(Math.abs(xMagnitude), Math.abs(yMagnitude));
 				else if (gpSpriteCoords[0] > 400)
 					gpHandleShift(magnitude*Math.abs(direction[0]), 0);
+//          gpHandleShift(Math.abs(xMagnitude), 0);
 				else if (gpSpriteCoords[1] < 300)
 					gpHandleShift(0, magnitude*Math.abs(direction[1]));
+//          gpHandleShift(0, Math.abs(yMagnitude));
 				if ((gpSpriteCoords[0] < 300)  &&  (gpSpriteCoords[1] > 400))
 					gpHandleShift(-magnitude*Math.abs(direction[0]), -magnitude*Math.abs(direction[1]));
+//          gpHandleShift(-Math.abs(xMagnitude), -Math.abs(yMagnitude));
 				else if (gpSpriteCoords[0] < 300)
 					gpHandleShift(-magnitude*Math.abs(direction[0]), 0);
+//          gpHandleShift(-Math.abs(xMagnitude), 0);
 				else if (gpSpriteCoords[1] > 400)
-					gpHandleShift(0, -magnitude*Math.abs(direction[1]));
+          gpHandleShift(0, -magnitude*Math.abs(direction[1]));
+//					gpHandleShift(0, -Math.abs(yMagnitude));
 				}
 				function gpHandleShift(x, y) {
 					gpRecorder[2] += x; //gpRecorder 2 and 3 are the total x and y shift of the canvas. 
@@ -727,14 +810,18 @@
 				}
 				gpShifter();
 				gpSpriteCoords[0] += magnitude * direction[0];
+//        gpSpriteCoords[0] += xMagnitude;
 				gpSpriteCoords[1] += magnitude * direction[1];
+//        gpSpriteCoords[1] += yMagnitude;
 				gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2];	//local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)		
 				gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
 				userSprite.style.left = gpSpriteCoords[0] + 'px';
 				userSprite.style.top = gpSpriteCoords[1] + 'px';
 				userSprite.style.transform = "rotate(" + angle*-2 +"deg)"; 
 				miniSprite1coords[0] += (magnitude*direction[0]*0.047); //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
-				miniSprite1coords[1] += (magnitude*direction[1]*0.045);
+//				miniSprite1coords[0] += (xMagnitude*0.047);
+        miniSprite1coords[1] += (magnitude*direction[1]*0.045);
+//        miniSprite1coords[1] += (yMagnitude*0.045);
 				miniSprite1.style.left = miniSprite1coords[0] + "px";
 				miniSprite1.style.top = miniSprite1coords[1] + "px";
 			};
@@ -754,7 +841,7 @@
 						userVerifyTargets[i].style.left = userVerifyTargets[i].xPos - gpRecorder[2] + "px";
 						userVerifyTargets[i].style.top = userVerifyTargets[i].yPos - gpRecorder[3] + "px";						
 					}
-					else if (targetTracker[i] == 2) {
+					else if (targetTracker[i] == 2 && vaVerifyTargets[i] !== undefined) {
 						vaVerifyTargets[i].style.left = vaVerifyTargets[i].xPos - gpRecorder[2] + "px";
 						vaVerifyTargets[i].style.top = vaVerifyTargets[i].yPos - gpRecorder[3] + "px";	
 					}				
@@ -775,9 +862,6 @@
 						logCookie();
 						//logger(); //It also logs before targets, not just at the end of the 7 minutes.
 						//vaLogger();
-            if (va.target.index === i) {
-              va.chooseTarget();
-            }
             localStorage.setItem("userLog", log);
 						window.location.replace('tag.html'); //I stopped using server requests since I stopped using html templates.
 					}
@@ -991,7 +1075,6 @@
 					document.cookie = "targetTracker=" + "[" + targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
 					document.cookie = "tagTracker=" + "[" + tagTracker.join(",") + "]"; // this is to store an array in a cookie. JSON parse to read it.
           document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
-          document.cookie = "lastTargetState=" + targetTracker[va.target.index] + ";"
 					document.cookie = "targetsVerified=" + targetsVerified + ";";
 					document.cookie = "tagCount=" + tagCount + ";";
 					document.cookie = "verifyCount=" + verifyCount + ";";
