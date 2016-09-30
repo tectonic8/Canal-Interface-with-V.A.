@@ -476,6 +476,7 @@
 						if (this.magnitude < 0.03) {
 							this.magnitude = 0;
 							this.accel = 0;
+							va.initialize(false, this.fastForward);
 						}
 						else { 
 							this.magnitude += this.accel;
