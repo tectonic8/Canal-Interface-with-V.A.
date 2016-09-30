@@ -83,17 +83,14 @@
         }
 			});
 
-      if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
+        if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
   			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
-          targetInitializer(); //targetInitializer creates the targets.
-		  		va.fastForward = true;
-          /* If the va was trying to tag the same tag as the user, reset the
-           * virtual agent with no delay (essentially let it respond 
-           * instantaneously to the user getting to the tag first).
-           */
-          if (va.target.index === lastTargetIndex) {
-            va.initialize(false, true);
-          }
+            targetInitializer(); //targetInitializer creates the targets.
+
+			if (va.target.index == lastTargetIndex) // User took VA's tag target, so it will have to go for another
+				va.targetValid = false;
+
+		  	va.fastForward = true;
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
 				  for (var t = 0; t < frameCount; ++t) {
 					  va.update(); //fastforwarding
@@ -201,6 +198,7 @@
 					this.sprite = document.getElementById(ELEMENT_IDS.buddySprite);
 					this.position = {x:x, y:y};
 					this.fastForward = false;
+					this.targetValid = true;
 				}
 				
 				initialize(addDelay, fastForward) {
@@ -226,6 +224,7 @@
 						this.randomAccelIndex = 3;
 						
 					this.chooseTarget();
+					this.targetValid = true;  
 
           if (fastForward) {
             this.framesRequiredDelay = this.startDelay / 1000 * 60;
@@ -321,7 +320,8 @@
 					var leastDistance = 10000;
 					var nextDistance = 0;
 					for (var i = 0; i <= 19; i++) {
-            if (i == lastTargetIndex) continue; // don't go after a point the user is tagging.
+						if (!va.targetValid && i == lastTargetIndex) continue;
+            			//if (i == lastTargetIndex) continue; // don't go after a point the user is tagging.
 						if (targetTracker[i] == 0) {
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
 							if (nextDistance < leastDistance) {
@@ -343,6 +343,7 @@
 					var leastDistance = 10000;
 					var nextDistance = 0;
 					for (var i = 0; i <= 19; i++) {
+						if (!va.targetValid && i == lastTargetIndex) continue;
 						if (i == lastTargetIndex && this.fastForward) continue; //don't go after the new verifying point if you're fast forwarding
 						if (targetTracker[i] == 2) {
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
@@ -394,83 +395,106 @@
 				update() {
 					/* Decide whether or not to accelerate and decide what direction to
 					   go.
-					 */
+					   */
+					if (this.targetValid) { 
+						   var endTime3 = new Date().getTime();
+						if ((this.counter == 0) && ((endTime3 - this.startDelayStart) < (this.startDelay)) && (!this.fastForward)) { //this handles the delay.
+							window.setTimeout(this.update.bind(this), (1000/60));
+							vaUpdateMap({x: 0, y: 0});
+				//					socket.emit('vaMove', {x: 0, y: 0}); //If it isn't constantly emitting no change, it will not update properly when the user moves.
 
-					var endTime3 = new Date().getTime();
-					if ((this.counter == 0) && ((endTime3 - this.startDelayStart) < (this.startDelay)) && (!this.fastForward)) { //this handles the delay.
-						window.setTimeout(this.update.bind(this), (1000/60));
-						vaUpdateMap({x: 0, y: 0});
-			//					socket.emit('vaMove', {x: 0, y: 0}); //If it isn't constantly emitting no change, it will not update properly when the user moves.
+							return;
+						}
+
+						if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
+							this.framesElapsedDelay += 1; 
+							return;
+						} else if (this.fastforward) {
+							this.framesElapsedDelay = 0;
+						}
+
+						var currentDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+						var progress = 1 - currentDistanceToTarget / this.startingDistanceToTarget;
+
+						if (progress <= accelerationData[this.randomAccelIndex][this.counter]) {
+							this.accel = 0.03 * (this.counter % 2 === 0 ? 1 : -1);
+							this.magnitude += this.accel; //since the data is a list of proportions at which there is switch, this code figure out if it is supposed to acc or decel
+						}
+						else this.counter++;
+						if (this.magnitude < 0.03) {
+							this.magnitude = 0;
+							this.accel = 0;
+						}
+						if (this.magnitude > this.saveSpeed) //killDistance handles the excess speed va has at the end.
+							this.killDistance = (this.magnitude * this.magnitude * (100/6)); //Speed divided by deceleration gives the number of frames it would take to decelerate. Speed/2 is average speed going from speed to 0. Frames it would take to decelerate times average speed = distance it would take to get to 0 speed. Formula simplified.
+						else 						
+							this.killDistance -= this.magnitude; //if va starts decelerating,  decrease the amount of distance va needs to slow down.
 						
-						return;
+						
+						var fuzz = Math.random()*0.3;
+						var cosFuzz = Math.cos(this.theta + 1.57);				
+
+						if ((currentDistanceToTarget>85) && (inside([this.position.x + this.magnitude * Math.cos(this.findPath()), this.position.y - this.magnitude * Math.sin(this.findPath())], vaCanalTriacontapentagon))) {
+							//The number above (85) is the distance at which it should bounce back.
+							this.angle = this.findPath();
+							this.saveSpeed = this.magnitude;
+							this.position.x += this.magnitude * Math.cos(this.angle);
+							this.position.y -= this.magnitude * Math.sin(this.angle);
+				//					socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+							vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+							this.onTarget = false;
+						}				
+						else if (currentDistanceToTarget<=85 && this.killDistance > 4) {
+							this.counter = accelerationData[this.randomAccelIndex].length - 1; //If va is near the target, make sure the counter is set so that it's only decelerating at this point.
+							if (this.magnitude > 0.3  &&  !inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
+								this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
+							}
+							if (inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
+								if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
+								this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
+								this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
+				//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
+								vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
+								this.onTarget = false;
+								this.theta += 0.04; //the higher this value, the curvier its path. Obviously this is a terrible, robotic way of doing it, but I don't know how to make a fuzzy curved path.
+							}
+						}
+						else if (currentDistanceToTarget < 35  &&  inside([this.position.x, this.position.y], vaCanalTriacontapentagon)) {
+							this.onTarget = true;
+							if (this.task === 0) {
+								this.lastRole = 'tagging';              
+							} else {
+								this.lastRole = 'verifying';
+							}
+							vaUpdateMap({x: 0, y: 0});
+				//					socket.emit('vaMove', {x: 0, y: 0});
+						}
+						//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
+					}
+					else { // Need to stop and pick a new target
+						this.accel = -0.03;
+						if (this.magnitude < 0.03) {
+							this.magnitude = 0;
+							this.accel = 0;
+						}
+						else { 
+							this.magnitude += this.accel;
+							this.saveSpeed = this.magnitude;
+
+							// If the VA will hit a wall, stop
+							if (!inside([this.position.x + this.magnitude * Math.cos(this.angle), this.position.y - this.magnitude * Math.sin(this.angle)], vaCanalTriacontapentagon)) {
+								this.magnitude = 0;
+							}
+
+							this.position.x += this.magnitude * Math.cos(this.angle); 
+							this.position.y -= this.magnitude * Math.sin(this.angle);
+							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle)), y: this.magnitude * (Math.sin(this.angle))});
+						}
 					}
 
-          if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
-            this.framesElapsedDelay += 1; 
-            return;
-          } else if (this.fastforward) {
-            this.framesElapsedDelay = 0;
-          }
-					
-					var currentDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-					var progress = 1 - currentDistanceToTarget / this.startingDistanceToTarget;
-					
-					if (progress <= accelerationData[this.randomAccelIndex][this.counter]) {
-						this.accel = 0.03 * (this.counter % 2 === 0 ? 1 : -1);
-						this.magnitude += this.accel; //since the data is a list of proportions at which there is switch, this code figure out if it is supposed to acc or decel
-					}
-					else this.counter++;
-					if (this.magnitude < 0.03) {
-						this.magnitude = 0;
-						this.accel = 0;
-					}
-					if (this.magnitude > this.saveSpeed) //killDistance handles the excess speed va has at the end.
-						this.killDistance = (this.magnitude * this.magnitude * (100/6)); //Speed divided by deceleration gives the number of frames it would take to decelerate. Speed/2 is average speed going from speed to 0. Frames it would take to decelerate times average speed = distance it would take to get to 0 speed. Formula simplified.
-					else 						
-						this.killDistance -= this.magnitude; //if va starts decelerating,  decrease the amount of distance va needs to slow down.
-					
-					
-					var fuzz = Math.random()*0.3;
-					var cosFuzz = Math.cos(this.theta + 1.57);				
-									
-					if ((currentDistanceToTarget>85) && (inside([this.position.x + this.magnitude * Math.cos(this.findPath()), this.position.y - this.magnitude * Math.sin(this.findPath())], vaCanalTriacontapentagon))) {
-						//The number above (85) is the distance at which it should bounce back.
-						this.angle = this.findPath();
-						this.saveSpeed = this.magnitude;
-						this.position.x += this.magnitude * Math.cos(this.angle);
-						this.position.y -= this.magnitude * Math.sin(this.angle);
-			//					socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
-						vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
-						this.onTarget = false;
-					}				
-					else if (currentDistanceToTarget<=85 && this.killDistance > 4) {
-						this.counter = accelerationData[this.randomAccelIndex].length - 1; //If va is near the target, make sure the counter is set so that it's only decelerating at this point.
-						if (this.magnitude > 0.3  &&  !inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
-							this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
-						}
-						if (inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
-							if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
-							this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
-							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
-			//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
-							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
-							this.onTarget = false;
-							this.theta += 0.04; //the higher this value, the curvier its path. Obviously this is a terrible, robotic way of doing it, but I don't know how to make a fuzzy curved path.
-						}
-					}
-					else if (currentDistanceToTarget < 35  &&  inside([this.position.x, this.position.y], vaCanalTriacontapentagon)) {
-						this.onTarget = true;
-            if (this.task === 0) {
-              this.lastRole = 'tagging';              
-            } else {
-              this.lastRole = 'verifying';
-            }
-						vaUpdateMap({x: 0, y: 0});
-			//					socket.emit('vaMove', {x: 0, y: 0});
-					}
-			//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
-          vaUpdateMap({x: 0, y: 0});
+					vaUpdateMap({x: 0, y: 0});
 					vaUltraRecorder();
+
 					if (!this.fastForward) {
 						window.setTimeout(this.update.bind(this), (1000/60));
 					}
