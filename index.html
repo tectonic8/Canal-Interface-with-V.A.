@@ -711,23 +711,23 @@
 				}
         
                     
-        if (!((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5))) {  // stick being moved
-          //var stickAngle =  Math.atan2(stick[1], stick[0])*180.0/Math.PI;
-          var stickAngle = Math.floor((Math.acos(stick[0] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]))))/0.0349)
-          if (stick[1] > 0) stickAngle *= -1;
-          // is there less distance going left or right?
-          //var diff = ((angle<0)? 180-angle: angle) - ((stickAngle<0)? 180-stickAngle: stickAngle);
-          var diff = angle - stickAngle;
-          if ((diff >= 90) || (diff >= -90 &&  diff < 0)) {
-            rotateUser(0);
-          }
-          else if ((diff < -90) || (diff >= 0 && diff < 90)) {
-            rotateUser(1);
-          }
-        }
+//        if (!((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5))) {  // stick being moved
+//          var stickAngle =  Math.atan2(stick[1], stick[0])*180.0/Math.PI;
+//          var stickAngle = Math.floor((Math.acos(stick[0] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]))))/0.0349)
+//          if (stick[1] > 0) stickAngle *= -1;
+//          // is there less distance going left or right?
+//          //var diff = ((angle<0)? 180-angle: angle) - ((stickAngle<0)? 180-stickAngle: stickAngle);
+//          var diff = angle - stickAngle;
+//          if ((diff >= 90) || (diff >= -90 &&  diff < 0)) {
+//            rotateUser(0);
+//          }
+//          else if ((diff < -90) || (diff >= 0 && diff < 90)) {
+//            rotateUser(1);
+//          }
+//        }
 				
-				/*angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
-				if (direction[1] > 0) angle *= -1;*/
+				angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
+				if (direction[1] > 0) angle *= -1;
         
         
 
@@ -1017,7 +1017,7 @@
 				endTime = new Date();
 				elapsedTime = endTime - startTime;
         var iAccel = accelButton ? 0.03 : -0.03
-				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + iAccel + ", " + lastRole + ", " + targetsVerified + ", " + sessionStorage.getItem("num-tags") + ", " + sessionStorage.getItem("num-verified-tags") + '\n';
+				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncate(saveDirection[0], 1) + ", " + truncate(saveDirection[1], 1) + ", " + iAccel + ", " + lastRole + ", " + targetsVerified + ", " + sessionStorage.getItem("num-tags") + ", " + sessionStorage.getItem("num-verified-tags") + '\n';
 				//the += "/n" part allows it to write on a new line each time.
 //				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
 	//			window.setTimeout(ultraRecorder, 100);
