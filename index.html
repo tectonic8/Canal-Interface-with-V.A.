@@ -65,22 +65,27 @@
 				ctx.drawImage(this, 0, 0); 
 				canvas.style.marginTop = canvasTopMargin + "px";
 				minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
-        if (!readCookie("gpRecorder0")) {
-          var button = document.createElement('button');
-          button.addEventListener('click', function(event) {
-            button.parentElement.removeChild(button);
-            window.addEventListener('unload', function(event) {
-              logCookie();
-            });
-            startTime = new Date().getTime();
-            var behavior = (Math.random() < 0.5) ? 0 : 1;
-            va = new VirtualAgent(20, 550, behavior);
-            va.start(true);//true meaning start with the delay.
-            interval = setInterval(pollGamepads, 500);
-          });
-          button.textContent = 'start';
-          document.body.appendChild(button);
-        }
+        		if (!readCookie("gpRecorder0")) {
+          			var button = document.createElement('button');
+          			button.addEventListener('click', function(event) {
+            			button.parentElement.removeChild(button);
+            			window.addEventListener('unload', function(event) {
+              				logCookie();
+            			});
+            			startTime = new Date().getTime();
+            			var behavior = (Math.random() < 0.5) ? 0 : 1;
+            			va = new VirtualAgent(20, 550, behavior);
+            			va.start(true);//true meaning start with the delay.
+            			interval = setInterval(pollGamepads, 500);
+          			});
+          			button.textContent = 'start';
+          			document.body.appendChild(button);
+        		} else {
+        			va.startDelayStart = new Date().getTime();
+			        va.tagAndVerifyDelayStart = new Date().getTime();
+					va.update();
+        			vaTagAndVerify();
+		        }
 			});
 
         if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
@@ -105,10 +110,10 @@
           
           updateTargets();
           
-          va.startDelayStart = new Date().getTime();
+          /*va.startDelayStart = new Date().getTime();
           va.tagAndVerifyDelayStart = new Date().getTime();
 				  va.update();
-          vaTagAndVerify();
+          vaTagAndVerify();*/
           handleFlash();
         });
 			}
@@ -199,6 +204,7 @@
 					this.position = {x:x, y:y};
 					this.fastForward = false;
 					this.targetValid = true;
+					this.hitWall = false;
 				}
 				
 				initialize(addDelay, fastForward) {
@@ -448,6 +454,7 @@
 							this.counter = accelerationData[this.randomAccelIndex].length - 1; //If va is near the target, make sure the counter is set so that it's only decelerating at this point.
 							if (this.magnitude > 0.3  &&  !inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
 								this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
+								this.hitWall = true;
 							}
 							if (inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
 								if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
@@ -484,7 +491,9 @@
 
 							// If the VA will hit a wall, stop
 							if (!inside([this.position.x + this.magnitude * Math.cos(this.angle), this.position.y - this.magnitude * Math.sin(this.angle)], vaCanalTriacontapentagon)) {
+								this.hitWall = true;
 								this.magnitude = 0;
+								this.saveSpeed = 0;
 							}
 
 							this.position.x += this.magnitude * Math.cos(this.angle); 
@@ -758,7 +767,7 @@
 				}
 			}
       
-      function rotateUser(clockwise) {
+      /*function rotateUser(clockwise) {
         if  (clockwise) {
           angle -= 2;
           if (angle <= -90) angle += 180;
@@ -769,7 +778,7 @@
           if (angle >= 90) angle -= 180;
          }
         //if (angle < 0)  angle += 360;
-      }
+      }*/
 
 	//		socket.on('gpUpdateMap', function(msg) { //I don't really use the msg from the server. It's sort of a vestige from the dragging form of the program. You probably don't need to emit this either, since there's only one user. 
 			function gpUpdateMap(msg) {
