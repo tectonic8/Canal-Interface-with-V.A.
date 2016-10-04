@@ -98,7 +98,7 @@
 		  	va.fastForward = true;
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
 				  for (var t = 0; t < frameCount; ++t) {
-					  va.update(); //fastforwarding
+					  va.update(); //fastForwarding
             vaTagAndVerify();
 				  }
 				  va.fastForward = false;
@@ -288,7 +288,7 @@
 				 * before moving toward the target. For now, just wait 500 ms.
 				 */
 					this.initialize(addDelay, false); //delay is optional, depending on when the va is being started. it's a boolean.
-          this.chooseTarget();
+          //this.chooseTarget();
 					handleFlash();
 					vaTagAndVerify();
 					if (addDelay) this.update();
@@ -415,7 +415,7 @@
 						if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
 							this.framesElapsedDelay += 1; 
 							return;
-						} else if (this.fastforward) {
+						} else if (this.fastForward) {
 							this.framesElapsedDelay = 0;
 						}
 
@@ -539,7 +539,7 @@
 				miniSprite1coords[1] = parseInt(readCookie("miniSprite1coords1"));			
 				miniSprite2coords[0] = parseInt(readCookie("miniSprite2coords0"));
 				miniSprite2coords[1] = parseInt(readCookie("miniSprite2coords1"));
-				lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastforwarding
+				lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastForwarding
 				imageId = parseInt(readCookie("imageId")); 
 				targetTracker = JSON.parse(readCookie("targetTracker"));
         tagTracker = JSON.parse(readCookie("tagTracker"));
@@ -961,7 +961,7 @@
               new Target(targetsCoords[va.target.index][0], targetsCoords[va.target.index][1], 'userVerifyTarget', va.target.index, targetTracker[va.target.index]);
               va.onTarget = false;
               va.initialize(true, true);              
-              va.chooseTarget();
+              //va.chooseTarget();
             } else if (va.task === 1 && va.framesElapsed >= framesRequiredVerify) {
               vaVerifyTargets[va.target.index].remove();
               targetSprites[va.target.index].remove();
@@ -970,7 +970,7 @@
                     
               va.onTarget = false;
               va.initialize(true, true);
-              va.chooseTarget();
+              //va.chooseTarget();
             }
               va.framesElapsed += 1;
           }
@@ -1000,8 +1000,8 @@
 						updateTargets();
 						
             va.onTarget = false;
-						va.initialize(true, false); //refreshes all the values for the va, but doesn't restart any of the main functions. True means add the delay. But if it's fastforwarding it won't add the delay (see if statement on line 320). In hindsight, it should still add the delay, just divided by 10.
-            va.chooseTarget();
+						va.initialize(true, false); //refreshes all the values for the va, but doesn't restart any of the main functions. True means add the delay. But if it's fastForwarding it won't add the delay (see if statement on line 320). In hindsight, it should still add the delay, just divided by 10.
+            //va.chooseTarget();
 					}
 					else if ((va.task == 1)  &&  ((endTime2 - va.tagAndVerifyDelayStart) >= (timeToVerify))) {
 						vaVerifyTargets[va.target.index].remove();
@@ -1013,7 +1013,7 @@
 						
             va.onTarget = false;
 						va.initialize(true, false);
-            va.chooseTarget();
+            //va.chooseTarget();
 					}
 				}
 				if(!va.fastForward) {
