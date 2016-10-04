@@ -204,7 +204,6 @@
 					this.position = {x:x, y:y};
 					this.fastForward = false;
 					this.targetValid = true;
-					this.hitWall = false;
 				}
 				
 				initialize(addDelay, fastForward) {
@@ -454,7 +453,6 @@
 							this.counter = accelerationData[this.randomAccelIndex].length - 1; //If va is near the target, make sure the counter is set so that it's only decelerating at this point.
 							if (this.magnitude > 0.3  &&  !inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
 								this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
-								this.hitWall = true;
 							}
 							if (inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
 								if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
@@ -476,6 +474,17 @@
 							vaUpdateMap({x: 0, y: 0});
 				//					socket.emit('vaMove', {x: 0, y: 0});
 						}
+						else {
+							this.angle = this.chooseDirection();
+
+							this.accel = 0.06;
+							this.magnitude += this.accel;
+
+							this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
+							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
+							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
+							this.onTarget = false;
+						}
 						//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
 					}
 					else { // Need to stop and pick a new target
@@ -491,7 +500,6 @@
 
 							// If the VA will hit a wall, stop
 							if (!inside([this.position.x + this.magnitude * Math.cos(this.angle), this.position.y - this.magnitude * Math.sin(this.angle)], vaCanalTriacontapentagon)) {
-								this.hitWall = true;
 								this.magnitude = 0;
 								this.saveSpeed = 0;
 							}
