@@ -73,7 +73,10 @@
               				logCookie();
             			});
             			startTime = new Date().getTime();
-            			var behavior = (Math.random() < 0.5) ? 0 : 1;
+                  var f00 = Math.random();
+            			var behavior = (f00 < 0.5) ? 0 : 1;
+                  console.log('Virtual agent behavior roll is: ' + f00);
+                  console.log('Virtual agent behavior is type: ' + behavior);
             			va = new VirtualAgent(20, 550, behavior);
             			va.start(true);//true meaning start with the delay.
             			interval = setInterval(pollGamepads, 500);
@@ -308,7 +311,9 @@
 					else {
 						tagTarget = this.closestTag();
 						verifyTarget = this.closestVerify();
-						if (Math.random() < preferenceData[this.behavior]) {
+            var ddd = Math.random();
+            console.log('Target roll is: ' + ddd);
+						if (ddd < preferenceData[this.behavior]) {
 							vaTarget = tagTarget;
 						} else {
 							vaTarget = verifyTarget;
@@ -571,7 +576,7 @@
 				var temp2 = parseInt(readCookie("elapsedTime"));
 				timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
 				        
-				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), readCookie("vaBehavior")); //it is drawn onto the old position.
+				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseInt(readCookie("vaBehavior"))); //it is drawn onto the old position.
         va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
 
 //				targetInitializer(); //targetInitializer creates the targets.
