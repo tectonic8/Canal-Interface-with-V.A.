@@ -24,7 +24,8 @@
   };
   
   var ELEMENTS = {
-    IMG: 'img'
+    BUTTON: 'button',
+    IMG:    'img'
   };
   
   var EVENTS = {
@@ -34,7 +35,8 @@
     MOUSEDOWN:          'mousedown',
     MOUSEMOVE:          'mousemove',
     MOUSEUP:            'mouseup',
-    READY_STATE_CHANGE: 'readystatechange'
+    READY_STATE_CHANGE: 'readystatechange',
+    UNLOAD:             'unload'
   };
   
   var HTTP_HEADER_VALUES = {
@@ -80,6 +82,7 @@
     ON_GAMEPAD_CONNECTED: 'ongamepadconnected',
     PX:                   'px',
     ROTATE:               'rotate',
+    START:                'start',
     TWO_D:                '2d',
     USER_VERIFY_TARGET:   'userVerifyTarget'
   };
@@ -131,7 +134,7 @@
   var vaMiniInitialY = 690;
   var vaMagnitude    =   0;
   var vaLastRole     = 'navigating';
-  var vaBehavior     = Math.random() < 0.5;
+  var vaBehavior     = (Math.random() < 0.5) ? 0 : 1;
   var vaAcceleration =   0;
   
   /* Starting coordinates for the user agent. */
@@ -777,8 +780,31 @@
       canvas.style.marginTop  = canvasTopMargin  + STRINGS.PX;
       canvas.style.marginLeft = canvasLeftMargin + STRINGS.PX;
       minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
-      updateClock();
-      gameLoop();
+      if (!readCookie('gpRecorder0')) {
+        var button = document.createElement(ELEMENTS.BUTTON);
+        button.addEventListener(EVENTS.CLICK, function(event) {
+          button.parentElement.removeChild(button);
+          window.addEventListener(EVENTS.UNLOAD, function(event) {
+            logCookie();
+          });
+          startTime = new Date().getTime();
+          var behavior = (Math.random() < 0.5) ? 0 : 1;
+          va = new VirtualAgent(20, 550, behavior);
+          /* Start the virtual agent with a delay. */
+          va.start(true);
+          interval = setInterval(pollGamepads, 500);
+        });
+        button.textContent = STRINGS.START;
+        document.body.appendChild(button);
+      } else {
+        var now = new Date().getTime();
+        va.startDelayStart = now;
+        va.tagAndVerifyDelayStart = now;
+        va.update();
+        vaTagAndVerify();
+      }
+//      updateClock();
+//      gameLoop();
     });
     
     NULL_TARGET = new Target(1000, 3500, -1, -1);
