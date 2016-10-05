@@ -218,18 +218,15 @@
     targetsCoords[i].y -= 9;
   }
   
-  /* One array for each type of target (tag and verify). One additional array
-   * forr the minimap sprites.
-   */
-  var tagTargets        = [];
-  var userVerifyTargets = [];
-  var varVerifyTargets  = [];
-  var targetSprites     = [];
-  
   /* 0 means untagged, 1 means user verifies, 2 means va verifies, 3 means
    * nonexistant.
    */
   var targetTracker = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  ];
+  
+  /* Keep track of how many tags are added to an image. */
+  var tagTracker = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   ];
   
@@ -251,7 +248,6 @@
   /* This is how much time is spent accelerating for each of the four 
    * representative models.
    */
-  var accelerationProportion = [ 0.768,  0.599,  0.644,  0.720];
   var preferenceData         = [ 0.088,  0.696];
   var tagTimeData            = [26.700, 12.700, 10.400, 27.400, 7.700]; 
   var verifyTimeData         = [ 6.200,  2.800,  3.200,  8.800, 3.900];
@@ -269,11 +265,12 @@
    * during fast forwarding.
    */
   var lastTargetIndex           = null;
+  var userLastRole              = null;
   /* collaborative score */
   var targetsVerified           = 0;
   var tagCount                  = 0;
   var verifyCount               = 0;
-  var startTime                 = new Date().getTime();
+  var startTime                 = null;
   
   /* Initialize gamepad state. */
   var interval    = null;
@@ -322,6 +319,7 @@
     lastTargetIndex  = parseInt(readCookie("lastTargetIndex")); 
     imageId          = parseInt(readCookie("imageId")); 
     targetTracker    = JSON.parse(readCookie("targetTracker"));
+    tagTracker       = JSON.parse(readCookie("tagTracker"));
     userLastRole     = readCookie("lastRole");
     targetsVerified  = parseInt(readCookie("targetsVerified"));
     tagCount         = parseInt(readCookie("tagCount"));
@@ -331,6 +329,12 @@
     vaMagnitude      = parseInt(readCookie("magnitude"));
     vaAcceleration   = parseInt(readCookie("acceleration"));
     vaLastRole       = readCookie("vaLastRole");
+    
+    if (userLastRole === "tagging") {
+      tagTracker[lastTargetIndex] = parseInt(readCookie("numTags"));
+    } else if (userLastRole === "verifying") {
+      targetsVerified += parseInt(readCookie("numVerifiedTags"));
+    }
     
     if (isNaN(targetsVerified)) { targetsVerified = 0; }
     if (isNaN(tagCount)) { tagCount = 0; }
@@ -819,8 +823,7 @@
       vaMagnitude,
       vaAcceleration,
       vaBehavior);
-    // TODO: Choose target, initialize, and update. */
-    va.start();
+    //va.start();
     
     /* Initialize user agent. */
     user = new UserAgent(
@@ -841,6 +844,29 @@
         ));
       }
     }
+    
+    /* Fast forward if necessary. */
+    if (readCookie('gpRecorder0') !== null) {
+      if (va.target.index === lastTargetIndex) {
+        va.targetValid = false;
+      }
+      va.fastForward = true;
+      var frameCount = timeSpentTaggingVerifying * 60 / 1000;
+      for (var frame = 0; frame < frameCount; ++frame) {
+        va.update();
+        vaTagAndVerify();
+      }
+      va.fastForward = false;
+      if (targetTracker[va.target.index] === 0) {
+        va.task = 0;
+      } else if (targetTracker[va.target.index] === 2) {
+        va.task = 1;
+      }
+      vaLogger();
+      updateTargets();
+      handleFlash();
+    }
+    
     updateScore();
   });
   
