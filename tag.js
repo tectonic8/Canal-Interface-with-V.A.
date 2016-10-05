@@ -19,8 +19,7 @@
   
   var ELEMENT_IDS = {
     COUNTDOWN:     'countdown',
-    NEXT_BUTTON:   'next-button',
-    SWITCH_BUTTON: 'switch-button',
+    FINISH_BUTTON: 'finish-button',
     TAG_IMAGE:     'tag-image',
     WRAPPER:       'wrapper'
   };
@@ -39,11 +38,6 @@
     ENTER:  'Enter',
     ESCAPE: 'Escape'
   };
-  
-  var LOCATIONS = {
-    SPLASH: 'file:///C:/Users/9/Documents/Objective Two/splash.html',
-    VERIFY: 'file:///C:/Users/9/Documents/Objective Two/verify.html',
-  }
   
   var STORAGE_KEYS = {
     NUM_IMAGES_TAGGED: 'num-images-tagged',
@@ -66,8 +60,6 @@
     ACCEPTED_TAG:  'accepted-tag',
     BEGIN_TAGGING: 'begin-tagging',
     CANCELLED_TAG: 'cancelled-tag',
-    NEXT_IMAGE:    'next-image',
-    SWITCH_TASKS:  'switch-tasks'
   };
   
   var NUM_IMAGES = 100;
@@ -142,7 +134,6 @@
     this.handleMouseupCallback   = this.handleMouseup.bind(this);
     
     events.subscribe(TOPICS.BEGIN_TAGGING, this.show.bind(this));
-    events.subscribe(TOPICS.NEXT_IMAGE, this.hide.bind(this));
     this.element.addEventListener(EVENTS.MOUSEDOWN, this.handleMousedown.bind(this));
     this.accept.addEventListener(EVENTS.CLICK, this.acceptTag.bind(this));
     this.cancel.addEventListener(EVENTS.CLICK, this.cancelTag.bind(this));
@@ -239,7 +230,6 @@
     this.element.classList.add(CSS_CLASSES.TAG);
     this.setPosition(x, y);
     this.element.textContent = tag;
-    this.nextImageSubscriber = events.subscribe(TOPICS.NEXT_IMAGE, this.hide.bind(this));
   };
   
   Tag.prototype.setPosition = function(x, y) {
@@ -249,7 +239,6 @@
   
   Tag.prototype.hide = function() {
     this.element.parentNode.removeChild(this.element);
-    this.nextImageSubscriber.remove();
   };
   
   var Wrapper = function() {
@@ -264,9 +253,17 @@
     this.img.src = this.img.src.replace(/[0-9]+.png/, imageId + ".png");
     
     this.handleClickCallback = this.handleClick.bind(this);
-    events.subscribe(TOPICS.NEXT_IMAGE, this.showNextImage.bind(this));
     events.subscribe(TOPICS.ACCEPTED_TAG, this.pushTag.bind(this));
-    events.subscribe(TOPICS.SWITCH_TASKS, this.switchTasks.bind(this));
+    
+    var handleFinish = function(event) {
+      document.cookie = "numTags=" + this.tags.length + ";";
+      window.location.replace('index.html');
+    };
+    
+    var finish = document.getElementById(ELEMENT_IDS.FINISH_BUTTON);
+    if (null !== finish) {
+      finish.addEventListener(EVENTS.CLICK, handleFinish.bind(this));
+    }
   };
   
   Wrapper.prototype.handleClick = function(event) {
@@ -289,53 +286,6 @@
   
   Wrapper.prototype.restoreEventListener = function(info) {
     this.img.addEventListener(EVENTS.CLICK, this.handleClickCallback);
-  };
-  
-  Wrapper.prototype.showNextImage = function(event) {
-    /* Get the source for the next image and load it. */
-    var imageId = this.getImageId();
-    if (NUM_IMAGES == imageId) {
-      imageId = 1;
-    } else {
-      imageId += 1;
-    }
-    this.img.src = this.img.src.replace(/[0-9]+.png/, imageId + STRINGS.PNG);
-    
-    this.numImagesTagged += 1;
-    sessionStorage.setItem(STORAGE_KEYS.NUM_IMAGES_TAGGED, this.numImagesTagged);
-    
-    /* Clear the list of tags to verify, then add the tags for the next image. */
-//    this.tagsToVerify = [];
-//    var tagToVerify = null;
-//    for (idx = 0; idx < TAGS_TO_VERIFY[imageId - 1].length; ++idx) {
-//      tagToVerify = new TagToVerify(TAGS_TO_VERIFY[imageId - 1][idx].x, TAGS_TO_VERIFY[imageId - 1][idx].y, TAGS_TO_VERIFY[imageId - 1][idx].tag);
-//      this.element.appendChild(tagToVerify.element);
-//      this.tagsToVerify.push(tagToVerify);
-//    }
-  };
-  
-  Wrapper.prototype.getImageId = function() {
-    var dotIndex = this.img.src.lastIndexOf('.');
-    var firstNumberIndex = dotIndex - 1;
-    while (!isNaN(Number.parseInt(this.img.src[firstNumberIndex])) && firstNumberIndex >= 0) {
-      --firstNumberIndex;
-    }
-    return Number.parseInt(this.img.src.substring(firstNumberIndex + 1, dotIndex));
-  }
-  
-  Wrapper.prototype.switchTasks = function(info) {
-    /* if (sessionStorage.getItem(STORAGE_KEYS.NUM_TAGS)) {
-      var numPreviousVerifiedTags = Number.parseInt(sessionStorage.getItem(STORAGE_KEYS.NUM_TAGS));
-      sessionStorage.setItem(STORAGE_KEYS.NUM_TAGS, numPreviousVerifiedTags + this.tags.length);
-    } else {
-      sessionStorage.setItem(STORAGE_KEYS.NUM_TAGS, this.tags.length);
-    } */
-    
-    sessionStorage.setItem(STORAGE_KEYS.TAG_IMAGE_ID, this.getImageId() + 1);
-    
-    if (info) {
-      info();
-    }
   };
   
   Wrapper.prototype.pushTag = function(info) {

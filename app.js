@@ -47,6 +47,10 @@ app.get('/verifyRedirect', function (req, res) {
   imageCount++;
 });
 
+app.get('', function(req, res) {
+  return res.redirect('/survey');
+});
+
 app.get('/', function(req, res){
 //  return res.sendFile(__dirname + '/index.html');
 	console.log('HONK h0nk');
@@ -88,8 +92,7 @@ app.get('/thanks', function(req, res) {
 
 app.get('/reset', function(req, res) {
   req.session.reset();
-  res.sendFile(__dirname + '/reset.html');
-//  res.status(404).send('not found');
+  return res.sendFile(__dirname + '/reset.html');
 });
 
 app.get('/tag-practice', function(req, res) {
