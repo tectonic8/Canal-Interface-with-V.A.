@@ -137,7 +137,7 @@
 			var log = '';
 			var vaLog = '';
 			
-			var targetsCoords = [[227, 4694], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
+			var targetsCoords = [[127, 4854], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
 			var tagTargets = [];//One array for each type of target. One array for the minimap sprites.
 			var userVerifyTargets = [];
 			var vaVerifyTargets = [];
@@ -455,7 +455,7 @@
 								this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
 							}
 							if (inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
-								if (currentDistanceToTarget>35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
+								if (currentDistanceToTarget >= 35  &&  this.killDistance <= 85) this.angle = this.chooseDirection(); //go directly to target
 								this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
 								this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
 				//						socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), y: this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)});
@@ -474,12 +474,12 @@
 							vaUpdateMap({x: 0, y: 0});
 				//					socket.emit('vaMove', {x: 0, y: 0});
 						}
-						else {
+						else if (currentDistanceToTarget >= 35 && currentDistanceToTarget <=85) {
 							this.angle = this.chooseDirection();
 
-							this.accel = 0.06;
-							this.magnitude += this.accel;
-
+							//this.accel = 0.06;
+							//this.magnitude += this.accel;
+              this.saveSpeed = this.magnitude;
 							this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
 							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
 							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
