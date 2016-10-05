@@ -477,8 +477,8 @@
 						else if (currentDistanceToTarget >= 35 && currentDistanceToTarget <=85) {
 							this.angle = this.chooseDirection();
 
-							//this.accel = 0.06;
-							//this.magnitude += this.accel;
+							this.accel = 0.06;
+							this.magnitude += this.accel;
               this.saveSpeed = this.magnitude;
 							this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
 							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
