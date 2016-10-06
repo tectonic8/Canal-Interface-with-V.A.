@@ -414,6 +414,7 @@
 				}
 				
 				update() {
+          va.lastRole = "navigating";
 					/* Decide whether or not to accelerate and decide what direction to
 					   go.
 					   */
@@ -429,10 +430,9 @@
 						}
 
 						if (this.fastForward && this.counter === 0 && this.framesElapsedDelay < this.framesRequiredDelay) {
-							this.framesElapsedDelay += 1; 
+							vaUltraRecorder();
+              this.framesElapsedDelay += 1; 
 							return;
-						} else if (this.fastForward) {
-							this.framesElapsedDelay = 0;
 						}
 
 						var currentDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
@@ -892,6 +892,7 @@
 						lastTargetIndex = i; 
 						imageId++;
 						tagCount++; //Used in the log
+            ultraRecorder();
 						logCookie();
 						//logger(); //It also logs before targets, not just at the end of the 7 minutes.
 						//vaLogger();
@@ -910,6 +911,7 @@
 //						targetsVerified++;
 						verifyCount++;
 						updateScore();
+            ultraRecorder();
 						logCookie();
 						//logger();
 						//vaLogger();
@@ -1004,8 +1006,6 @@
         }
 				if (!va.onTarget) {
 					va.tagAndVerifyDelayStart = new Date().getTime(); //this time is constantly updated if you are not on the target so you get the exact start time when it is on the target
-          
-          va.lastRole = "navigating";
 				}
 				else if (va.onTarget) {
 					var endTime2 = new Date().getTime();
