@@ -65,40 +65,47 @@
 				ctx.drawImage(this, 0, 0); 
 				canvas.style.marginTop = canvasTopMargin + "px";
 				minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
-        		if (!readCookie("gpRecorder0")) {
-          			var button = document.createElement('button');
-          			button.addEventListener('click', function(event) {
-            			button.parentElement.removeChild(button);
-            			window.addEventListener('unload', function(event) {
-              				logCookie();
-            			});
-            			startTime = new Date().getTime();
-                  var f00 = Math.random();
-            			var behavior = (f00 < 0.5) ? 0 : 1;
-                  console.log('Virtual agent behavior roll is: ' + f00);
-                  console.log('Virtual agent behavior is type: ' + behavior);
-            			va = new VirtualAgent(20, 550, behavior);
-            			va.start(true);//true meaning start with the delay.
-            			interval = setInterval(pollGamepads, 500);
-          			});
-          			button.textContent = 'start';
-          			document.body.appendChild(button);
-        		} else {
-        			va.startDelayStart = new Date().getTime();
-			        va.tagAndVerifyDelayStart = new Date().getTime();
+        if (!readCookie("gpRecorder0")) {
+          var button = document.createElement('button');
+          button.addEventListener('click', function(event) {
+            button.parentElement.removeChild(button);
+            window.addEventListener('unload', function(event) {
+              localStorage.setItem("userLog", log);
+              localStorage.setItem("vaLog", vaLog);
+              logCookie();
+            });
+            startTime = new Date().getTime();
+            var f00 = Math.random();
+            var behavior = (f00 < 0.5) ? 0 : 1;
+            console.log('Virtual agent behavior roll is: ' + f00);
+            console.log('Virtual agent behavior is type: ' + behavior);
+            va = new VirtualAgent(20, 550, behavior);
+            va.start(true);//true meaning start with the delay.
+            interval = setInterval(pollGamepads, 500);
+          });
+          button.textContent = 'start';
+          document.body.appendChild(button);
+        } else {
+          va.startDelayStart = new Date().getTime();
+//			    va.tagAndVerifyDelayStart = new Date().getTime();
 					va.update();
-        			vaTagAndVerify();
-		        }
+          vaTagAndVerify();
+        }
 			});
 
-        if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
-  			document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
-            targetInitializer(); //targetInitializer creates the targets.
+      if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
+        document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
+          targetInitializer(); //targetInitializer creates the targets.
 
-			if (va.target.index == lastTargetIndex) // User took VA's tag target, so it will have to go for another
-				va.targetValid = false;
+          if (va.target.index === lastTargetIndex) { // User took VA's tag target, so it will have to go for another
+            va.targetValid = false;
+          }
 
-		  	va.fastForward = true;
+          if (vaLog === '') {
+            vaLog = localStorage.getItem("vaLog");
+          }
+          
+          va.fastForward = true;
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
 				  for (var t = 0; t < frameCount; ++t) {
 					  va.update(); //fastForwarding
@@ -109,7 +116,7 @@
 					if (targetTracker[va.target.index] == 0) va.task = 0;
 					else if (targetTracker[va.target.index] == 2) va.task = 1;
           
-				  vaLogger();
+          localStorage.setItem("vaLog", vaLog);
           
           updateTargets();
           
@@ -120,6 +127,7 @@
           handleFlash();
         });
 			}
+      
 			var userSprite = document.getElementById(ELEMENT_IDS.userSprite);
 			var buddySprite = document.getElementById(ELEMENT_IDS.buddySprite);
 			var miniSprite1 = document.getElementById(ELEMENT_IDS.miniSprite1);
@@ -260,6 +268,7 @@
             angle: this.angle,
             onTarget: this.onTarget,
             lastRole: this.lastRole,
+            tagAndVerifyDelayStart: this.tagAndVerifyDelayStart,
             framesElapsed: framesElapsed,
             framesElapsedDelay: framesElapsedDelay,
             framesRequiredDelay: framesRequiredDelay
@@ -281,6 +290,7 @@
           this.angle = state.angle;
           this.onTarget = state.onTarget;
           this.lastRole = state.lastRole;
+          this.tagAndVerifyDelayStart = state.tagAndVerifyDelayStart;
           this.framesElapsed = state.framesElapsed;
           this.framesElapsedDelay = state.framesElapsedDelay;
         }
@@ -558,6 +568,7 @@
         tagTracker = JSON.parse(readCookie("tagTracker"));
 				lastRole = readCookie("lastRole"); //this is for the log I think.
 				log = localStorage.getItem("userLog"); //Cookies can't save things that are multiple lines, so I use localStorage instead.
+        vaLog = localStorage.getItem("vaLog");
 				targetsVerified = parseInt(readCookie("targetsVerified"));
 				tagCount = parseInt(readCookie("tagCount"));
 				verifyCount = parseInt(readCookie("verifyCount"));
@@ -581,8 +592,6 @@
 
 //				targetInitializer(); //targetInitializer creates the targets.
 //				updateTargets(); //updateTargets draws the targets.
-
-				vaLog = localStorage.getItem("vaLog");
 				
 				updateClock();
 				updateScore();
@@ -885,6 +894,7 @@
 						//logger(); //It also logs before targets, not just at the end of the 7 minutes.
 						//vaLogger();
             localStorage.setItem("userLog", log);
+            localStorage.setItem("vaLog", vaLog);
 						window.location.replace('tag.html'); //I stopped using server requests since I stopped using html templates.
 					}
 				}
@@ -902,6 +912,7 @@
 						//logger();
 						//vaLogger();
 						localStorage.setItem("vaLog", vaLog);
+            localStorage.setItem("userLog", log);
 						window.location.replace('verify.html');
 					}
 				}
@@ -998,6 +1009,7 @@
 					var endTime2 = new Date().getTime();
 					var timeToTag = tagTimeData[va.randomTaggingVerifyingTimeIndex]*1000; //there is only one random index for both of these because both arrays are the same size.
 					var timeToVerify = verifyTimeData[va.randomTaggingVerifyingTimeIndex]*1000;
+          console.log('Time tagging: ' + (endTime2 - va.tagAndVerifyDelayStart));
 					if ((va.task == 0)  &&  ((endTime2 - va.tagAndVerifyDelayStart) >= (timeToTag))) {
 						if (tagTargets[va.target.index]) { tagTargets[va.target.index].remove(); }
 						if (targetSprites[va.target.index]) { targetSprites[va.target.index].remove(); }
@@ -1107,6 +1119,7 @@
 //					document.cookie = "vaLastRole=" + va.lastRole + ";"; 
 					document.cookie = "startTime=" + startTime + ";";
 					document.cookie = "elapsedTime=" + elapsedTime + ";";
+//          document.cookie = "tagAndVerifyDelayStart=" + va.tagAndVerifyDelayStart + ";";
 //					document.cookie = "vaOnTarget=" + va.onTarget + ";";
 //					document.cookie = "vaTargetX=" + va.target.x + ";";
 //					document.cookie = "vaTargetY=" + va.target.y + ";";
