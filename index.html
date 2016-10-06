@@ -581,6 +581,7 @@
         } else if (lastRole === "verifying") {
           targetsVerified += parseInt(readCookie("numVerifiedTags"));
         }
+        lastRole = 'navigating';
         
 				if (isNaN(targetsVerified)) { targetsVerified = 0; }
 				if (isNaN(imageId)) { imageId = 15; }
@@ -599,6 +600,7 @@
 				updateScore();
 			}
 			else { //if there are no cookies:
+        lastRole = 'navigating';
 				var va = null;
         var startTime = 0;
         document.cookie = 'deleted=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -679,7 +681,6 @@
         stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
         aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
         accelButton = (gamepads[0]).buttons[5].pressed;
-        lastRole = 'navigating';
         if (accelButton) {
 //          var stickMagnitude = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
 //          var xStick = 0.03 * stick[0] / stickMagnitude;
@@ -906,7 +907,7 @@
 						targetTracker[i] = 3;
 						lastRole = "verifying";
 						imageId++;
-						targetsVerified++;
+//						targetsVerified++;
 						verifyCount++;
 						updateScore();
 						logCookie();
