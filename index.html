@@ -86,6 +86,7 @@
           button.textContent = 'start';
           document.body.appendChild(button);
         } else {
+          interval = setInterval(pollGamepads, 500);
           va.startDelayStart = new Date().getTime();
 //			    va.tagAndVerifyDelayStart = new Date().getTime();
 					va.update();
@@ -419,6 +420,7 @@
 					if (this.targetValid) { 
 						   var endTime3 = new Date().getTime();
 						if ((this.counter == 0) && ((endTime3 - this.startDelayStart) < (this.startDelay)) && (!this.fastForward)) { //this handles the delay.
+              vaUltraRecorder();
 							window.setTimeout(this.update.bind(this), (1000/60));
 							vaUpdateMap({x: 0, y: 0});
 				//					socket.emit('vaMove', {x: 0, y: 0}); //If it isn't constantly emitting no change, it will not update properly when the user moves.
@@ -595,7 +597,6 @@
 				
 				updateClock();
 				updateScore();
-        interval = setInterval(pollGamepads, 500);;
 			}
 			else { //if there are no cookies:
 				var va = null;
@@ -678,7 +679,7 @@
         stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
         aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
         accelButton = (gamepads[0]).buttons[5].pressed;
-        
+        lastRole = 'navigating';
         if (accelButton) {
 //          var stickMagnitude = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
 //          var xStick = 0.03 * stick[0] / stickMagnitude;
