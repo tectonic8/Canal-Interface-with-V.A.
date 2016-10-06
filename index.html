@@ -149,7 +149,6 @@
 			var log = '';
 			var vaLog = '';
 			
-			var targetsCoords = [[127, 4854], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
 			var tagTargets = [];//One array for each type of target. One array for the minimap sprites.
 			var userVerifyTargets = [];
 			var vaVerifyTargets = [];
@@ -1053,7 +1052,7 @@
 				endTime = new Date();
 				elapsedTime = endTime - startTime;
         var iAccel = accelButton ? 0.03 : -0.03
-				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncate(saveDirection[0], 1) + ", " + truncate(saveDirection[1], 1) + ", " + iAccel + ", " + lastRole + ", " + targetsVerified + ", " + sessionStorage.getItem("num-tags") + ", " + sessionStorage.getItem("num-verified-tags") + '\n';
+				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncate(saveDirection[0], 1) + ", " + truncate(saveDirection[1], 1) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + ", " + targetsVerified + '\n';
 				//the += "/n" part allows it to write on a new line each time.
 //				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
 	//			window.setTimeout(ultraRecorder, 100);
@@ -1061,7 +1060,7 @@
 			function vaUltraRecorder() {
 				var endTime2 = new Date();
 				elapsedTime = endTime2 - startTime;
-				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + va.accel + ", "+ va.lastRole + ", " + va.behavior + '\n';
+				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + va.accel + ", "+ va.lastRole + ", " + va.target.index + ", " + va.behavior + '\n';
 				
 //				localStorage.setItem("vaLog", vaLog);
 	//			window.setTimeout(vaUltraRecorder, 100);
