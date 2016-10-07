@@ -504,6 +504,16 @@
 							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
 							this.onTarget = false;
 						}
+            
+            if (currentDistanceToTarget < 35 && this.magnitude < 0.06) {
+              this.onTarget = true;
+							if (this.task === 0) {
+								this.lastRole = 'tagging';              
+							} else {
+								this.lastRole = 'verifying';
+							}
+							vaUpdateMap({x: 0, y: 0});
+            }
 						//				socket.emit('vaMove', {x: 0, y:0}); //just for good measure.
 					}
 					else { // Need to stop and pick a new target
