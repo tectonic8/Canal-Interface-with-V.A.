@@ -458,7 +458,9 @@
 
 						if ((currentDistanceToTarget>85) && (inside([this.position.x + this.magnitude * Math.cos(this.findPath()), this.position.y - this.magnitude * Math.sin(this.findPath())], vaCanalTriacontapentagon))) {
 							//The number above (85) is the distance at which it should bounce back.
-							this.angle = this.findPath();
+							// if magnitude is 0 reset to 1 (most likely stuck)
+              if (0 === this.magnitude) this.magnitude = 1;
+              this.angle = this.findPath();
 							this.saveSpeed = this.magnitude;
 							this.position.x += this.magnitude * Math.cos(this.angle);
 							this.position.y -= this.magnitude * Math.sin(this.angle);
