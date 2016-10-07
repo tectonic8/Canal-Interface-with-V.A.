@@ -538,8 +538,15 @@
   };
   
   Wrapper.prototype.finish = function(info) {
-    this.save(info);
     var xhr = new XMLHttpRequest();
+    
+    var contentTypeString = STRINGS.APPLICATION_JSON + STRINGS.CONJOIN_HEADER + STRINGS.CHARSET + STRINGS.EQUALS_SYMBOL + STRINGS.UTF_8;
+    var data = {
+      numVerifiedTags:   this.numVerifiedTags,
+      numImagesVerified: this.numImagesVerified,
+      timeVerifying:     this.countdown.initialTime - this.countdown.timeRemaining,
+    };
+    
     xhr.addEventListener(EVENTS.READY_STATE_CHANGE, function(event) {
       if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === HTTP_CODES.OK) {
@@ -548,7 +555,8 @@
       }
     });
     xhr.open(HTTP_VERBS.POST, LOCATIONS.WRITE_TO_DISK);
-    xhr.send(null);
+    xhr.setRequestHeader(HTTP_HEADERS.CONTENT_TYPE, contentTypeString);
+    xhr.send(JSON.stringify(data));
   };
   
   var Countdown = function(initialTime) {

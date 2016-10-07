@@ -164,12 +164,6 @@ app.post('/savetagged', function(req, res) {
     req.session.numImagesTagged += req.body.numImagesTagged;
   }
   
-  if (undefined === req.session.timeTagging) {
-    req.session.timeTagging = req.body.timeTagging;
-  } else {
-    req.session.timeTagging += req.body.timeTagging;
-  }
-  
   req.session.tagImageId = req.body.imageId;
   
   if (undefined === req.session.numSwitches) {
@@ -193,12 +187,6 @@ app.post('/saveverified', function(req, res) {
     req.session.numImagesVerified += req.body.numImagesVerified;
   }
   
-  if (undefined === req.session.timeVerifying) {
-    req.session.timeVerifying = req.body.timeVerifying;
-  } else {
-    req.session.timeVerifying += req.body.timeVerifying;
-  }
-  
   req.session.verifyImageId = req.body.imageId;
   
   if (undefined === req.session.numSwitches) {
@@ -212,16 +200,72 @@ app.post('/saveverified', function(req, res) {
 app.post('/savetime', function(req, res) {
   req.session.timeRemaining = req.body.timeRemaining;
   if (undefined !== req.body.timeVerifying) {
-    req.session.timeVerifying += req.body.timeVerifying;
+    if (undefined === req.session.timeVerifying) {
+      req.session.timeVerifying = parseInt(req.body.timeVerifying);
+    } else {
+      req.session.timeVerifying += req.body.timeVerifying;
+    }
   }
   if (undefined !== req.body.timeTagging) {
-    req.session.timeTagging += req.body.timeTagging;
+    if (undefined === req.session.timeTagging) {
+      req.session.timeTagging = parseInt(req.body.timeTagging);
+    } else {
+      req.session.timeTagging += req.body.timeTagging;
+    }
   }
   res.end();
 });
 
 app.post('/write', function(req, res) {
-  str = '';
+  if (req.body.numVerfiedTags !== undefined) {
+    if (undefined === req.session.numVerifiedTags) {
+      req.session.numVerifiedTags = req.body.numVerifiedTags;
+    } else {
+      req.session.numVerifiedTags += req.body.numVerifiedTags;
+    }
+  }
+  
+  if (req.body.numTags !== undefined) {
+    if (undefined === req.session.numTags) {
+      req.session.numTags = req.body.numTags;
+    } else {
+      req.session.numTags += req.body.numTags;
+    }
+  }
+  
+  if (req.body.numImagesVerified !== undefined) {
+    if (undefined === req.session.numImagesVerified) {
+      req.session.numImagesVerified = req.body.numImagesVerified;
+    } else {
+      req.session.numImagesVerified += req.body.numImagesVerified;
+    }
+  }
+  
+  if (req.body.numImagesTagged !== undefined) {
+    if (undefined === req.session.numImagesTagged) {
+      req.session.numImagesTagged = req.body.numImagesTagged;
+    } else {
+      req.session.numImagesTagged += req.body.numImagesTagged;
+    }
+  }
+  
+  if (req.body.timeVerifying !== undefined) {
+    if (undefined === req.session.timeVerifying) {
+      req.session.timeVerifying = req.body.timeVerifying;
+    } else {
+      req.session.timeVerifying += req.body.timeVerifying;
+    }
+  }
+  
+  if (req.body.timeTagging !== undefined) {
+    if (undefined === req.session.timeTagging) {
+      req.session.timeTagging = req.body.timeTagging;
+    } else {
+      req.session.timeTagging = req.body.timeTagging;
+    }
+  }
+  
+  var str = '';
   if (undefined === req.session.numTags) {
     str += '0'
   } else {

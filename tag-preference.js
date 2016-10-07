@@ -344,7 +344,7 @@
     this.countdown = new Countdown(0);
     
     this.tags = [];
-    this.numImagesTagged = 0;
+    this.numImagesTagged = 1;
     this.switched = false;
     
     if (sessionStorage.getItem(STORAGE_KEYS.TAG_IMAGE_ID)) {
@@ -459,7 +459,12 @@
   };
   
   Wrapper.prototype.finish = function(info) {
-    this.save(info);
+    var contentTypeString = STRINGS.APPLICATION_JSON + STRINGS.CONJOIN_HEADER + STRINGS.CHARSET + STRINGS.EQUALS_SYMBOL + STRINGS.UTF_8;
+    var data = {
+      numVerifiedTags:   this.numVerifiedTags,
+      numImagesVerified: this.numImagesVerified,
+      timeVerifying:     this.countdown.initialTime - this.countdown.timeRemaining,
+    };
     var xhr = new XMLHttpRequest();
     xhr.addEventListener(EVENTS.READY_STATE_CHANGE, function(event) {
       if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -469,7 +474,8 @@
       }
     });
     xhr.open(HTTP_VERBS.POST, LOCATIONS.WRITE_TO_DISK);
-    xhr.send(null);
+    xhr.setRequestHeader(HTTP_HEADERS.CONTENT_TYPE, contentTypeString);
+    xhr.send(JSON.stringify(data));
   };
   
   Wrapper.prototype.pushTag = function(info) {
