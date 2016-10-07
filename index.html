@@ -593,7 +593,7 @@
 							this.position.y -= this.magnitude * Math.sin(this.angle);
             }
 						else if (currentDistanceToTarget<=85 && this.killDistance > 4) {
-//              if (this.magnitude === 0) this.magnitude = 1;
+							//if (this.magnitude === 0) this.magnitude = 1;
 							this.counter = accelerationData[this.randomAccelIndex].length - 1; //If va is near the target, make sure the counter is set so that it's only decelerating at this point.
 							if (this.magnitude > 0.3  &&  !inside([this.position.x + this.magnitude * Math.cos(this.angle+fuzz+cosFuzz), this.position.y - this.magnitude * Math.sin(this.angle+fuzz+cosFuzz)], vaCanalTriacontapentagon)) {
 								this.angle += Math.PI; //without this va would only bounce back when it is past 85 pixels away. But it can run into the side of the canal before that, in which case it should reverse direction.
@@ -627,6 +627,18 @@
 							this.position.x += this.magnitude * Math.cos(this.angle+fuzz+cosFuzz); 
 							this.position.y -= this.magnitude * Math.sin(this.angle+fuzz+cosFuzz);
 							vaUpdateMap({x: this.magnitude * (Math.cos(this.angle + fuzz + cosFuzz)), y: this.magnitude * (Math.sin(this.angle + fuzz + cosFuzz))});
+							this.onTarget = false;
+						}
+						else if ((currentDistanceToTarget>85) && (!inside([this.position.x + this.magnitude * Math.cos(this.findPath()), this.position.y - this.magnitude * Math.sin(this.findPath())], vaCanalTriacontapentagon))) {
+							//The number above (85) is the distance at which it should bounce back.
+							// if magnitude is 0 reset to 1 (most likely stuck)
+              //if (0 === this.magnitude) this.magnitude = 1;
+              this.angle = this.findPath();
+							this.saveSpeed = this.magnitude;
+							this.position.x += this.magnitude * Math.cos(this.angle);
+							this.position.y -= this.magnitude * Math.sin(this.angle);
+				//					socket.emit('vaMove', {x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
+							vaUpdateMap({x: this.magnitude * Math.cos(this.angle), y: this.magnitude * Math.sin(this.angle)});
 							this.onTarget = false;
 						}
             
