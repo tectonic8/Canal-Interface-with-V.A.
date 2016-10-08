@@ -587,7 +587,7 @@
 						} else if (!inside([this.position.x + this.magnitude * Math.cos(this.findPath()), this.position.y - this.magnitude * Math.sin(this.findPath())], vaCanalTriacontapentagon)) {
               this.magnitude = 1;
               this.accel = 0;
-              this.angle = this.findPath() + Math.PI;
+              this.angle = this.findPath();
               this.saveSpeed = this.magnitude;
 							this.position.x += this.magnitude * Math.cos(this.angle);
 							this.position.y -= this.magnitude * Math.sin(this.angle);
