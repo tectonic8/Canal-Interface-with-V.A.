@@ -149,7 +149,30 @@
 			var log = '';
 			var vaLog = '';
 			
-			var targetsCoords = [[227, 4694], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
+			//var targetsCoords = [[227, 4694], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
+      var targetsCoords = [
+        [ 227, 4694],
+        [ 401, 4409],
+        [ 557, 4133],
+        [ 708, 3924],
+        [ 863, 3688],
+        [1045, 3506],
+        [1158, 3256],
+        [1377, 3121],
+        [1828, 3079],
+        [2149, 3169],
+        [2428, 3215],
+        [2605, 3327],
+        [2786, 3014],
+        [2965, 2694],
+        [3107, 2358],
+        [3206, 1962],
+        [3333, 1724],
+        [3471, 1451],
+        [3600, 1214],
+        [3711,  960]
+      ]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
+      var anchorPoints = [{x: 1603, y: 3100}, {x: 2605, y: 3277}, {x: 3157, y: 2160}];
 			var tagTargets = [];//One array for each type of target. One array for the minimap sprites.
 			var userVerifyTargets = [];
 			var vaVerifyTargets = [];
@@ -333,9 +356,94 @@
 					this.target = {x: vaTarget[0], y: vaTarget[1], index: vaTarget[2]};
 					if (targetTracker[this.target.index] == 0) this.task = 0;
 					else if (targetTracker[this.target.index] == 2) this.task = 1;
-					this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+					//this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+          this.startingDistanceToTarget = this.distanceToTarget();
 				}
 				
+        distanceToTarget() {
+          /* Case 0: the virtual agent is to the left of all anchor points. */
+          if (this.position.x <= anchorPoints[0].x) {
+            /* Sub case 0: the target is to the left of all anchor points. */
+            if (this.target.x <= anchorPoints[0].x) {
+              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+            /* Sub case 1: the target is between the first and second anchor points. */ 
+            } else if (this.target.x <= anchorPoints[1].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
+                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
+            /* Sub case 2: the target is between the second and third anchor points. */
+            } else if (this.target.x <= anchorPoints[2].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
+                this.distance(anchorPoints[0].x, anchorPoints[0].y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
+            /* Sub case 3: the target is to the right of all anchor points. */
+            } else {
+              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
+                this.distance(anchorPoints[0].x, anchorPoints[0].y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[2].x, anchorPoints[2].y) +
+                this.distance(anchorPoints[2].x, anchorPoints[2].y, target.x, this.target.y);
+            }
+          /* Case 1: the virtual agent is between the first and second anchor points. */          
+          } else if (this.position.x <= anchorPoints[1].x) {
+            /* Sub case 0: the target is to the left of all anchor points. */
+            if (this.target.x <= anchorPoints[0].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
+                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
+            /* Sub case 1: the target is between the first and second anchor points. */ 
+            } else if (this.target.x <= anchorPoints[1].x) {
+              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+            /* Sub case 2: the target is between the second and third anchor points. */
+            } else if (this.target.x <= anchorPoints[2].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
+            /* Sub case 3: the target is to the right of all anchor points. */
+            } else {
+              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[2].x, anchorPoints[2].y) +
+                this.distance(anchorPoints[2].x, anchorPoints[2].y, this.target.x, this.target.y);
+            }
+          /* Case 2: the virtual agent is between the second and third anchor points. */
+          } else if (this.position.x <= anchorPoints[2].x) {
+            /* Sub case 0: the target is to the left of all anchor points. */
+            if (this.target.x <= anchorPoints[0].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[0].x, anchorPoints[0].y) +
+                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
+            /* Sub case 1: the target is between the first and second anchor points. */ 
+            } else if (this.target.x <= anchorPoints[1].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
+            /* Sub case 2: the target is between the second and third anchor points. */
+            } else if (this.target.x <= anchorPoints[2].x) {
+              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+            /* Sub case 3: the target is to the right of all anchor points. */
+            } else {
+              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
+                this.distance(anchorPoints[2].x, anchorPoints[2].y, this.target.x, this.target.y);
+            }
+          /* Case 3: the virtual agent is to the right of all anchor points. */
+          } else {
+            /* Sub case 0: the target is to the left of all anchor points. */
+            if (this.target.x <= anchorPoints[0].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
+                this.distance(anchorPoints[2].x, anchorPoints[2].y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[0].x, anchorPoints[0].y) +
+                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
+            /* Sub case 1: the target is between the first and second anchor points. */ 
+            } else if (this.target.x <= anchorPoints[1].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
+                this.distance(anchorPoints[2].x, anchorPoints[2].y, anchorPoints[1].x, anchorPoints[1].y) +
+                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
+            /* Sub case 2: the target is between the second and third anchor points. */
+            } else if (this.target.x <= anchorPoints[2].x) {
+              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
+                this.distance(anchorPoints[2].x, anchorPoints[2].y, this.target.x, this.target.y);
+            /* Sub case 3: the target is to the right of all anchor points. */
+            } else {
+              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+            }
+          }
+        }
+        
 				closestTag() {
 					var tagTarget = null;
 					var leastDistance = 10000;
@@ -389,16 +497,24 @@
 				
 				findPath() {
 					var options = [];
-					var startDistance = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+					//var startDistance = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
+          var startDistance = this.distanceToTarget();
 					if (startDistance < 85) { //if va is close to target, just go to the target, don't navigate through canal.
 						return this.chooseDirection();
 					}
 					for (var tryDirection = 0; tryDirection <= 23; tryDirection++){ //This is movement algorithm. Start by looking in 24 evenly spaced directions.
 						for (var steps = 0; steps < 1000; steps += 10) { //see what is the farthest distance you can go in each of those 24 directions
 							if (inside([(this.position.x + steps * Math.cos(tryDirection * Math.PI / 12)), (this.position.y - steps * Math.sin(tryDirection * Math.PI / 12))], vaCanalTriacontapentagon)){ //0.26 is pi/12
-								var endDistance = this.distance(this.position.x + steps*Math.cos(tryDirection * Math.PI / 12), this.position.y - steps*Math.sin(tryDirection * Math.PI / 12), this.target.x, this.target.y);
-								if (endDistance < startDistance) options[tryDirection] = steps; //if it takes va closer, save it.
+								//var endDistance = this.distance(this.position.x + steps*Math.cos(tryDirection * Math.PI / 12), this.position.y - steps*Math.sin(tryDirection * Math.PI / 12), this.target.x, this.target.y);
+                var tmpPos = {x: this.position.x, y: this.position.y};
+                this.position.x = this.position.x + steps*Math.cos(tryDirection * Math.PI / 12);
+                this.position.y = this.position.y - steps*Math.sin(tryDirection * Math.PI / 12);
+                //var endDistance = this.distance(this.position.x + steps*Math.cos(tryDirection * Math.PI / 12), this.position.y - steps*Math.sin(tryDirection * Math.PI / 12), this.target.x, this.target.y);
+								var endDistance = this.distanceToTarget();
+                if (endDistance < startDistance) options[tryDirection] = steps; //if it takes va closer, save it.
 								else options[tryDirection] = 0;
+                this.position.x = tmpPos.x;
+                this.position.y = tmpPos.y
 							}
 							else break;
 						}
