@@ -937,44 +937,12 @@
             var t = (Date.now() - impulseStartTime) / 1000;
             magnitude = magnitude0 * Math.exp(-b * t);
             userT = userT0 + magnitude0 / b * (1 - Math.exp(-b * t));
+            var dx = d2x(userT) - d2x(userTPrev);
+            var dy = d2y(userT) - d2y(userTPrev);
+            angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          }
         }
-//        console.log('xMagnitude - ' + xMagnitude);
-//        console.log('yMagnitude - ' + yMagnitude);
         
-				if ((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5)) { //it checks for larger values so you really have to move the stick to move it. It's super sensitive so it would look weird without this.
-					direction[0] = saveDirection[0];
-					direction[1] = saveDirection[1];
-				}
-				else {
-					direction[0] = stick[0] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1])); //The direction array is components of the angle. This is slightly different from the stick array. If I used the stick array, I could slow down by pressing the stick forward only a little.
-					direction[1] = stick[1] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]));
-					saveDirection[0] = direction[0]; //Save direction allows the inertial movement when you stop moving the stick.
-					saveDirection[1] = direction[1];
-				}
-        
-                    
-//        if (!((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5))) {  // stick being moved
-//          var stickAngle =  Math.atan2(stick[1], stick[0])*180.0/Math.PI;
-//          var stickAngle = Math.floor((Math.acos(stick[0] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]))))/0.0349)
-//          if (stick[1] > 0) stickAngle *= -1;
-//          // is there less distance going left or right?
-//          //var diff = ((angle<0)? 180-angle: angle) - ((stickAngle<0)? 180-stickAngle: stickAngle);
-//          var diff = angle - stickAngle;
-//          if ((diff >= 90) || (diff >= -90 &&  diff < 0)) {
-//            rotateUser(0);
-//          }
-//          else if ((diff < -90) || (diff >= 0 && diff < 90)) {
-//            rotateUser(1);
-//          }
-//        }
-				
-				angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
-				if (direction[1] > 0) angle *= -1;
-        
-        
-
-				handleTargets(); 
-				
 //				angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
 				handleTargets();
         
@@ -1050,6 +1018,7 @@
           gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
           userSprite.style.left = gpSpriteCoords[0] + 'px';
           userSprite.style.top = gpSpriteCoords[1] + 'px';
+				  userSprite.style.transform = "rotate(" + angle + "deg)"; 
           miniSprite1coords[0] += (d2x(userT) - d2x(userTPrev)) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
           miniSprite1coords[1] += (d2y(userT) - d2y(userTPrev)) * 0.045;
           miniSprite1.style.left = miniSprite1coords[0] + "px";
