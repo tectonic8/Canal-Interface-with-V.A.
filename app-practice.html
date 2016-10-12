@@ -63,7 +63,7 @@
             name   = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
             document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
           }
-		  document.cookie = 'deleted=true;';
+          document.cookie = 'deleted=true;';
         };
         
         button.addEventListener(EVENTS.CLICK, function(event) {
@@ -92,27 +92,102 @@
         
         //var targetsCoords = [[227, 4694], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
         var targetsCoords = [
-        [ 227, 4694],
-        [ 401, 4409],
-        [ 557, 4133],
-        [ 708, 3924],
-        [ 863, 3688],
-        [1045, 3506],
-        [1158, 3256],
-        [1377, 3121],
-        [1828, 3079],
-        [2149, 3169],
-        [2428, 3215],
-        [2605, 3327],
-        [2786, 3014],
-        [2965, 2694],
-        [3107, 2358],
-        [3206, 1962],
-        [3333, 1724],
-        [3471, 1451],
-        [3600, 1214],
-        [3711,  960]
-      ];
+          [ 227, 4694],
+          [ 401, 4409],
+          [ 557, 4133],
+          [ 708, 3924],
+          [ 863, 3688],
+          [1045, 3506],
+          [1158, 3256],
+          [1377, 3121],
+          [1828, 3079],
+          [2149, 3169],
+          [2428, 3215],
+          [2605, 3327],
+          [2786, 3014],
+          [2965, 2694],
+          [3107, 2358],
+          [3206, 1962],
+          [3333, 1724],
+          [3471, 1451],
+          [3600, 1214],
+          [3711,  960]
+        ];
+      
+        var xPP = [
+          function(t) { var x = t - 0.0000000000000000; return    8953.191181828150 * Math.pow(x, 3) +      0.0000000000000 * Math.pow(x, 2) + 3476.29230164558 * x +   63.3554914025323; },
+          function(t) { var x = t - 0.0476190476190476; return  -30776.261948209600 * Math.pow(x, 3) +   1279.0273116897400 * Math.pow(x, 2) + 3537.19836410700 * x +  229.8599829485350; },
+          function(t) { var x = t - 0.0952380952380952; return   12633.599670041300 * Math.pow(x, 3) +  -3117.5815380545000 * Math.pow(x, 2) + 3449.64816285153 * x +  397.8750774489620; },
+          function(t) { var x = t - 0.1428571428571430; return   20428.620505240300 * Math.pow(x, 3) +  -1312.7815851914600 * Math.pow(x, 2) + 3238.67849031601 * x +  556.4388639934420; },
+          function(t) { var x = t - 0.1904761904761900; return   -5835.990828331130 * Math.pow(x, 3) +   1605.5927727000100 * Math.pow(x, 2) + 3252.62188019737 * x +  709.8906965650410; },
+          function(t) { var x = t - 0.2380952380952380; return  -72349.662010489400 * Math.pow(x, 3) +    771.8797972241350 * Math.pow(x, 2) + 3365.83485971757 * x +  867.7880841652360; },
+          function(t) { var x = t - 0.2857142857142860; return  247100.186511898000 * Math.pow(x, 3) +  -9563.7862042743400 * Math.pow(x, 2) + 2947.17264985803 * x + 1022.0039341670400; },
+          function(t) { var x = t - 0.3333333333333330; return  117343.812814706000 * Math.pow(x, 3) +  25736.2404402825000 * Math.pow(x, 2) + 3717.28951823937 * x + 1167.3407028539500; },
+          function(t) { var x = t - 0.3809523809523810; return -415868.370293537000 * Math.pow(x, 3) +  42499.6422709547000 * Math.pow(x, 2) + 6966.61726639353 * x + 1415.3840609798800; },
+          function(t) { var x = t - 0.4285714285714290; return   -7367.551204785860 * Math.pow(x, 3) + -16910.1249138363000 * Math.pow(x, 2) + 8185.16571197060 * x + 1798.5934694537000; },
+          function(t) { var x = t - 0.4761904761904760; return  -10462.088996404900 * Math.pow(x, 3) + -17962.6322288057000 * Math.pow(x, 2) + 6524.55822898763 * x + 2149.2227648412000; },
+          function(t) { var x = t - 0.5238095238095240; return  127692.653440297000 * Math.pow(x, 3) + -19457.2163711493000 * Math.pow(x, 2) + 4742.66067660883 * x + 2418.0547282557600; },
+          function(t) { var x = t - 0.5714285714285710; return    8736.193827991100 * Math.pow(x, 3) +  -1215.4087368212200 * Math.pow(x, 2) + 3758.24995718167 * x + 2613.5632552000100; },
+          function(t) { var x = t - 0.6190476190476190; return  -56760.027991477800 * Math.pow(x, 3) +     32.6189528917927 * Math.pow(x, 2) + 3701.92663413741 * x + 2790.7148415807300; },
+          function(t) { var x = t - 0.6666666666666670; return    -389.673320279334 * Math.pow(x, 3) +  -8075.9564744621600 * Math.pow(x, 2) + 3318.91056168168 * x + 2960.9420973494200; },
+          function(t) { var x = t - 0.7142857142857140; return   88091.483724844200 * Math.pow(x, 3) +  -8131.6240916449300 * Math.pow(x, 2) + 2547.12101091467 * x + 3100.6305541486500; },
+          function(t) { var x = t - 0.7619047619047620; return   -9080.474652720400 * Math.pow(x, 3) +   4452.8735833328000 * Math.pow(x, 2) + 2371.94241528076 * x + 3212.9950659307100; },
+          function(t) { var x = t - 0.8095238095238100; return  -37716.646633605200 * Math.pow(x, 3) +   3155.6629186584500 * Math.pow(x, 2) + 2734.25367728034 * x + 3335.0614168362300; },
+          function(t) { var x = t - 0.8571428571428570; return    -863.038121997126 * Math.pow(x, 3) +  -2232.4294575708600 * Math.pow(x, 2) + 2778.21717542738 * x + 3468.3470389438700; },
+          function(t) { var x = t - 0.9047619047619050; return   61819.493941185100 * Math.pow(x, 3) +  -2355.7206178561700 * Math.pow(x, 2) + 2559.73383850227 * x + 3595.4877060027800; },
+          function(t) { var x = t - 0.9523809523809520; return  -45329.449616191800 * Math.pow(x, 3) +   6475.6356594559700 * Math.pow(x, 2) + 2755.92026905464 * x + 3718.7132738405600; },
+          function(t) { var x = t - 0.9523809523809520; return  -45329.449616191800 * Math.pow(x, 3) +   6475.6356594559700 * Math.pow(x, 2) + 2755.92026905464 * x + 3718.7132738405600; }
+        ];
+      
+        var yPP = [
+          function(t) { var y = t - 0.0000000000000000; return -118620.76345757700 * math.pow(y, 3) +      0.000000000000 * Math.pow(y, 2) + -4222.487284904500 * y + 4890.539089620000; },
+          function(t) { var y = t - 0.0476190476190476; return  122262.95723977400 * Math.pow(y, 3) + -16945.823351082400 * Math.pow(y, 2) + -5029.431254003670 * y + 4676.659632099160; },
+          function(t) { var y = t - 0.0952380952380952; return   81436.95215667060 * Math.pow(y, 3) +    520.313397456678 * Math.pow(y, 2) + -5811.598394652500 * y + 4411.938919849020; },
+          function(t) { var y = t - 0.1428571428571430; return  -87616.01512019570 * Math.pow(y, 3) +  12154.163705552500 * Math.pow(y, 2) + -5208.051865937800 * y + 4145.169525772950; },
+          function(t) { var y = t - 0.1904761904761900; return   33701.69287959380 * Math.pow(y, 3) +   -362.409883046909 * Math.pow(y, 2) + -4646.539779151810 * y + 3915.266766871950; },
+          function(t) { var y = t - 0.2380952380952380; return  -88825.16321797640 * Math.pow(y, 3) +   4452.117671180770 * Math.pow(y, 2) + -4451.791789240680 * y + 3696.820275427140; },
+          function(t) { var y = t - 0.2857142857142860; return  198251.28745675000 * Math.pow(y, 3) +  -8237.191359958710 * Math.pow(y, 2) + -4632.033393468190 * y + 3485.334380688090; },
+          function(t) { var y = t - 0.3333333333333330; return   38637.42455900570 * Math.pow(y, 3) +  20084.421133862700 * Math.pow(y, 2) + -4067.879594710860 * y + 3267.490038001360; },
+          function(t) { var y = t - 0.3809523809523810; return    3958.01100878381 * Math.pow(y, 3) +  25604.053213720700 * Math.pow(y, 2) + -1892.237959111660 * y + 3123.496448443280; },
+          function(t) { var y = t - 0.4285714285714290; return -174913.68533615100 * Math.pow(y, 3) +  26169.483357832600 * Math.pow(y, 2) +   573.168544295638 * y + 3091.876341384500; },
+          function(t) { var y = t - 0.4761904761904760; return  -44669.57149651820 * Math.pow(y, 3) +   1181.814024096740 * Math.pow(y, 2) +  1875.611276768480 * y + 3159.624186456600; },
+          function(t) { var y = t - 0.5238095238095240; return -486356.10176023000 * Math.pow(y, 3) +  -5199.553332548720 * Math.pow(y, 2) +  1684.290357318380 * y + 3246.795452633520; },
+          function(t) { var y = t - 0.5714285714285710; return  406967.37924129000 * Math.pow(y, 3) + -74678.996441153000 * Math.pow(y, 2) + -2119.450108095990 * y + 3262.692799122410; },
+          function(t) { var y = t - 0.6190476190476190; return   96204.92576852350 * Math.pow(y, 3) + -16540.799406682900 * Math.pow(y, 2) + -6463.249910373890 * y + 3036.370690959880; },
+          function(t) { var y = t - 0.6666666666666670; return   -7669.91933176008 * Math.pow(y, 3) +  -2797.238582608150 * Math.pow(y, 2) + -7384.108862244890 * y + 2701.477583061520; },
+          function(t) { var y = t - 0.7142857142857140; return  205117.14229648100 * Math.pow(y, 3) +  -3892.941344288160 * Math.pow(y, 2) + -7702.688858763770 * y + 2342.682211307220; },
+          function(t) { var y = t - 0.7619047619047620; return -172849.17710965100 * Math.pow(y, 3) +  25409.507555209100 * Math.pow(y, 2) + -6678.090467767530 * y + 1989.208459806480; },
+          function(t) { var y = t - 0.8095238095238100; return   19438.62559454410 * Math.pow(y, 3) +    716.767968116085 * Math.pow(y, 2) + -5433.982109513950 * y + 1710.157880523920; },
+          function(t) { var y = t - 0.8571428571428570; return  -37810.03564819670 * Math.pow(y, 3) +   3493.714481622370 * Math.pow(y, 2) + -5233.482945240690 * y + 1455.121128837210; },
+          function(t) { var y = t - 0.9047619047619050; return   21267.81868834230 * Math.pow(y, 3) +  -1907.719182405730 * Math.pow(y, 2) + -5157.959359563710 * y + 1209.747194015340; },
+          function(t) { var y = t - 0.9523809523809520; return   -7913.78441150216 * Math.pow(y, 3) +   1130.540630214600 * Math.pow(y, 2) + -5194.967862049000 * y +  962.100680495231; },
+          function(t) { var y = t - 0.9523809523809520; return   -7913.78441150216 * Math.pow(y, 3) +   1130.540630214600 * Math.pow(y, 2) + -5194.967862049000 * y +  962.100680495231; }
+        ];
+
+        /* xBreaks and yBreaks are the same (values of t where xPP and yPP switch
+         * functions), but could change for scaling purposes.
+         */
+        var xBreaks = [
+          0.0000000000000000,	0.0476190476190476,	0.0952380952380952,
+          0.1428571428571430,	0.1904761904761900,	0.2380952380952380,
+          0.2857142857142860,	0.3333333333333330,	0.3809523809523810,
+          0.4285714285714290,	0.4761904761904760,	0.5238095238095240,
+          0.5714285714285710,	0.6190476190476190,	0.6666666666666670,
+          0.7142857142857140,	0.7619047619047620,	0.8095238095238100,
+          0.8571428571428570,	0.9047619047619050, 0.9523809523809520,
+          1.0000000000000000
+        ];
+        var yBreaks = [
+          0.0000000000000000,	0.0476190476190476,	0.0952380952380952,
+          0.1428571428571430,	0.1904761904761900,	0.2380952380952380,
+          0.2857142857142860,	0.3333333333333330,	0.3809523809523810,
+          0.4285714285714290,	0.4761904761904760,	0.5238095238095240,
+          0.5714285714285710,	0.6190476190476190,	0.6666666666666670,
+          0.7142857142857140,	0.7619047619047620,	0.8095238095238100,
+          0.8571428571428570,	0.9047619047619050, 0.9523809523809520,
+          1.0000000000000000
+        ];
+      
         var tagTargets = [];//One array for each type of target. One array for the minimap sprites.
         var userVerifyTargets = [];
         var vaVerifyTargets = [];
@@ -163,13 +238,20 @@
         var interval; //All the gamepad variables are initialized here.
         var stick = [0, 0];
         var aButton = false;
-        var accelButton = false;
+        var rightAccelButton     = false;
+        var leftAccelButton      = false;
+        var rightAccelButtonPrev = false;
+        var leftAccelButtonPrev  = false;
+        var impulseStartTime = 0;
         var gamepads = [];
+        var gpIdx = -1;
         var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
         var gpSpriteCoords = [50, 470];
         var magnitude = 0;
-        var yMagnitude = 0;
-        var xMagnitude = 0;
+        var magnitude0 = 0;
+        var userT = 0;
+        var userT0 = 0;
+        var userTPrev = 0;
         var direction = [0, 0];
         var saveDirection = [0,0];
         var angle = 1.57;
@@ -269,170 +351,132 @@
             var gp = gamepads[i];
             if (gp) {
               console.log("Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.");
-              clearInterval(interval);
+              if (gp.id.indexOf('STANDARD GAMEPAD Vendor: 046d') !== -1 && gp.id.indexOf("Product: c216") !== -1) {
+                gpIdx = i;
+                clearInterval(interval);
+              }
             }
           }
-          if ((gamepads[0]) != "undefined") { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
-            updateGP();
+          if (gpIdx !== -1) { //If the gamepad doesn't work, it probably wasn't at index 0, and this is the source of that problem.
             gameLoop();
           }
-        }
-        function updateGP() {//this loops independently at 30fps. I think this was done back when we were trying to do the frame buffering. It could probably go back into gameLoop.
-            gamepads = navigator.getGamepads(); //in chrome, it needs to do this any time it wants input. The entire syntax for handling these gamepads seems to differ a lot between browsers.
-            stick[0] = ((gamepads[0]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
-            stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
-            aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
-            accelButton = (gamepads[0]).buttons[5].pressed;
-            setTimeout(updateGP, (1000/30));
         }
       
         function gameLoop() {
           gamepads = navigator.getGamepads(); //in chrome, it needs to do this any time it wants input. The entire syntax for handling these gamepads seems to differ a lot between browsers.
-          stick[0] = ((gamepads[0]).axes[0]); //This value varies from -1 to 1. 1 is all the way to the right.
-          stick[1] = ((gamepads[0]).axes[1]); //This is the y-axis. 1 is all the way down.
-          aButton = (gamepads[0]).buttons[0].pressed; //this is a boolean
-          accelButton = (gamepads[0]).buttons[5].pressed;
-          
-          if (accelButton) {
-//            var stickMagnitude = Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]);
-//            var xStick = 0.03 * stick[0] / stickMagnitude;
-//            var yStick = 0.03 * stick[1] / stickMagnitude;
-//            if (stick[0] < 0.5 && stick[0] > -0.5 && stick[1] < 0.5 && stick[1] > -0.5) {
-//              xMagnitude += 0.03 * saveDirection[0];
-//              yMagnitude += 0.03 * saveDirection[1];
-//            } else if (stick[0] < 0.5 && stick[0] > -0.5) {
-//              xMagnitude += xMagnitude > 0 ? -0.0424 : 0.0424;
-//              yMagnitude += yStick;
-//              if (Math.abs(xMagnitude) < 0.01) {
-//                xMagnitude = 0;
-//              }
-//            } else if (stick[1] < 0.5 && stick[1] > -0.5) {
-//              xMagnitude += xStick;
-//              yMagnitude += yMagnitude > 0 ? -0.0424 : 0.0424;
-//              if (Math.abs(yMagnitude) < 0.01) {
-//                yMagnitude = 0;
-//              }
-//            } else {
-//              xMagnitude += xStick;
-//              if (Math.sign(xMagnitude) !== Math.sign(xStick)) {
-//                xMagnitude += 3 * xStick;
-//              }
-//              yMagnitude += yStick;
-//              if (Math.sign(yMagnitude) !== Math.sign(yStick)) {
-//                yMagnitude += 3 * yStick;
-//              }
-//            }
-            magnitude += 0.03;
+          aButton = (gamepads[gpIdx]).buttons[0].pressed; //this is a boolean
+          leftAccelButton  = (gamepads[gpIdx]).buttons[4].pressed;
+          rightAccelButton = (gamepads[gpIdx]).buttons[5].pressed;
+          if (rightAccelButton && !rightAccelButtonPrev && !leftAccelButton) {
+            magnitude0 = magnitude + 0.01;
+            magnitude  = magnitude0; 
+            userT0     = userT;
+            impulseStartTime = Date.now();
+          } else if (leftAccelButton && !leftAccelButtonPrev && !rightAccelButton) {
+            magnitude0 = magnitude - 0.01;
+            magnitude  = magnitude0;
+            userT0     = userT;
+            impulseStartTime = Date.now();
+          } else{
+            if (magnitude < 0.005 && magnitude > -0.005) {
+              magnitude = 0;
+            } else {
+              var t = (Date.now() - impulseStartTime) / 1000;
+              magnitude = magnitude0 * Math.exp(-b * t);
+              userT = Math.min(1, Math.max(0, userT0 + magnitude0 / b * (1 - Math.exp(-b * t))));
+              var dx = d2x(userT) - d2x(userTPrev);
+              var dy = d2y(userT) - d2y(userTPrev);
+              angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            }
           }
-          else{
-//            if (Math.abs(xMagnitude) < 0.027) {
-//              xMagnitude = 0;
-//            }
-//            else {
-//              xMagnitude += xMagnitude > 0 ? -0.0424 : 0.0424;
-//            }
-//            
-//            if (Math.abs(yMagnitude) < 0.027) {
-//              yMagnitude = 0;
-//            }
-//            else {
-//              yMagnitude += yMagnitude > 0 ? -0.0424 : 0.0424;
-//            }
-            if (magnitude < 0.01) magnitude = 0;
-            else magnitude -= 0.03;
-          }
-          
-//          console.log('xMagnitude - ' + xMagnitude);
-//          console.log('yMagnitude - ' + yMagnitude);
-          
-          if ((stick[0] < 0.5 && stick[0] > -0.5) && (stick[1] < 0.5 && stick[1] > -0.5)) { //it checks for larger values so you really have to move the stick to move it. It's super sensitive so it would look weird without this.
-            direction[0] = saveDirection[0];
-            direction[1] = saveDirection[1];
-          }
-          else {
-            direction[0] = stick[0] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1])); //The direction array is components of the angle. This is slightly different from the stick array. If I used the stick array, I could slow down by pressing the stick forward only a little.
-            direction[1] = stick[1] / (Math.sqrt(stick[0] * stick[0] + stick[1] * stick[1]));
-            saveDirection[0] = direction[0]; //Save direction allows the inertial movement when you stop moving the stick.
-            saveDirection[1] = direction[1];
-          }
-          
-          angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
-          if (direction[1] > 0) angle *= -1;
+//          angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
 
-          handleTargets(); 
-          
-          
-//          if (inside([(gpRecorder[0] + xMagnitude), (gpRecorder[1] + yMagnitude)], canalTriacontapentagon)) { //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
-//            gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
-//          } else {
-//            xMagnitude = 0;
-//            yMagnitude = 0;
-//                        gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
-//          }
+          handleTargets();
+          gpUpdateMap();
 
-          if (inside([(gpRecorder[0] + magnitude*2*direction[0]), (gpRecorder[1] + magnitude*2*direction[1])], canalTriacontapentagon)){ //the significance of doing it this way instead of just using gpRecorder0 and gpRecorder1 as arguments is this way, it can never leave the canal. It asks if it would be in the canal after taking one more step, not whether it is in the canal right now.
-            gpUpdateMap({x1: gpRecorder[0], y1: gpRecorder[1]});
-          }
-          else { 
-            magnitude = 1; //If it hits the canal edge, magnitude is reset to 1.
-          }
+          leftAccelButtonPrev  = leftAccelButton;
+          rightAccelButtonPrev = rightAccelButton;
+          userTPrev            = userT;
           
           window.setTimeout(gameLoop, (1000/60));
         }
 
-        //socket.on('gpUpdateMap', function(msg) { //I don't really use the msg from the server. It's sort of a vestige from the dragging form of the program. You probably don't need to emit this either, since there's only one user. 
-        function gpUpdateMap(msg) {
+        //socket.on('gpUpdateMap', function(msg) {
+        function gpUpdateMap() {
           function gpShifter() { //This shifts the canvas based on the local coordinates of the user. It shifts direction depending on what edge or corner you're on.
-          if (gpSpriteCoords[0] > 400  &&  gpSpriteCoords[1] < 300)
-            gpHandleShift(magnitude*Math.abs(direction[0]), magnitude*Math.abs(direction[1]));
-//            gpHandleShift(Math.abs(xMagnitude), Math.abs(yMagnitude));
-          else if (gpSpriteCoords[0] > 400)
-            gpHandleShift(magnitude*Math.abs(direction[0]), 0);
-//            gpHandleShift(Math.abs(xMagnitude), 0);
-          else if (gpSpriteCoords[1] < 300)
-            gpHandleShift(0, magnitude*Math.abs(direction[1]));
-//            gpHandleShift(0, Math.abs(yMagnitude));
-          if ((gpSpriteCoords[0] < 300)  &&  (gpSpriteCoords[1] > 400))
-            gpHandleShift(-magnitude*Math.abs(direction[0]), -magnitude*Math.abs(direction[1]));
-//            gpHandleShift(-Math.abs(xMagnitude), -Math.abs(yMagnitude));
-          else if (gpSpriteCoords[0] < 300)
-            gpHandleShift(-magnitude*Math.abs(direction[0]), 0);
-//            gpHandleShift(-Math.abs(xMagnitude), 0);
-          else if (gpSpriteCoords[1] > 400)
-            gpHandleShift(0, -magnitude*Math.abs(direction[1]));
-//            gpHandleShift(0, -Math.abs(yMagnitude));
-          }
+            if (gpSpriteCoords[0] < 300 && d2x(userT) < d2x(userTPrev)) {
+              gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+            }
+            
+            if (gpSpriteCoords[0] > 400 && d2x(userT) > d2x(userTPrev)) {
+              gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+            }
+            
+            if (gpSpriteCoords[1] < 300 && d2y(userT) < d2y(userTPrev)) {
+              gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+            } 
+            
+            if (gpSpriteCoords[1] > 400 && d2y(userT) > d2y(userTPrev)) {
+              gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+            }
+//            if (gpSpriteCoords[0] > 400  &&  gpSpriteCoords[1] < 300) {
+//              gpHandleShift(d2x(userT) - d2x(userTPrev), d2y(userT) - d2y(userTPrev));
+//            } else if (gpSpriteCoords[0] > 400) {
+//              gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+//            } else if (gpSpriteCoords[1] < 300) {
+//              gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+//            }
+//				
+//            if ((gpSpriteCoords[0] < 300)  &&  (gpSpriteCoords[1] > 400)) {
+//              gpHandleShift(d2x(userT) - d2x(userTPrev), d2y(userT) - d2y(userTPrev));
+//            } else if (gpSpriteCoords[0] < 300) {
+//              gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+//            } else if (gpSpriteCoords[1] > 400) {
+//              gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+//            }
+          };
+
           function gpHandleShift(x, y) {
             gpRecorder[2] += x; //gpRecorder 2 and 3 are the total x and y shift of the canvas. 
-            gpRecorder[3] -= y;
+            gpRecorder[3] += y;
             gpSpriteCoords[0] -= x;
-            gpSpriteCoords[1] += y;
+            gpSpriteCoords[1] -= y;
             gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2]; //I only just noticed this adds up to 0. This should get deleted.			
             gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
             canvasLeftMargin -= x;
-            canvasTopMargin += y;
+            canvasTopMargin  -= y;
             canvas.style.marginLeft = canvasLeftMargin + "px";
             canvas.style.marginTop = canvasTopMargin + "px";
             userSprite.style.left = gpSpriteCoords[0] + "px";
             userSprite.style.top = gpSpriteCoords[1] + "px";
             updateTargets();
-          }
+          };
+          
           gpShifter();
-          gpSpriteCoords[0] += magnitude * direction[0];
-//          gpSpriteCoords[0] += xMagnitude;
-          gpSpriteCoords[1] += magnitude * direction[1];
-//          gpSpriteCoords[1] += yMagnitude;
+          gpSpriteCoords[0] += d2x(userT) - d2x(userTPrev);
+          gpSpriteCoords[1] += d2y(userT) - d2y(userTPrev);
           gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2];	//local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)		
           gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
           userSprite.style.left = gpSpriteCoords[0] + 'px';
           userSprite.style.top = gpSpriteCoords[1] + 'px';
-          userSprite.style.transform = "rotate(" + angle*-2 +"deg)"; 
-          miniSprite1coords[0] += (magnitude*direction[0]*0.047); //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
-//          miniSprite1coords[0] += (xMagnitude*0.047);
-          miniSprite1coords[1] += (magnitude*direction[1]*0.045);
-//          miniSprite1coords[1] += (yMagnitude*0.045);
+          miniSprite1coords[0] += (d2x(userT) - d2x(userTPrev)) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
+          miniSprite1coords[1] += (d2y(userT) - d2y(userTPrev)) * 0.045;
           miniSprite1.style.left = miniSprite1coords[0] + "px";
           miniSprite1.style.top = miniSprite1coords[1] + "px";
+        };
+        
+        function d2x(d) {
+          var ppIndex = xBreaks.findIndex(function(xBreak, index, xBreaks) {
+            return (d < xBreak && d >= xBreaks[index - 1]) || (d >= 1 && index === 19);
+          });
+          return xPP[ppIndex](d) - 14;
+        };
+      
+        function d2y(d) {
+          var ppIndex = yBreaks.findIndex(function(yBreak, index, yBreaks) {
+            return (d < yBreak && d >= yBreaks[index - 1]) || (d >= 1 && index === 19);
+          });
+          return yPP[ppIndex](d) - 4412;
         };
 
         function updateTargets (x, y) { //draws the targets.
