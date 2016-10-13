@@ -952,28 +952,28 @@
 			};
 			
       function d2x(d) {
-          var omega = 4.980;
-          var a0 = 1963;
-          var a  = [-1216, -560.5, -307.1, -40.62, 113.2, 84.7 , 25.1  , 1.831 ];
-          var b  = [-1129, -41   , 304.7 , 219.7 , 101.3, 28.59, -39.48, -29.42];
-          var x = a0;
-          for (var idx = 0; idx < a.length; ++idx) {
-            x += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
-          }
-          return x;
-        };
-      
-        function d2y(d) {
-          var omega = 5.174;
-          var a0 = 2839;
-          var a  = [410.2, 808.3, 340.6, 312.9 , 125.8 , 47.16 , 2.847 , -5.913];
-          var b  = [1281 , 448.8, 125  , -99.37, -85.81, -89.05, -45.36, -34.82];
-          var y  = a0;
-          for (var idx = 0; idx < a.length; ++idx) {
-            y += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
-          }
-          return y;
-        };
+        var omega = 4.963;
+        var a0 = 2141;
+        var a  = [-968.1, -487.7, -393.6, -163.8, -54.71, -4.298, 2.624, -4.896];
+        var b  = [-1250 , -303.6, 61.59 , 101.5 , 96.12 , 72.48 , 14.93, 23.2  ];
+        var x = a0;
+        for (var idx = 0; idx < a.length; ++idx) {
+          x += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
+        }
+        return x;
+      };
+    
+      function d2y(d) {
+        var omega = 5.051;
+        var a0 = 2834;
+        var a  = [541.7, 872.2, 386.1, 212.3 , 58.69 , 3.367 , -16.64, -10.5 ];
+        var b  = [1200 , 295.6, 51.12, -200.9, -92.59, -93.36, -4.567, -10.81];
+        var y  = a0;
+        for (var idx = 0; idx < a.length; ++idx) {
+          y += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
+        }
+        return y;
+      };
       
 			/*
 			*/
