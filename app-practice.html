@@ -297,7 +297,7 @@
           rightAccelButton = (gamepads[gpIdx]).buttons[5].pressed;
           if (rightAccelButton && !rightAccelButtonPrev && !leftAccelButton) {
             magnitude0 = magnitude + 0.01;
-            magnitude  = magnitude0; 
+            magnitude  = magnitude0;
             userT0     = userT;
             impulseStartTime = Date.now();
           } else if (leftAccelButton && !leftAccelButtonPrev && !rightAccelButton) {

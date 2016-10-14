@@ -79,7 +79,7 @@
             var behavior = (f00 < 0.5) ? 0 : 1;
             console.log('Virtual agent behavior roll is: ' + f00);
             console.log('Virtual agent behavior is type: ' + behavior);
-            va = new VirtualAgent(20, 550, behavior);
+            va = new VirtualAgent(20, 550, 0, behavior);
             va.start(true);//true meaning start with the delay.
             interval = setInterval(pollGamepads, 500);
           });
@@ -89,7 +89,8 @@
           interval = setInterval(pollGamepads, 500);
           va.startDelayStart = new Date().getTime();
 //			    va.tagAndVerifyDelayStart = new Date().getTime();
-					va.update();
+//					va.update();
+          va.update2();
           vaTagAndVerify();
         }
 			});
@@ -245,12 +246,14 @@
 					this.sprite = document.getElementById(ELEMENT_IDS.buddySprite);
 					this.position = {x:x, y:y};
           this.mapProportion = d;
+          this.mapProportion0 = d;
 					this.fastForward = false;
 					this.targetValid = true;
 				}
 				
 				initialize(addDelay, fastForward) {
 					this.magnitude = 0;
+          this.magnitude0 = 0;
 					this.onTarget = false;
 					this.counter = 0;
 					this.randomTaggingVerifyingTimeIndex = Math.floor(Math.random()*5);
@@ -287,6 +290,7 @@
           var framesRequiredDelay = va.startDelay * 1000 * 60;
           return {
             magnitude: this.magnitude,
+            magnitude0: this.magnitude0,
             counter: this.counter,
             randomTaggingVerifyingTimeIndex: this.randomTaggingVerifyingTimeIndex,
             task: this.task,
@@ -309,6 +313,7 @@
 
         restoreState(state) {
           this.magnitude = state.magnitude;
+          this.magnitude0 = state.magnitude0;
           this.counter = state.counter;
           this.randomTaggingVerifyingTimeIndex = state.randomTaggingVerifyingTimeIndex;
           this.task = state.task;
@@ -335,7 +340,8 @@
           //this.chooseTarget();
 					handleFlash();
 					vaTagAndVerify();
-					if (addDelay) this.update();
+					//if (addDelay) this.update();
+          if (addDelay) this.update2();
 				}
 				
 				chooseTarget() {
@@ -365,7 +371,8 @@
 					if (targetTracker[this.target.index] == 0) this.task = 0;
 					else if (targetTracker[this.target.index] == 2) this.task = 1;
 					//this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-          this.startingDistanceToTarget = this.distanceToTarget();
+          //this.startingDistanceToTarget = this.distanceToTarget();
+          this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
 				}
 				
         distanceToTarget() {
@@ -545,6 +552,67 @@
 					return Math.sqrt((vaX - targetX)*(vaX - targetX) + (vaY - targetY)*(vaY - targetY));
 				}
 				
+        update2() {
+          va.lastRole = 'navigating';
+          var oldD = this.mapProportion;
+          if (this.targetValid) {
+            var now = Date.now();
+            if (now - this.startDelayStart < this.startDelay && !this.fastForward) {
+              vaUltraRecorder();
+              window.setTimeout(this.update2.bind(this), (1000 / 60));
+            } else if (this.fastForward && this.framesElapsedDelay < this.framesRequiredDelay) {
+              vaUltraRecorder();
+              this.framesElapsedDelay += 1;
+            } else {
+              var speedAtTarget = 0;
+              if (0 !== this.magnitude0) {
+                speedAtTarget = this.magnitude0 - this.startingDistanceToTarget * b;
+              }
+              var currentDistanceToTarget = this.target.mapProportion - this.mapProportion;
+              console.log(currentDistanceToTarget);
+              /* Add an impulse if the virtual agent cannot reach the target. */
+              if (speedAtTarget < 0.01 && speedAtTarget > -0.01 && (currentDistanceToTarget > 0.003 || currentDistanceToTarget < -0.003)) {
+                this.magnitude0 = this.magnitude + 0.03 * Math.sign(currentDistanceToTarget);
+                this.magnitude  = this.magnitude0;
+                this.mapProportion0 = this.mapProportion;
+                this.impulseStartTime = now;
+                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
+                vaUpdateMap({x: 0, y: 0});
+              } else if ((speedAtTarget > 0.03 || speedAtTarget < -0.03) && currentDistanceToTarget < 0.003 && currentDistanceToTarget > -0.003) {
+                this.magnitude0 = this.magnitude - 0.03 * Math.sign(currentDistanceToTarget);
+                this.magnitude = this.magnitude0;
+                this.mapProportion0 = this.mapProportion;
+                this.impulseStartTime = now;
+                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
+                vaUpdateMap({x: 0, y: 0});
+              } else {
+                if (this.magnitude < 0.01 && this.magnitude > -0.01) {
+                  this.magnitude = 0;
+                  vaUpdateMap({x: 0, y: 0});
+                } else {
+                  var t = (now - this.impulseStartTime) / 1000;
+                  this.magnitude = this.magnitude0 * Math.exp(-b * t);
+                  this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
+                  var x = d2x(this.mapProportion) + 14;
+                  var y = d2y(this.mapProportion) - 4412;
+                  var dx = x - d2x(oldD);
+                  var dy = y - d2y(oldD);
+                  this.position.x = x;
+                  this.position.y = y;
+                  vaUpdateMap({x: dx, y: dy});
+                  this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                }
+              }
+              
+              vaUltraRecorder();
+              
+              if (!this.fastForward) {
+                window.setTimeout(this.update2.bind(this), 1000 / 60);
+              }
+            }
+          }
+        }
+        
 				update() {
 					va.lastRole = "navigating";
 
@@ -720,7 +788,7 @@
       var userT     = 0;
       var userTPrev = 0;
       var userT0    = 0;
-      var b = 0.1;
+      var b = 0.6;
 			var direction = [0, 0];
 			var saveDirection = [0,0];
 			var angle = 1.57;
@@ -764,7 +832,7 @@
 				var temp2 = parseInt(readCookie("elapsedTime"));
 				timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
 				        
-				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseInt(readCookie("vaBehavior"))); //it is drawn onto the old position.
+				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseFloat(readCookie("vaD")), parseInt(readCookie("vaBehavior"))); //it is drawn onto the old position.
         va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
 
 //				targetInitializer(); //targetInitializer creates the targets.
@@ -855,26 +923,27 @@
         leftAccelButton  = (gamepads[gpIdx]).buttons[4].pressed;
         rightAccelButton = (gamepads[gpIdx]).buttons[5].pressed;
         if (rightAccelButton && !rightAccelButtonPrev && !leftAccelButton) {
-          magnitude0 = magnitude + 0.03;
-          userT0     = userT;
-          impulseStartTime = Date.now();
-        } else if (leftAccelButton && !leftAccelButtonPrev && !rightAccelButton) {
-          magnitude0 = magnitude - 0.03;
-          userT0     = userT;
-          impulseStartTime = Date.now();
-        }
-        else{
-          if (magnitude < 0.01 || magnitude > -0.01) {
-            magnitude = 0;
-          } else {
-            var t = (Date.now() - impulseStartTime) / 1000;
-            magnitude = magnitude0 * Math.exp(-b * t);
-            userT = userT0 + magnitude0 / b * (1 - Math.exp(-b * t));
-            var dx = d2x(userT) - d2x(userTPrev);
-            var dy = d2y(userT) - d2y(userTPrev);
-            angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            magnitude0 = magnitude + 0.01;
+            magnitude  = magnitude0;
+            userT0     = userT;
+            impulseStartTime = Date.now();
+          } else if (leftAccelButton && !leftAccelButtonPrev && !rightAccelButton) {
+            magnitude0 = magnitude - 0.01;
+            magnitude  = magnitude0;
+            userT0     = userT;
+            impulseStartTime = Date.now();
+          } else{
+            if (magnitude < 0.005 && magnitude > -0.005) {
+              magnitude = 0;
+            } else {
+              var t = (Date.now() - impulseStartTime) / 1000;
+              magnitude = magnitude0 * Math.exp(-b * t);
+              userT = Math.min(1, Math.max(0, userT0 + magnitude0 / b * (1 - Math.exp(-b * t))));
+              var dx = d2x(userT) - d2x(userTPrev);
+              var dy = d2y(userT) - d2y(userTPrev);
+              angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            }
           }
-        }
         
 //				angle = Math.floor((Math.acos(direction[0] / (Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1]))))/0.0349); //angle is used to angle the user boat. 0.0349 means it moves in intervals of 2 degrees.
 				handleTargets();
@@ -930,13 +999,13 @@
         
 				function gpHandleShift(x, y) {
 					gpRecorder[2] += x; //gpRecorder 2 and 3 are the total x and y shift of the canvas. 
-					gpRecorder[3] -= y;
+					gpRecorder[3] += y;
 					gpSpriteCoords[0] -= x;
-					gpSpriteCoords[1] += y;
+					gpSpriteCoords[1] -= y;
 					gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2]; //I only just noticed this adds up to 0. This should get deleted.			
 					gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
 					canvasLeftMargin -= x;
-					canvasTopMargin += y;
+					canvasTopMargin  -= y;
 					canvas.style.marginLeft = canvasLeftMargin + "px";
 					canvas.style.marginTop = canvasTopMargin + "px";
 					userSprite.style.left = gpSpriteCoords[0] + "px";
@@ -1238,6 +1307,7 @@
 					document.cookie = "verifyCount=" + verifyCount + ";";
 					document.cookie = "vaPosX=" + va.position.x + ";";
 					document.cookie = "vaPosY=" + va.position.y + ";";
+          document.cookie = "vaD=" + va.mapProportion + ";";
 					document.cookie = "imageId=" + imageId + ";";
 					document.cookie = "lastRole=" + lastRole + ";"; 
 //					document.cookie = "vaLastRole=" + va.lastRole + ";"; 
