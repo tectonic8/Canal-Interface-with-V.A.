@@ -572,19 +572,53 @@
               console.log(currentDistanceToTarget);
               /* Add an impulse if the virtual agent cannot reach the target. */
               if (speedAtTarget < 0.01 && speedAtTarget > -0.01 && (currentDistanceToTarget > 0.003 || currentDistanceToTarget < -0.003)) {
-                this.magnitude0 = this.magnitude + 0.03 * Math.sign(currentDistanceToTarget);
-                this.magnitude  = this.magnitude0;
-                this.mapProportion0 = this.mapProportion;
-                this.impulseStartTime = now;
-                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-                vaUpdateMap({x: 0, y: 0});
+              	if (this.burstCD == 0) {
+              		this.burstCD = 20
+	                this.magnitude0 = this.magnitude + 0.03 * Math.sign(currentDistanceToTarget);
+	                this.magnitude = this.magnitude0;
+	                this.mapProportion0 = this.mapProportion;
+	                this.impulseStartTime = now;
+	                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
+	                vaUpdateMap({x: 0, y: 0});
+            	}
+              	else {
+              		var t = (now - this.impulseStartTime) / 1000;
+                    this.magnitude = this.magnitude0 * Math.exp(-b * t);
+                    this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
+                    var x = d2x(this.mapProportion) + 14;
+                    var y = d2y(this.mapProportion) - 4412;
+                    var dx = x - d2x(oldD);
+                    var dy = y - d2y(oldD);
+                    this.position.x = x;
+                    this.position.y = y;
+                    vaUpdateMap({x: dx, y: dy});
+                    this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+              	}
+                
               } else if ((speedAtTarget > 0.03 || speedAtTarget < -0.03) && currentDistanceToTarget < 0.003 && currentDistanceToTarget > -0.003) {
-                this.magnitude0 = this.magnitude - 0.03 * Math.sign(currentDistanceToTarget);
-                this.magnitude = this.magnitude0;
-                this.mapProportion0 = this.mapProportion;
-                this.impulseStartTime = now;
-                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-                vaUpdateMap({x: 0, y: 0});
+              	if (this.burstCD == 0) {
+              		this.burstCD = 20
+	                this.magnitude0 = this.magnitude - 0.03 * Math.sign(currentDistanceToTarget);
+	                this.magnitude = this.magnitude0;
+	                this.mapProportion0 = this.mapProportion;
+	                this.impulseStartTime = now;
+	                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
+	                vaUpdateMap({x: 0, y: 0});
+              	}
+              	else {
+              		var t = (now - this.impulseStartTime) / 1000;
+                    this.magnitude = this.magnitude0 * Math.exp(-b * t);
+                    this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
+                    var x = d2x(this.mapProportion) + 14;
+                    var y = d2y(this.mapProportion) - 4412;
+                    var dx = x - d2x(oldD);
+                    var dy = y - d2y(oldD);
+                    this.position.x = x;
+                    this.position.y = y;
+                    vaUpdateMap({x: dx, y: dy});
+                    this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+              	}
+                
               } else {
                 if (this.magnitude < 0.01 && this.magnitude > -0.01) {
                   this.magnitude = 0;
