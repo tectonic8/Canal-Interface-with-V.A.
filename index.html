@@ -173,6 +173,12 @@
         [3721,  960]
       ]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
       
+      var targetDCoordinates = [
+        0.0435, 0.0870, 0.1304, 0.1739, 0.2174, 0.2609, 0.3043, 0.3478, 0.4348,
+        0.4783, 0.5217, 0.5652, 0.6087, 0.6957, 0.6957, 0.7826, 0.8261, 0.8696,
+        0.9130, 0.9565
+      ];
+      
       var anchorPoints = [{x: 1603, y: 3100}, {x: 2605, y: 3277}, {x: 3157, y: 2160}];
 			var tagTargets = [];//One array for each type of target. One array for the minimap sprites.
 			var userVerifyTargets = [];
@@ -234,10 +240,11 @@
 			}
 
 			class VirtualAgent {
-				constructor(x, y, behavior) {
+				constructor(x, y, d, behavior) {
 					this.behavior = behavior;
 					this.sprite = document.getElementById(ELEMENT_IDS.buddySprite);
 					this.position = {x:x, y:y};
+          this.mapProportion = d;
 					this.fastForward = false;
 					this.targetValid = true;
 				}
@@ -354,7 +361,7 @@
 							vaTarget = verifyTarget;
 						}
 					}
-					this.target = {x: vaTarget[0], y: vaTarget[1], index: vaTarget[2]};
+					this.target = {x: vaTarget[0], y: vaTarget[1], index: vaTarget[2], mapProportion: vaTarget[3]};
 					if (targetTracker[this.target.index] == 0) this.task = 0;
 					else if (targetTracker[this.target.index] == 2) this.task = 1;
 					//this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
@@ -456,7 +463,7 @@
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
 							if (nextDistance < leastDistance) {
 								leastDistance = nextDistance;
-								tagTarget = [targetsCoords[i][0], targetsCoords[i][1], i];
+								tagTarget = [targetsCoords[i][0], targetsCoords[i][1], i, targetDCoordinates[i]];
 							}
 						}
 					}
@@ -479,7 +486,7 @@
 							nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
 							if (nextDistance < leastDistance) {
 								leastDistance = nextDistance;
-								verifyTarget = [targetsCoords[i][0], targetsCoords[i][1], i];
+								verifyTarget = [targetsCoords[i][0], targetsCoords[i][1], i, targetDCoordinates[i]];
 							}
 						}
 					}
