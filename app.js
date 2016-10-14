@@ -57,6 +57,10 @@ app.get('/', function(req, res){
 	return res.redirect('/survey');
 });
 
+app.get('/trials', function(req, res) {
+  return res.sendFile(__dirname + '/trials.html');
+});
+
 app.get('/survey', function(req, res) {
   return res.render('survey.pug');
 });
