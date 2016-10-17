@@ -307,7 +307,11 @@
           if (Math.abs(gpRecorder[0] - target.xPos) < 50 && 
               Math.abs(gpRecorder[1] - target.yPos) < 50 &&
               Math.abs(magnitude) < 0.03 && aButton) {
-            target.updateLocation(userT + randomDistance());
+            var newDistance = 0;
+            while (2 * Math.abs(newDistance) < .13) {
+              newDistance = randomDistance();
+            }
+            target.updateLocation(userT + newDistance);
             updateTargets();
             magnitude = 0;
           }
