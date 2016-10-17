@@ -70,7 +70,7 @@
         var miniSprite1coords = [500, 690];
         var rotate = 0;
         
-        var log = [];
+        var log = 'left trigger, right trigger, velocity, user position, target position, distance, timestamp\n';
       
         class Target {
           constructor(t) { //type is 0, 1, or 2, representing tagged, user verify, and va verify.
@@ -196,7 +196,12 @@
           rightAccelButtonPrev = rightAccelButton;
           userTPrev            = userT;
           
-          log.push([leftImpulse, rightImpulse, magnitude, gpSpriteCoords[0], gpSpriteCoords[1], userT, target.xPos, target.yPos, target.t, Date.now()]);
+          var x  = d2x(userT);
+          var y  = d2y(userT);
+          var tX = d2x(target.t);
+          var tY = d2y(target.t);
+          var distance = Math.sqrt((x - tX) * (x - tX) + (y - tY) * (y - tY));
+          log += leftImpulse + ', ' + rightImpulse + ', ' + magnitude + ', ' + userT + ', ' + target.t + ', ' + distance + ', ' + Date.now() + '\n';
           
           window.setTimeout(gameLoop, (1000/60));
         };
