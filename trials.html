@@ -307,11 +307,7 @@
           if (Math.abs(gpRecorder[0] - target.xPos) < 50 && 
               Math.abs(gpRecorder[1] - target.yPos) < 50 &&
               Math.abs(magnitude) < 0.03 && aButton) {
-            var newDistance = 0;
-            while (2 * Math.abs(newDistance) < .13) {
-              newDistance = randomDistance();
-            }
-            target.updateLocation(userT + newDistance);
+            target.updateLocation(userT + randomDistance());
             updateTargets();
             magnitude = 0;
           }
@@ -336,9 +332,15 @@
               }
             }
           } else {
-            var minDistance = Math.max(-longDistance, -userT);
-            var maxDistance = Math.min(1 - userT, longDistance);
-            distance = Math.random() * (maxDistance - minDistance) + minDistance;
+            var shortDistance = 0.042;
+            distance = Math.random() * (longDistance - shortDistance) + shortDistance;
+            if (Math.random() < 0.5) {
+              if (userT >= distance) // Go left, if we can, or else go right
+                distance = -distance;
+            } else {                  // Go right, if we can, or else go left
+              if (userT + distance > 1)
+                distance = -distance;
+            }
           }
           return distance;
         };
