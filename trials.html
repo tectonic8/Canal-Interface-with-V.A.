@@ -83,6 +83,7 @@
             this.yPos = d2y(t) - 4412;
             this.target.style.left = this.xPos + "px";
             this.target.style.top = this.yPos + "px";
+            this.t = t;
             
             this.targetSprite = document.createElement('img');
             this.targetSprite.setAttribute("width", 15);
@@ -103,6 +104,7 @@
             this.target.style.top  = this.yPos + 'px';
             this.targetSprite.style.left = (d2x(t) - 107) * 0.048 + 501 + 'px';
             this.targetSprite.style.top  = (d2y(t) - 4864) * 0.046 + 691 + 'px';
+            this.t = t;
           }
         }
 
@@ -194,7 +196,7 @@
           rightAccelButtonPrev = rightAccelButton;
           userTPrev            = userT;
           
-          log.push([leftImpulse, rightImpulse, magnitude, userT, Date.now()]);
+          log.push([leftImpulse, rightImpulse, magnitude, gpSpriteCoords[0], gpSpriteCoords[1], userT, target.xPos, target.yPos, target.t, Date.now()]);
           
           window.setTimeout(gameLoop, (1000/60));
         };
@@ -213,7 +215,7 @@
             a.click();
             setTimeout(function() {
               document.body.removeChild(a);
-              window.URL.revokeObject(url);
+//              window.URL.revokeObject(url);
             }, 1);
           }
         };
