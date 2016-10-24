@@ -21,12 +21,13 @@
 		<img id="miniSprite1" src="miniSprite1.png">
 	</div>
   <div>
-    <button id="finish-button">finish</button>
+    <button id="start-button">start</button>
     <script>
       (function(window, document) {
+        var NUM_TARGETS = 20;
         var clientContainer = [];
         var ELEMENT_IDS = {
-          button: 'finish-button',
+          button: 'start-button',
           canvas: "canvas",
           minimap: "minimap",
           userSprite: "boatSprite1",
@@ -53,7 +54,9 @@
         var canvasLeftMargin = 0;
         
         button.addEventListener(EVENTS.CLICK, function(event) {
-          download(log, 'user-data.txt', 'text/plain');
+          button.style.visibility = 'hidden';
+          interval = setInterval(pollGamepads, 500);
+          //download(log, 'user-data.txt', 'text/plain');
         });
         
         gowanusMap.addEventListener(EVENTS.LOAD, function(event) {
@@ -126,6 +129,7 @@
         var userTPrev = 0;
         var b = 0.6;
         var angle = 1.57;
+        var targetsHit = 0;
         
         var target = new Target(randomDistance());
         updateTargets();
@@ -139,7 +143,7 @@
         
         /* All the initializing is done at this point. */
         
-        interval = setInterval(pollGamepads, 500);
+        //interval = setInterval(pollGamepads, 500);
         function pollGamepads() { //This searches for the gamepad at multiple indices. For some reason it isn't always at index 0.
           gamepads = navigator.getGamepads();
           for (var i = 0; i < gamepads.length; i++) {
@@ -353,6 +357,10 @@
           if (Math.abs(gpRecorder[0] - target.xPos) < 50 && 
               Math.abs(gpRecorder[1] - target.yPos) < 50 &&
               Math.abs(magnitude) < 0.03 && aButton) {
+            targetsHit += 1;
+            if (targetsHit == NUM_TARGETS) { // Finished
+              download(log, 'user-data.txt', 'text/plain');
+            }
             target.updateLocation(userT + randomDistance());
             updateTargets();
             magnitude = 0;
