@@ -79,8 +79,8 @@
             this.target.setAttribute("width", 50);
             this.target.setAttribute("height", 50);
             this.target.setAttribute("class", "target");
-            this.xPos = d2x(t) - 14;
-            this.yPos = d2y(t) - 4412;
+            this.xPos = d2x(t2d(t));// - 14;
+            this.yPos = d2y(t2d(t));// - 4412;
             this.target.style.left = this.xPos + "px";
             this.target.style.top = this.yPos + "px";
             this.t = t;
@@ -90,20 +90,20 @@
             this.targetSprite.src = 'miniTarget.png';
             this.targetSprite.setAttribute("height", 15);
             this.targetSprite.setAttribute("class", "target");
-            this.targetSprite.style.left = (d2x(t)-107)*0.048 + 501 + "px";
-            this.targetSprite.style.top = (d2y(t)-4864)*0.046 + 691 + "px";
+            this.targetSprite.style.left = (d2x(t2d(t))-93)*0.048 + 501 + "px";
+            this.targetSprite.style.top = (d2y(t2d(t))-452)*0.046 + 691 + "px";
 
             divWrapper.appendChild(this.target);
             divWrapper.appendChild(this.targetSprite);
           }
           
           updateLocation(t) {
-            this.xPos = d2x(t) - 14;
-            this.yPos = d2y(t) - 4412;
+            this.xPos = d2x(t2d(t));// - 14;
+            this.yPos = d2y(t2d(t))// - 4412;
             this.target.style.left = this.xPos + 'px';
             this.target.style.top  = this.yPos + 'px';
-            this.targetSprite.style.left = (d2x(t) - 107) * 0.048 + 501 + 'px';
-            this.targetSprite.style.top  = (d2y(t) - 4864) * 0.046 + 691 + 'px';
+            this.targetSprite.style.left = (d2x(t2d(t)) -  93) * 0.048 + 501 + 'px';
+            this.targetSprite.style.top  = (d2y(t2d(t)) - 452) * 0.046 + 691 + 'px';
             this.t = t;
           }
         }
@@ -117,8 +117,8 @@
         var impulseStartTime = 0;
         var gamepads = [];
         var gpIdx = -1;
-        var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
-        var gpSpriteCoords = [50, 470];
+        var gpRecorder = [73.369, 449.282, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
+        var gpSpriteCoords = [73.369, 449.282];
         var magnitude = 0;
         var magnitude0 = 0;
         var userT = 0;
@@ -183,8 +183,8 @@
               var t = (Date.now() - impulseStartTime) / 1000;
               magnitude = magnitude0 * Math.exp(-b * t);
               userT = Math.min(1, Math.max(0, userT0 + magnitude0 / b * (1 - Math.exp(-b * t))));
-              var dx = d2x(userT) - d2x(userTPrev);
-              var dy = d2y(userT) - d2y(userTPrev);
+              var dx = d2x(t2d(userT)) - d2x(t2d(userTPrev));
+              var dy = d2y(t2d(userT)) - d2y(t2d(userTPrev));
               angle = Math.atan2(dy, dx) * 180 / Math.PI;
             }
           }
@@ -196,10 +196,10 @@
           rightAccelButtonPrev = rightAccelButton;
           userTPrev            = userT;
           
-          var x  = d2x(userT);
-          var y  = d2y(userT);
-          var tX = d2x(target.t);
-          var tY = d2y(target.t);
+          var x  = d2x(t2d(userT));
+          var y  = d2y(t2d(userT));
+          var tX = d2x(t2d(target.t));
+          var tY = d2y(t2d(target.t));
           var distance = Math.sqrt((x - tX) * (x - tX) + (y - tY) * (y - tY));
           log += leftImpulse + ', ' + rightImpulse + ', ' + magnitude + ', ' + userT + ', ' + target.t + ', ' + distance + ', ' + Date.now() + '\n';
           
@@ -227,20 +227,20 @@
 
         function gpUpdateMap() {
           function gpShifter() { //This shifts the canvas based on the local coordinates of the user. It shifts direction depending on what edge or corner you're on.
-            if (gpSpriteCoords[0] < 300 && d2x(userT) < d2x(userTPrev)) {
-              gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+            if (gpSpriteCoords[0] < 300 && d2x(t2d(userT)) < d2x(t2d(userTPrev))) {
+              gpHandleShift(d2x(t2d(userT)) - d2x(t2d(userTPrev)), 0);
             }
             
-            if (gpSpriteCoords[0] > 400 && d2x(userT) > d2x(userTPrev)) {
-              gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+            if (gpSpriteCoords[0] > 400 && d2x(t2d(userT)) > d2x(t2d(userTPrev))) {
+              gpHandleShift(d2x(t2d(userT)) - d2x(t2d(userTPrev)), 0);
             }
             
-            if (gpSpriteCoords[1] < 300 && d2y(userT) < d2y(userTPrev)) {
-              gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+            if (gpSpriteCoords[1] < 300 && d2y(t2d(userT)) < d2y(t2d(userTPrev))) {
+              gpHandleShift(0, d2y(t2d(userT)) - d2y(t2d(userTPrev)));
             } 
             
-            if (gpSpriteCoords[1] > 400 && d2y(userT) > d2y(userTPrev)) {
-              gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+            if (gpSpriteCoords[1] > 400 && d2y(t2d(userT)) > d2y(t2d(userTPrev))) {
+              gpHandleShift(0, d2y(t2d(userT)) - d2y(t2d(userTPrev)));
             }
           };
 
@@ -261,24 +261,66 @@
           };
           
           gpShifter();
-          gpSpriteCoords[0] += d2x(userT) - d2x(userTPrev);
-          gpSpriteCoords[1] += d2y(userT) - d2y(userTPrev);
+          gpSpriteCoords[0] += d2x(t2d(userT)) - d2x(t2d(userTPrev));
+          gpSpriteCoords[1] += d2y(t2d(userT)) - d2y(t2d(userTPrev));
           gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2];	//local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)		
           gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
           userSprite.style.left = gpSpriteCoords[0] + 'px';
           userSprite.style.top = gpSpriteCoords[1] + 'px';
 				  userSprite.style.transform = "rotate(" + angle + "deg)"; 
-          miniSprite1coords[0] += (d2x(userT) - d2x(userTPrev)) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
-          miniSprite1coords[1] += (d2y(userT) - d2y(userTPrev)) * 0.045;
+          miniSprite1coords[0] += (d2x(t2d(userT)) - d2x(t2d(userTPrev))) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
+          miniSprite1coords[1] += (d2y(t2d(userT)) - d2y(t2d(userTPrev))) * 0.045;
           miniSprite1.style.left = miniSprite1coords[0] + "px";
           miniSprite1.style.top = miniSprite1coords[1] + "px";
         };
         
+        function t2d(t) {
+          return t;
+//          var a     = [-0.3501, -0.1949, -0.03592, 0.02322, 0.01584];
+//          var b     = [-0.2948, 0.03365, 0.08675, 0.04027, -0.001421];
+//          var omega = 0.9199;
+//          var a0    = 0.5434;
+//          
+//          var d = a0;
+//          for (var idx = 0; idx < a.length; ++idx) {
+//            d += a[idx] * Math.cos((idx + 1) * t * omega) + b[idx] * Math.sin((idx + 1) * t * omega);
+//          }
+//          return d;
+          
+//          var tBreaks = [
+//            0.0000, 0.0374, 0.0936, 0.1385, 0.1825, 0.2284, 0.2717, 0.3121,
+//            0.3475, 0.3814, 0.4212, 0.4702, 0.5170, 0.5479, 0.5934, 0.6597,
+//            0.7116, 0.7436, 0.7768, 0.8225, 0.8693, 0.9113, 0.9557, 1.0000
+//          ];
+//          
+//          var dBreaks = [
+//            0.0000, 0.0435, 0.0870, 0.1304, 0.1739, 0.2174, 0.2609, 0.3043,
+//            0.3478, 0.3913, 0.4348, 0.4783, 0.5217, 0.5652, 0.6087, 0.6522,
+//            0.6957, 0.7391, 0.7826, 0.8261, 0.8696, 0.9130, 0.9565, 1.0000
+//          ];
+//          
+//          var idx = -1;
+//          var curBreak = 0;
+//          while (idx < 0 && curBreak < tBreaks.length - 1) {
+//            if (t >= tBreaks[curBreak] && t < tBreaks[curBreak + 1]) {
+//              idx = curBreak;
+//            } else if (curBreak === tBreaks.length - 2) {
+//              idx = curBreak;
+//            }
+//            curBreak += 1;
+//          }
+//          return d = (dBreaks[idx + 1] - dBreaks[idx]) * ((t - tBreaks[idx]) / (tBreaks[idx + 1] - tBreaks[idx])) + dBreaks[idx];
+        };
+        
         function d2x(d) {
-          var omega = 4.963;
-          var a0 = 2141;
-          var a  = [-968.1, -487.7, -393.6, -163.8, -54.71, -4.298, 2.624, -4.896];
-          var b  = [-1250 , -303.6, 61.59 , 101.5 , 96.12 , 72.48 , 14.93, 23.2  ];
+          var omega = 4.932;
+          var a0    = 1957;
+          var a     = [-1255, -545.1, -247.1, 21.65, 96.48, 57.33,  9.179,  -21.07];
+          var b     = [-1026, -24.18, 303.9,  187.4, 54.77, -12.83, -31.56, -4.434];
+//          var omega = 4.963;
+//          var a0 = 2141;
+//          var a  = [-968.1, -487.7, -393.6, -163.8, -54.71, -4.298, 2.624, -4.896];
+//          var b  = [-1250 , -303.6, 61.59 , 101.5 , 96.12 , 72.48 , 14.93, 23.2  ];
           var x = a0;
           for (var idx = 0; idx < a.length; ++idx) {
             x += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
@@ -287,10 +329,14 @@
         };
       
         function d2y(d) {
-          var omega = 5.051;
-          var a0 = 2834;
-          var a  = [541.7, 872.2, 386.1, 212.3 , 58.69 , 3.367 , -16.64, -10.5 ];
-          var b  = [1200 , 295.6, 51.12, -200.9, -92.59, -93.36, -4.567, -10.81];
+          var omega = 5.157;
+          var a0    = -1548
+          var a     = [471.4, 837.2, 375.9, 245.6,  98.05, 6.102,  -14.82, -22.15];
+          var b     = [1186,  389.8, 77.28, -161.3, -117,  -94.79, -33.45, -25.23];
+//          var omega = 5.051;
+//          var a0 = 2834;
+//          var a  = [541.7, 872.2, 386.1, 212.3 , 58.69 , 3.367 , -16.64, -10.5 ];
+//          var b  = [1200 , 295.6, 51.12, -200.9, -92.59, -93.36, -4.567, -10.81];
           var y  = a0;
           for (var idx = 0; idx < a.length; ++idx) {
             y += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
@@ -315,26 +361,31 @@
         
         function randomDistance() {
           var distance = 0;
-          var longDistance = 0.13;
+          var shortDistance = 0.05;
+          var longDistance  = 0.13;
           /* 25% chance of getting a far target. */
           if (Math.random() < 0.25) {
-            if (userT < longDistance) {
-              distance = Math.random() * (1 - userT);
-            } else if (userT > 1 - longDistance) {
-              distance = -Math.random() * userT
-            } else {
-              var leftDistance = Math.random() * (userT - longDistance) - userT;
-              var rightDistance = Math.random() * (1 - userT - longDistance) + longDistance;
-              if (Math.random() < 0.5) {
-                distance = leftDistance;
-              } else {
-                distance = rightDistance
-              }
+            var roll = Math.random();
+            var canGoLeft  = roll < 0.5  && userT > longDistance;
+            var canGoRight = roll >= 0.5 && userT < 1 - longDistance;
+            
+            if (canGoLeft || userT > 1 - longDistance) {
+              distance = Math.random() * (-longDistance + userT) - userT;
+            } else if (canGoRight || userT < longDistance) {
+              distance = Math.random() * (1 - userT - longDistance) + longDistance;
             }
           } else {
-            var minDistance = Math.max(-longDistance, -userT);
-            var maxDistance = Math.min(1 - userT, longDistance);
-            distance = Math.random() * (maxDistance - minDistance) + minDistance;
+            var roll = Math.random();
+            var canGoLeft  = roll < 0.5  && userT > shortDistance;
+            var canGoRight = roll >= 0.5 && userT < 1 - shortDistance;
+            
+            if (canGoLeft || userT > 1 - shortDistance) {
+              var minDistance = -Math.min(userT, longDistance);
+              distance = Math.random() * (-shortDistance - minDistance) + minDistance;
+            } else if (canGoRight || userT < shortDistance) {
+              var maxDistance = Math.min(1 - userT, longDistance);
+              distance = Math.random() * (maxDistance - shortDistance) + shortDistance;
+            }
           }
           return distance;
         };
