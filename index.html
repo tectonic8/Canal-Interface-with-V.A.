@@ -7,7 +7,7 @@
 		#clockDiv {position:relative; width:50px; height:50px; margin: 0 auto; overflow:hidden; font-size: 20px; z-index:99; font-family: Arial, Helvetica, sans-serif;}
 		#scoreDiv {position:relative; width:200px; height:50px; margin: 0 auto; padding-left: 127px; overflow:hidden; font-size: 1.5em; z-index:100; font-family: Arial, Helvetica, sans-serif;}
 		#boatSprite1 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
-		#boatSprite2 {position:absolute; top:470; left: 50px; width:50px; height:35px; transition: none; z-index: 93}
+		#boatSprite2 {position:absolute; top:470px; left: 50px; width:50px; height:35px; transition: none; z-index: 93}
 		#gowanusMap {position:relative; right: 10px; bottom: 10px; width:700px; height:700px; z-index: 4}
 		#canvas {width:5100px; height:6600px; transition: none; z-index:1}
 		#minimap {width:200px, height:228px; position:absolute; left:500px; top: 500px; border:1px solid #000000; z-index:79}
@@ -80,6 +80,7 @@
             console.log('Virtual agent behavior roll is: ' + f00);
             console.log('Virtual agent behavior is type: ' + behavior);
             va = new VirtualAgent(20, 550, 0, behavior);
+			//vaUpdateMap({x: 0, y: 0});
             va.start(true);//true meaning start with the delay.
             interval = setInterval(pollGamepads, 500);
           });
@@ -196,8 +197,23 @@
 			var accelerationProportion = [0.768, 0.599, 0.644, 0.72]; //This is how much time is spent accelerating for each of the 4 representative models.
 			var preferenceData = [0.088, 0.696]; //1 in the last index was made by me, it will not be randomly selected, only used when I want it to 100% verify
 			var startDelayData = [500, 3599, 500, 1200, 801, 499, 890, 700, 900, 2700, 2401, 2598, 800, 800, 2701, 1000, 301, 3700, 4100, 4401, 6300, 4101, 4801, 4500, 2101, 6099, 5299, 5100, 3900, 3100, 6300, 4799, 3801, 4800, 4601, 3703, 5000, 9501, 3903, 5899, 4300, 4700];
+			var startDelayData2 = [22,26,29,32,34,37,40,43,48,58]; // Number of frames 
 			var tagTimeData = [26.7, 12.7, 10.4, 27.4, 7.7]; 
 			var verifyTimeData = [6.2, 2.8, 3.2, 8.8, 3.9];
+			var userImpulseData =  [[7,  9,  9, 10, 11, 12, 12, 13, 14, 17],
+									[8, 9, 10, 11, 12, 12, 13, 14, 16, 18],
+									[8, 10, 11, 12, 12, 13, 14, 15, 17, 19],
+									[9, 10, 11, 12, 13, 14, 15, 16, 17, 20],
+									[9, 11, 12, 12, 13, 14, 15, 16, 18, 21],
+									[9, 11, 12, 13, 14, 15, 16, 17, 18, 21],
+									[10, 11, 12, 13, 14, 15, 16, 17, 19, 22],
+									[10, 12, 13, 14, 15, 16, 17, 18, 20, 23],
+									[11, 12, 14, 15, 16, 17, 18, 19, 21, 24],
+									[11, 13, 15, 16, 17, 18, 19, 21, 23, 26]];
+
+			var intercepts = [-0.27053038, -0.20427559, -0.16486123, -0.13337173, -0.10509578, -0.07772764, -0.04945170, -0.01796220, 0.02145217, 0.08770695];
+
+			var slopes = [2.646595, 2.909829, 3.066424, 3.191534, 3.303876, 3.412611, 3.524953, 3.650063, 3.806658, 4.069892];
 			
 			var imageId = 1; //This is used to tell the tag and verify html which image to load, instead of using an html template system.
 			var lastRole = null;
@@ -245,7 +261,7 @@
 					this.burstCD = 0;
 					this.behavior = behavior;
 					this.sprite = document.getElementById(ELEMENT_IDS.buddySprite);
-					this.position = {x:d2x(d), y:d2y(y)};
+					this.position = {x:d2x(d), y:d2y(d)};
           this.mapProportion = d;
           this.mapProportion0 = d;
 					this.fastForward = false;
@@ -256,13 +272,15 @@
 					this.magnitude = 0;
           this.magnitude0 = 0;
           this.impulseBehavior = true;
+          this.impulseIndex = Math.floor(Math.random()*userImpulseData.length); //accel interval
 					this.onTarget = false;
 					this.counter = 0;
 					this.randomTaggingVerifyingTimeIndex = Math.floor(Math.random()*5);
 					this.tagAndVerifyDelayStart = new Date().getTime();
 					this.task = 0; //0 for tagging, 1 for verifying
 					this.startDelayStart = new Date().getTime();
-					this.startDelay = addDelay? startDelayData[Math.floor(Math.random()*42)] : 0; //after a target or when the page loads, it initializes with the start delay. If you come back to the page in the middle of its movement, it will not have a start delay.
+					//this.startDelay = addDelay? startDelayData[Math.floor(Math.random()*42)] : 0; //after a target or when the page loads, it initializes with the start delay. If you come back to the page in the middle of its movement, it will not have a start delay.
+					this.startDelay = addDelay? startDelayData2[Math.floor(Math.random()*startDelayData2.length)] / 60 * 1000 : 0;
 					this.theta = 0;
 					this.saveSpeed = 0;
 					
@@ -316,7 +334,8 @@
             mapProportion: this.mapProportion,
             mapProportion0: this.mapProportion0,
             impulseStartTime: this.impulseStartTime,
-            now: this.now
+            now: this.now,
+            impulseIndex: this.impulseIndex
           };
         }
 
@@ -346,6 +365,7 @@
           this.mapProportion0 = state.mapProportion0;
           this.impulseStartTime = state.impulseStartTime;
           this.now = state.now;
+          this.impulseIndex = state.impulseIndex;
         }
 
 				start(addDelay) {
@@ -389,7 +409,15 @@
 					//this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
           //this.startingDistanceToTarget = this.distanceToTarget();
           this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-          this.switchPoint = this.startingDistanceToTarget - 0.0434; // Temporary
+
+          var slope = slopes[Math.floor(Math.random()*slopes.length)];
+          var intercept = intercepts[Math.floor(Math.random()*intercepts.length)];
+          var x = intercept + slope*this.startingDistanceToTarget;
+          var ratio = Math.exp(x)/(Math.exp(x)+1);
+          this.switchPoint = this.mapProportion + Math.sign(this.startingDistanceToTarget)*this.startingDistanceToTarget*ratio;
+
+          //this.switchPoint = this.target.mapProportion + Math.sign(this.mapProportion - this.target.mapProportion)*0.0434; // Temporary
+
 				}
 				
         distanceToTarget() {
@@ -605,7 +633,7 @@
 					  }
 		              else if (this.impulseBehavior) { // Keep impulsing toward target until "close"
 		              	if (this.burstCD == 0) {
-		              		this.burstCD = 20;
+		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];		              		
 			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
 			                this.magnitude = this.magnitude0;
 			                this.mapProportion0 = this.mapProportion;
@@ -637,10 +665,10 @@
 		              	}
 		              }
 		              else { // second part of user behavior
-		              	if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget > 0.03) { // If the virtual agent will overshoot then we hit the brake
+		              	if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget > 0.01) { // If the virtual agent will overshoot then we hit the brake
 		              	  if (this.burstCD == 0) {
-		              		this.burstCD = 20;
-			                this.magnitude0 = this.magnitude - 0.01 * Math.sign(currentDistanceToTarget);
+		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];
+			                this.magnitude0 = this.magnitude - 0.01 * Math.sign(this.target.mapProportion-this.switchPoint);
 			                this.magnitude = this.magnitude0;
 			                this.mapProportion0 = this.mapProportion;
 			                this.impulseStartTime = this.now;
@@ -667,9 +695,9 @@
 			                }
 			              }
 		              	}
-		              	else if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget < 0.03) { // If the VA isn't fast enough to coast to the target, it will decrease its impulse rate, since it is close, so that it wont overshoot
+		              	else if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget < 0.01) { // If the VA isn't fast enough to coast to the target, it will decrease its impulse rate, since it is close, so that it wont overshoot
 			              if (this.burstCD == 0) {
-		              		this.burstCD = 60;
+		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)]*4;
 			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
 			                this.magnitude = this.magnitude0;
 			                this.mapProportion0 = this.mapProportion;
@@ -695,6 +723,15 @@
 			                  this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
 			                }
 			              }
+			            }
+			            else if (this.magnitude == 0) {
+			            	this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];
+			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
+			                this.magnitude = this.magnitude0;
+			                this.mapProportion0 = this.mapProportion;
+			                this.impulseStartTime = this.now;
+			                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
+			                vaUpdateMap({x: 0, y: 0});
 			            }
 			            else { // The VA will reach the target by coasting 
 		                  if (this.magnitude < 0.005 && this.magnitude > -0.005) {
