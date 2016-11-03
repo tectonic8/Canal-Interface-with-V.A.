@@ -7,7 +7,7 @@
 		#clockDiv {position:relative; width:50px; height:50px; margin: 0 auto; overflow:hidden; font-size: 20px; z-index:99; font-family: Arial, Helvetica, sans-serif;}
 		#scoreDiv {position:relative; width:200px; height:50px; margin: 0 auto; padding-left: 127px; overflow:hidden; font-size: 1.5em; z-index:100; font-family: Arial, Helvetica, sans-serif;}
 		#boatSprite1 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
-		#boatSprite2 {position:absolute; top:470px; left: 50px; width:50px; height:35px; transition: none; z-index: 93}
+		#boatSprite2 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
 		#gowanusMap {position:relative; right: 10px; bottom: 10px; width:700px; height:700px; z-index: 4}
 		#canvas {width:5100px; height:6600px; transition: none; z-index:1}
 		#minimap {width:200px, height:228px; position:absolute; left:500px; top: 500px; border:1px solid #000000; z-index:79}
@@ -22,8 +22,8 @@
 		<canvas id="minimap" width="200" height="228"></canvas>
 		<canvas id="canvas" width="5100" height="6600"></canvas>
 		<img id="gowanusMap" src="canal3.png" alt="canalMap">
-		<img id="boatSprite1" src="boatSprite1.png" alt="boatIcon">
-		<img id="boatSprite2" src="boatSprite2.png" alt="boatIcon2">
+		<img id="boatSprite2" src="boatSprite4.png" alt="boatIcon2">
+		<img id="boatSprite1" src="boatSprite5.png" alt="boatIcon">
 		<img id="miniSprite1" src="miniSprite1.png">
 		<img id="miniSprite2" src="miniSprite2.png">
 	</div>
@@ -1196,7 +1196,7 @@
 				miniSprite2coords[1] += (msg.y*0.045);
 				miniSprite2.style.left = miniSprite2coords[0] + "px";
 				miniSprite2.style.top = miniSprite2coords[1] + "px";
-				//va.sprite.style.transform = "rotate(" + va.angle + "deg)";
+				va.sprite.style.transform = "rotate(" + va.angle + "deg)";
 				//va.sprite.style.transform = "rotate(" + va.angle*(180/3.14)*-2 +"deg)"; // I considered having have the va sprite rotate as well, but it looks bad with the current sprite
 			};
 			
