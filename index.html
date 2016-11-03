@@ -219,6 +219,27 @@
 			var dIntercepts = [-2.380378, -2.291526, -2.238668, -2.196438, -2.158518, -2.121816, -2.083896,-2.041666, -1.988809, -1.899956];
 			var dSlopes = [0.3676553, 0.4044531, 0.4263438, 0.4438330, 0.4595374, 0.4747377, 0.4904421, 0.5079313, 0.5298220, 0.5666199];
 
+ var userSwitchData = [[0.01073028, 0.01550475, 0.01930014, 0.02298981, 0.02690030, 0.03131760, 0.03664462, 0.04365011, 0.05433514, 0.07851171],
+ [0.01483318, 0.02143325, 0.02667986, 0.03178034, 0.03718607, 0.04329240, 0.05065629, 0.06034044, 0.07511107, 0.10853194],
+ [0.01792642, 0.02590284, 0.03224354, 0.03840766, 0.04494067, 0.05232039, 0.06121991, 0.07292354, 0.09077436, 0.13116466],
+ [0.02050489, 0.02962860, 0.03688134, 0.04393208, 0.05140477, 0.05984596, 0.07002555, 0.08341259, 0.10383101, 0.15003091],
+ [0.02275768, 0.03288378, 0.04093334, 0.04875872, 0.05705241, 0.06642100, 0.07771898, 0.09257680, 0.11523851, 0.16651420],
+ [0.02478088, 0.03580721, 0.04457239, 0.05309346, 0.06212447, 0.07232594, 0.08462834, 0.10080704, 0.12548342, 0.18131762],
+ [0.02663117, 0.03848079, 0.04790043, 0.05705773, 0.06676306, 0.07772624, 0.09094720, 0.10833390, 0.13485277, 0.19485589],
+ [0.02834528, 0.04095758, 0.05098352, 0.06073022, 0.07106022, 0.08272904, 0.09680096, 0.11530676, 0.14353249, 0.20739768],
+ [0.02994857, 0.04327427, 0.05386730, 0.06416531, 0.07507960, 0.08740844, 0.10227632, 0.12182885, 0.15165112, 0.21912871],
+ [0.03145946, 0.04545743, 0.05658487, 0.06740241, 0.07886733, 0.09181815, 0.10743610, 0.12797505, 0.15930183, 0.23018363],
+ [0.03289178, 0.04752707, 0.05916114, 0.07047119, 0.08245809, 0.09599856, 0.11232758, 0.13380165, 0.16655472, 0.24066371],
+ [0.03425626, 0.04949868, 0.06161537, 0.07339461, 0.08587878, 0.09998095, 0.11698736, 0.13935226, 0.17346406, 0.25064737],
+ [0.03556139, 0.05138453, 0.06396286, 0.07619087, 0.08915067, 0.10379012, 0.12144447, 0.14466144, 0.18007286, 0.26019679],
+ [0.03681404, 0.05319455, 0.06621595, 0.07887469, 0.09229100, 0.10744613, 0.12572235, 0.14975714, 0.18641593, 0.26936222],
+ [0.03801986, 0.05493690, 0.06838481, 0.08145818, 0.09531393, 0.11096546, 0.12984030, 0.15466234, 0.19252186, 0.27818499],
+ [0.03918355, 0.05661839, 0.07047790, 0.08395142, 0.09823126, 0.11436184, 0.13381440, 0.15939618, 0.19841449, 0.28669957],
+ [0.04030910, 0.05824475, 0.07250238, 0.08636292, 0.10105296, 0.11764689, 0.13765822, 0.16397484, 0.20411395, 0.29493502],
+ [0.04139989, 0.05982089, 0.07446434, 0.08869996, 0.10378752, 0.12083049, 0.14138334, 0.16841210, 0.20963740, 0.30291615],
+ [0.04245885, 0.06135103, 0.07636904, 0.09096878, 0.10644226, 0.12392117, 0.14499973, 0.17271985, 0.21499964, 0.31066433],
+ [0.04348849, 0.06283882, 0.07822103, 0.09317482, 0.10902354, 0.12692632, 0.14851605, 0.17690840, 0.22021349, 0.31819810]];
+
 
 			
 			var imageId = 1; //This is used to tell the tag and verify html which image to load, instead of using an html template system.
@@ -421,7 +442,12 @@
           //var x = intercept + slope*this.startingDistanceToTarget;
           //var ratio = Math.exp(x)/(Math.exp(x)+1);
           //this.switchPoint = this.mapProportion + Math.sign(this.startingDistanceToTarget)*this.startingDistanceToTarget*ratio;
-          var remainingDist = Math.exp(intercept + slope*Math.log(Math.abs(this.startingDistanceToTarget)));
+
+          //var remainingDist = Math.exp(intercept + slope*Math.log(Math.abs(this.startingDistanceToTarget)));
+
+          var switchIndex = (Math.floor(this.startingDistanceToTarget*100)) % 5;
+
+          var remainingDist = userSwitchData[switchIndex][Math.floor(Math.random()*userSwitchData[switchIndex].length)];
 
           this.switchPoint = this.target.mapProportion - Math.sign(this.startingDistanceToTarget)*remainingDist;
 
@@ -674,7 +700,7 @@
 		              	}
 		              }
 		              else { // second part of user behavior
-		              	if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget > 0.015) { // If the virtual agent will overshoot then we hit the brake
+		              	if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget > 0.01) { // If the virtual agent will overshoot then we hit the brake
 		              	  if (this.burstCD == 0) {
 		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];
 			                this.magnitude0 = this.magnitude - 0.01 * Math.sign(this.target.mapProportion-this.switchPoint);
@@ -704,7 +730,7 @@
 			                }
 			              }
 		              	}
-		              	else if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget < 0.015) { // If the VA isn't fast enough to coast to the target, it will decrease its impulse rate, since it is close, so that it wont overshoot
+		              	else if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget < 0.01) { // If the VA isn't fast enough to coast to the target, it will decrease its impulse rate, since it is close, so that it wont overshoot
 			              if (this.burstCD == 0 || (this.magnitude < 0.01 && this.magnitude > -0.01)) {
 		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)]*4;
 			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
@@ -1170,6 +1196,7 @@
 				miniSprite2coords[1] += (msg.y*0.045);
 				miniSprite2.style.left = miniSprite2coords[0] + "px";
 				miniSprite2.style.top = miniSprite2coords[1] + "px";
+				//va.sprite.style.transform = "rotate(" + va.angle + "deg)";
 				//va.sprite.style.transform = "rotate(" + va.angle*(180/3.14)*-2 +"deg)"; // I considered having have the va sprite rotate as well, but it looks bad with the current sprite
 			};
 			
