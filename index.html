@@ -7,7 +7,7 @@
 		#clockDiv {position:relative; width:50px; height:50px; margin: 0 auto; overflow:hidden; font-size: 20px; z-index:99; font-family: Arial, Helvetica, sans-serif;}
 		#scoreDiv {position:relative; width:200px; height:50px; margin: 0 auto; padding-left: 127px; overflow:hidden; font-size: 1.5em; z-index:100; font-family: Arial, Helvetica, sans-serif;}
 		#boatSprite1 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
-		#boatSprite2 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
+		#boatSprite2 {position:absolute; width:50px; height:35px; left:73.369px; top:449.282px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
 		#gowanusMap {position:relative; right: 10px; bottom: 10px; width:700px; height:700px; z-index: 4}
 		#canvas {width:5100px; height:6600px; transition: none; z-index:1}
 		#minimap {width:200px, height:228px; position:absolute; left:500px; top: 500px; border:1px solid #000000; z-index:79}
@@ -112,7 +112,7 @@
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
 				  for (var t = 0; t < frameCount; ++t) {
 					  va.update(); //fastForwarding
-            vaTagAndVerify();
+            		  vaTagAndVerify();
 				  }
 				  va.fastForward = false;
 
@@ -289,6 +289,7 @@
 					this.behavior = behavior;
 					this.sprite = document.getElementById(ELEMENT_IDS.buddySprite);
 					this.position = {x:d2x(d), y:d2y(d)};
+
           this.mapProportion = d;
           this.mapProportion0 = d;
 					this.fastForward = false;
@@ -445,7 +446,7 @@
 
           //var remainingDist = Math.exp(intercept + slope*Math.log(Math.abs(this.startingDistanceToTarget)));
 
-          var switchIndex = (Math.floor(this.startingDistanceToTarget*100)) % 5;
+          var switchIndex = (Math.floor(Math.abs(this.startingDistanceToTarget)*100)) % 5;
 
           var remainingDist = userSwitchData[switchIndex][Math.floor(Math.random()*userSwitchData[switchIndex].length)];
 
@@ -884,6 +885,7 @@
 				        
 				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseFloat(readCookie("vaD")), parseInt(readCookie("vaBehavior"))); //it is drawn onto the old position.
         va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
+        va.sprite.style.transform = "rotate(" + (this.angle? this.angle:0) + "deg)";
 
 //				targetInitializer(); //targetInitializer creates the targets.
 //				updateTargets(); //updateTargets draws the targets.
@@ -1158,6 +1160,7 @@
 						targetSprites[i].remove();
 						targetTracker[i] = 3;
 						lastRole = "verifying";
+						lastTargetIndex = i; 
 						imageId++;
 //						targetsVerified++;
 						verifyCount++;

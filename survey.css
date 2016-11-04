@@ -49,6 +49,10 @@ body {
   padding-bottom: 10%;
 }
 
+input {
+  text-align:center;
+}
+
 #survey-form .likert {
   list-style: none;
 }

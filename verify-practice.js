@@ -63,9 +63,9 @@
   };
   
   var LOCATIONS = {
-    TAG_PRACTICE:      'tag-practice.html',
+    TAG_PRACTICE:      'tag-practice',
     TAG_PREFERENCE:    'tag-preference',
-    VERIFY_PREFERENCE: 'verify-preference.html'
+    VERIFY_PREFERENCE: 'verify-preference'
   };
   
   var TOPICS = {

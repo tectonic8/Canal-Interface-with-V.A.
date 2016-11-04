@@ -10,6 +10,12 @@
     TAG:           'tag',
     TAG_FRAME:     'tag-frame'
   };
+
+  var DESCRIPTIONS = {
+    INITIAL:       'To tag an image, click any area in the picture.',
+    BEGIN_TAGGING: 'Type the name of the object being tagged and<br> \nchoose \'Accept\' to post it, or \'Cancel\' to discard it.',
+    DONE_TAGGING:  'After tagging, you may add additional tags or continue to the next task.'
+  };
   
   var ELEMENTS = {
     DIV:   'div',
@@ -18,6 +24,7 @@
   };
   
   var ELEMENT_IDS = {
+    DESCRIPTION:   'description',
     FINISH_BUTTON: 'finish-button',
     SWITCH_BUTTON: 'switch-button',
     TAG_IMAGE:     'tag-image',
@@ -40,9 +47,9 @@
   };
   
   var LOCATIONS = {
-    TAG_PREFERENCE:    'tag-preference.html',
-    VERIFY_PRACTICE:   'verify-practice.html',
-    VERIFY_PREFERENCE: 'verify-preference.html',
+    TAG_PREFERENCE:    'tag-preference',
+    VERIFY_PRACTICE:   'verify-practice',
+    VERIFY_PREFERENCE: 'verify-preference',
   }
   
   var STRINGS = {
@@ -179,7 +186,7 @@
       y: this.top + this.height / 2 + this.heightOffset / 2,
       tag: this.input.value
     };
-    
+    description.innerHTML = DESCRIPTIONS.DONE_TAGGING;
     this.input.value = '';
     events.publish(TOPICS.ACCEPTED_TAG, info);
   };
@@ -187,6 +194,7 @@
   TagFrame.prototype.cancelTag = function(event) {
     this.container.parentNode.removeChild(this.container);
     this.input.value = '';
+    description.innerHTML = DESCRIPTIONS.INITIAL;
     events.publish(TOPICS.CANCELLED_TAG)
   };
   
@@ -256,6 +264,7 @@
       parent: this.element
     };
     events.publish(TOPICS.BEGIN_TAGGING, info);
+    description.innerHTML = DESCRIPTIONS.BEGIN_TAGGING;
     events.subscribe(TOPICS.ACCEPTED_TAG, this.restoreEventListener.bind(this));
     events.subscribe(TOPICS.CANCELLED_TAG, this.restoreEventListener.bind(this));
   };
@@ -277,6 +286,9 @@
   document.addEventListener(EVENTS.DOM_CONTENT_LOADED, function(event) {
     var eventStage = new Wrapper();
     var tagFrame   = new TagFrame();
+    var description = document.getElementById(ELEMENT_IDS.DESCRIPTION);
+
+    description.innerHTML = DESCRIPTIONS.INITIAL;
     
     var switchButton = document.getElementById(ELEMENT_IDS.SWITCH_BUTTON);
     switchButton.addEventListener(EVENTS.CLICK, function(event) {
