@@ -418,7 +418,7 @@
 						if ((targetTracker[i] == 0) || (targetTracker[i] == 2)) thereAreNoAvailableTargets = false;
 					}
 					if (thereAreNoAvailableTargets) {
-						vaTarget = [1000, 3500, 0]; //Just a random location to go when it's done. Otherwise it will search for targets until it breaks.
+						vaTarget = [1000, 3500, -1, 0.2907]; //Just a random location to go when it's done. Otherwise it will search for targets until it breaks.
 					}
 					else {
 						tagTarget = this.closestTag();
@@ -651,13 +651,17 @@
 		            } 
 		            else {
 		              var currentDistanceToTarget = this.target.mapProportion - this.mapProportion;
-		              console.log(currentDistanceToTarget);
+		              if (this.fastForward) {
+		              	console.log('<Fastforwaring> ' + currentDistanceToTarget);
+		              } else {
+			              console.log(currentDistanceToTarget);
+			          }
 		              var speedAtTarget = 0;
 		              if (0 !== this.magnitude0) {
 		                speedAtTarget = this.magnitude0 - this.startingDistanceToTarget * b;
 		              }
 
-		              if (Math.abs(currentDistanceToTarget) < .0055 && Math.abs(this.magnitude) < 0.015) {
+		              if (Math.abs(currentDistanceToTarget) < .0055 && Math.abs(this.magnitude) < 0.015 && this.target.index !== -1) {
 					    this.onTarget = true;
 					    if (this.task === 0) {
 						  this.lastRole = 'tagging';              
