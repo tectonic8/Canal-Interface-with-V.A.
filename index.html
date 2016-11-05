@@ -117,6 +117,8 @@
       		  vaTagAndVerify();
             va.now += 1 / 60 * 1000;
 				  }
+          var t = va.now - Date.now();
+          va.impulseStartTime -= t;
 				  va.fastForward = false;
 
 					if (targetTracker[va.target.index] == 0) va.task = 0;
