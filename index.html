@@ -110,9 +110,12 @@
           
           va.fastForward = true;
 			  	var frameCount = timeSpentTaggingVerifying * 60/1000;
+          va.now = Date.now();
+          va.impulseStartTime += timeSpentTaggingVerifying;
 				  for (var t = 0; t < frameCount; ++t) {
 					  va.update(); //fastForwarding
-            		  vaTagAndVerify();
+      		  vaTagAndVerify();
+            va.now += 1 / 60 * 1000;
 				  }
 				  va.fastForward = false;
 
@@ -637,7 +640,10 @@
 		          va.lastRole = 'navigating';
 		          var oldD = this.mapProportion;
 		          if (this.targetValid) {
-		            this.now = Date.now();
+                if (!this.fastForward) {
+  		            this.now = Date.now();
+                }
+
 		            if (this.now - this.startDelayStart < this.startDelay && !this.fastForward) {
 		              vaUltraRecorder();
 		              window.setTimeout(this.update.bind(this), (1000 / 60));
@@ -799,7 +805,7 @@
 		                vaUpdateMap({x: 0, y: 0});
 						va.initialize(false, this.fastForward);
 		              } else {
-		                var t = ((Date.now() - this.now + timeSpentTaggingVerifying) - (this.now - this.impulseStartTime)) / 1000;
+		                var t = (this.now - this.impulseStartTime)) / 1000;
 		                this.magnitude = this.magnitude0 * Math.exp(-b * t);
 		                this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
 		                var x = d2x(this.mapProportion);// + 14;
