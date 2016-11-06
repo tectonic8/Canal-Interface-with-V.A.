@@ -461,9 +461,9 @@
   Wrapper.prototype.finish = function(info) {
     var contentTypeString = STRINGS.APPLICATION_JSON + STRINGS.CONJOIN_HEADER + STRINGS.CHARSET + STRINGS.EQUALS_SYMBOL + STRINGS.UTF_8;
     var data = {
-      numVerifiedTags:   this.numVerifiedTags,
-      numImagesVerified: this.numImagesVerified,
-      timeVerifying:     this.countdown.initialTime - this.countdown.timeRemaining,
+      numTags:         this.tags.length,
+      numImagesTagged: this.numImagesTagged,
+      timeTagging:     this.countdown.initialTime - this.countdown.timeRemaining,
     };
     var xhr = new XMLHttpRequest();
     xhr.addEventListener(EVENTS.READY_STATE_CHANGE, function(event) {

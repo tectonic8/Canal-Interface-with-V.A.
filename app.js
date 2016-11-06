@@ -86,6 +86,9 @@ app.get('/verify-preference', function(req, res) {
   if (undefined !== req.session.verifyImageId) {
     imageId = req.session.verifyImageId;
   }
+  if (null === req.session.firstTask) {
+    req.session.firstTask = 'verify';
+  }
   res.render('verify-preference', {imgSrc: './images/img' + imageId + '.png'});
 //  return res.sendFile(__dirname + '/verify-preference.html');
 });
@@ -100,6 +103,7 @@ app.get('/reset', function(req, res) {
 });
 
 app.get('/tag-practice', function(req, res) {
+  req.session.firstTask = null;
   return res.sendFile(__dirname + '/tag-practice.html');
 });
 
@@ -107,6 +111,9 @@ app.get('/tag-preference', function(req, res) {
   var imageId = 60;
   if (undefined !== req.session.tagImageId) {
     imageId = req.session.tagImageId;
+  }
+  if (null === req.session.firstTask) {
+    req.session.firstTask = 'tag';
   }
   res.render('tag-preference', {imgSrc: './images/img' +imageId + '.png'});
 //  return res.sendFile(__dirname + '/tag-preference.html');
@@ -221,6 +228,7 @@ app.post('/savetime', function(req, res) {
 });
 
 app.post('/write', function(req, res) {
+  console.log(req.body);
   if (req.body.numVerfiedTags !== undefined) {
     if (undefined === req.session.numVerifiedTags) {
       req.session.numVerifiedTags = req.body.numVerifiedTags;
@@ -265,7 +273,7 @@ app.post('/write', function(req, res) {
     if (undefined === req.session.timeTagging) {
       req.session.timeTagging = req.body.timeTagging;
     } else {
-      req.session.timeTagging = req.body.timeTagging;
+      req.session.timeTagging += req.body.timeTagging;
     }
   }
   
@@ -310,6 +318,9 @@ app.post('/write', function(req, res) {
   } else {
     str += req.session.timeVerifying;
   }
+  str += ', ';
+
+  str += req.session.firstTask;
   
   fs.writeFile('pref-test.txt', str);
   return res.end();
