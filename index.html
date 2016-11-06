@@ -1019,8 +1019,8 @@
         rightAccelButtonPrev = rightAccelButton;
         userTPrev            = userT;
         
-				if (elapsedTime > 420000) { //data is only logged at the end of the 7 minutes.
-					elapsedTime = 420000;
+				if (elapsedTime > 300000) { //data is only logged at the end of the 5 minutes.
+					elapsedTime = 300000;
 					logger();
 					vaLogger(true);
 				} else {
