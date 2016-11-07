@@ -632,10 +632,46 @@
 				distance(vaX, vaY, targetX, targetY) { //just distance formula
 					return Math.sqrt((vaX - targetX)*(vaX - targetX) + (vaY - targetY)*(vaY - targetY));
 				}
+
+				impulse(distSign, towards, slow) { 
+					// forward => target is to the right
+                  if ((distSign == 1?true:false) == towards) {
+                    this.iAccel = 'right trigger';
+                  } else {
+                    this.iAccel = 'left trigger';
+                  }
+		                this.magnitude = this.magnitude0;
+		                this.mapProportion0 = this.mapProportion;
+		                this.impulseStartTime = this.now;
+		                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
+		                vaUpdateMap({x: 0, y: 0});
+				}
+
+				slowDown(initializeAfter, oldD) {
+					if (this.magnitude < 0.005 && this.magnitude > -0.005) {
+	                  this.magnitude = 0;
+	                  if (initializeAfter) 
+	                  	va.initialize(false, this.fastForward);
+	                  vaUpdateMap({x: 0, y: 0});
+	                } 
+	                else {
+						var t = (this.now - this.impulseStartTime) / 1000;
+	                    this.magnitude = this.magnitude0 * Math.exp(-b * t);
+	                    this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
+	                    var x = d2x(this.mapProportion);// + 14;
+	                    var y = d2y(this.mapProportion);// - 4412;
+	                    var dx = x - d2x(oldD);
+	                    var dy = y - d2y(oldD);
+	                    this.position.x = x;
+	                    this.position.y = y;
+	                    vaUpdateMap({x: dx, y: dy});
+	                    this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+               		 }
+				}
 				
 	        	update() {
 		          this.lastRole = 'navigating';
-              this.iAccel = 'no trigger';
+                  this.iAccel = 'no trigger';
 		          var oldD = this.mapProportion;
 		          if (this.targetValid) {
                 if (!this.fastForward) {
@@ -672,37 +708,10 @@
 					  }
 		              else if (this.impulseBehavior) { // Keep impulsing toward target until "close"
 		              	if (this.burstCD == 0) {
-		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];		              		
-			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
-                      if (Math.sign(currentDistanceToTarget) > 0) {
-                        this.iAccel = 'right trigger';
-                      } else {
-                        this.iAccel = 'left trigger';
-                      }
-			                this.magnitude = this.magnitude0;
-			                this.mapProportion0 = this.mapProportion;
-			                this.impulseStartTime = this.now;
-			                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-			                vaUpdateMap({x: 0, y: 0});
+		              		this.impulse(Math.sign(currentDistanceToTarget) , true, false);
 		            	}
 		              	else {
-		              	  if (this.magnitude < 0.005 && this.magnitude > -0.005) {
-		                    this.magnitude = 0;
-		                    vaUpdateMap({x: 0, y: 0});
-		                  } 
-		                  else {
-		              		var t = (this.now - this.impulseStartTime) / 1000;
-		                    this.magnitude = this.magnitude0 * Math.exp(-b * t);
-		                    this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
-		                    var x = d2x(this.mapProportion);// + 14;
-		                    var y = d2y(this.mapProportion);// - 4412;
-		                    var dx = x - d2x(oldD);
-		                    var dy = y - d2y(oldD);
-		                    this.position.x = x;
-		                    this.position.y = y;
-		                    vaUpdateMap({x: dx, y: dy});
-		                    this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
-		                  }
+		              	  this.slowDown(false, oldD);
 		              	}
 		              	if (Math.sign(currentDistanceToTarget)*(this.switchPoint - this.mapProportion) < 0) {
 		              	  this.impulseBehavior = false;
@@ -711,125 +720,29 @@
 		              else { // second part of user behavior
 		              	if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget > 0.01) { // If the virtual agent will overshoot then we hit the brake
 		              	  if (this.burstCD == 0) {
-		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];
-			                this.magnitude0 = this.magnitude - 0.01 * Math.sign(this.target.mapProportion-this.switchPoint);
-                      if (Math.sign(currentDistanceToTarget) > 0) {
-                        this.iAccel = 'right trigger';
-                      } else {
-                        this.iAccel = 'left trigger';
-                      }
-			                this.magnitude = this.magnitude0;
-			                this.mapProportion0 = this.mapProportion;
-			                this.impulseStartTime = this.now;
-			                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-			                vaUpdateMap({x: 0, y: 0});
 			              } 
 			              else {
-			              	if (this.magnitude < 0.005 && this.magnitude > -0.005) {
-			                  this.magnitude = 0;
-			                  vaUpdateMap({x: 0, y: 0});
-			                } 
-			                else {
-			                  var t = (this.now - this.impulseStartTime) / 1000;
-			                  this.magnitude = this.magnitude0 * Math.exp(-b * t);
-			                  this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
-			                  var x = d2x(this.mapProportion);// + 14;
-			                  var y = d2y(this.mapProportion);// - 4412;
-			                  var dx = x - d2x(oldD);
-			                  var dy = y - d2y(oldD);
-			                  this.position.x = x;
-			                  this.position.y = y;
-			                  vaUpdateMap({x: dx, y: dy});
-			                  this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
-			                }
+			              	this.slowDown(false, oldD);
 			              }
 		              	}
 		              	else if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget < 0.01) { // If the VA isn't fast enough to coast to the target, it will decrease its impulse rate, since it is close, so that it wont overshoot
 			              if (this.burstCD == 0 || (this.magnitude < 0.01 && this.magnitude > -0.01)) {
-		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)]*4;
-			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
-                      if (Math.sign(currentDistanceToTarget) > 0) {
-                        this.iAccel = 'right trigger';
-                      } else {
-                        this.iAccel = 'left trigger';
-                      }
-			                this.magnitude = this.magnitude0;
-			                this.mapProportion0 = this.mapProportion;
-			                this.impulseStartTime = this.now;
-			                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-			                vaUpdateMap({x: 0, y: 0});
+		              		this.impulse(Math.sign(currentDistanceToTarget),true,true);
 			              } 
 			              else {
-			              	/*if (this.magnitude < 0.005 && this.magnitude > -0.005) {
-			                  this.magnitude = 0;
-			                  vaUpdateMap({x: 0, y: 0});
-			                } else {*/
-			                  var t = (this.now - this.impulseStartTime) / 1000;
-			                  this.magnitude = this.magnitude0 * Math.exp(-b * t);
-			                  this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
-			                  var x = d2x(this.mapProportion);// + 14;
-			                  var y = d2y(this.mapProportion);// - 4412;
-			                  var dx = x - d2x(oldD);
-			                  var dy = y - d2y(oldD);
-			                  this.position.x = x;
-			                  this.position.y = y;
-			                  vaUpdateMap({x: dx, y: dy});
-			                  this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
-			                //}
+			              	this.slowDown(false, oldD);
 			              }
 			            }
 			            else if (this.magnitude == 0) {
-			            	this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];
-			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
-                      if (Math.sign(currentDistanceToTarget) > 0) {
-                        this.iAccel = 'right trigger';
-                      } else {
-                        this.iAccel = 'left trigger';
-                      }
-			                this.magnitude = this.magnitude0;
-			                this.mapProportion0 = this.mapProportion;
-			                this.impulseStartTime = this.now;
-			                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-			                vaUpdateMap({x: 0, y: 0});
+			            	this.impulse(Math.sign(currentDistanceToTarget),true,false);
 			            }
 			            else { // The VA will reach the target by coasting 
-		                  if (this.magnitude < 0.005 && this.magnitude > -0.005) {
-		                    this.magnitude = 0;
-		                    vaUpdateMap({x: 0, y: 0});
-		                  } else {
-		                    var t = (this.now - this.impulseStartTime) / 1000;
-		                    this.magnitude = this.magnitude0 * Math.exp(-b * t);
-		                    this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
-		                    var x = d2x(this.mapProportion);// + 14;
-		                    var y = d2y(this.mapProportion);// - 4412;
-		                    var dx = x - d2x(oldD);
-		                    var dy = y - d2y(oldD);
-		                    this.position.x = x;
-		                    this.position.y = y;
-		                    vaUpdateMap({x: dx, y: dy});
-		                    this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
-		                  }
+		                  this.slowDown(false, oldD);
 		                }
 		              }
 		            }
 		          } else { // VA's target has been taken
-					  if (this.magnitude < 0.005 && this.magnitude > -0.005) {
-		                this.magnitude = 0;
-		                vaUpdateMap({x: 0, y: 0});
-						va.initialize(false, this.fastForward);
-		              } else {
-		                var t = (this.now - this.impulseStartTime) / 1000;
-		                this.magnitude = this.magnitude0 * Math.exp(-b * t);
-		                this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
-		                var x = d2x(this.mapProportion);// + 14;
-		                var y = d2y(this.mapProportion);// - 4412;
-		                var dx = x - d2x(oldD);
-		                var dy = y - d2y(oldD);
-		                this.position.x = x;
-		                this.position.y = y;
-		                vaUpdateMap({x: dx, y: dy});
-		                this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
-		              }
+					  this.slowDown(true, oldD);
 		          }
 
 		          if (this.burstCD > 0) this.burstCD -= 1;
@@ -841,6 +754,8 @@
 		          }
 		        }
 			}
+
+
 
 			var interval = null; //All the gamepad variables are initialized here.
 			var stick = [0, 0];
