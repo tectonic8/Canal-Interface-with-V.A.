@@ -683,6 +683,11 @@
 		              	if (this.burstCD == 0) {
 		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];		              		
 			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
+                      if (Math.sign(currentDistanceToTarget) > 0) {
+                        this.iAccel = 'right trigger';
+                      } else {
+                        this.iAccel = 'left trigger';
+                      }
 			                this.magnitude = this.magnitude0;
 			                this.mapProportion0 = this.mapProportion;
 			                this.impulseStartTime = this.now;
@@ -717,6 +722,11 @@
 		              	  if (this.burstCD == 0) {
 		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];
 			                this.magnitude0 = this.magnitude - 0.01 * Math.sign(this.target.mapProportion-this.switchPoint);
+                      if (Math.sign(currentDistanceToTarget) > 0) {
+                        this.iAccel = 'right trigger';
+                      } else {
+                        this.iAccel = 'left trigger';
+                      }
 			                this.magnitude = this.magnitude0;
 			                this.mapProportion0 = this.mapProportion;
 			                this.impulseStartTime = this.now;
@@ -747,6 +757,11 @@
 			              if (this.burstCD == 0 || (this.magnitude < 0.01 && this.magnitude > -0.01)) {
 		              		this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)]*4;
 			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
+                      if (Math.sign(currentDistanceToTarget) > 0) {
+                        this.iAccel = 'right trigger';
+                      } else {
+                        this.iAccel = 'left trigger';
+                      }
 			                this.magnitude = this.magnitude0;
 			                this.mapProportion0 = this.mapProportion;
 			                this.impulseStartTime = this.now;
@@ -775,6 +790,11 @@
 			            else if (this.magnitude == 0) {
 			            	this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)];
 			                this.magnitude0 = this.magnitude + 0.01 * Math.sign(currentDistanceToTarget);
+                      if (Math.sign(currentDistanceToTarget) > 0) {
+                        this.iAccel = 'right trigger';
+                      } else {
+                        this.iAccel = 'left trigger';
+                      }
 			                this.magnitude = this.magnitude0;
 			                this.mapProportion0 = this.mapProportion;
 			                this.impulseStartTime = this.now;
@@ -1319,8 +1339,13 @@
 			function ultraRecorder() {
 				endTime = new Date();
 				elapsedTime = endTime - startTime;
-        var iAccel = rightAccelButton ? 0.03 : -0.03
-				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncate(saveDirection[0], 1) + ", " + truncate(saveDirection[1], 1) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + ", " + targetsVerified + '\n';
+        var iAccel = 'no trigger';
+        if (rightAccelButton && !leftAccelButton && !rightAccelButtonPrev) {
+          iAccel = 'right trigger';
+        } else if (leftAccelButton && !rightAccelButton && !leftAccelButtonPrev) {
+          iAccel = 'leftTrigger'
+        }
+				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncatre(userT, 4) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + '\n';
 				//the += "/n" part allows it to write on a new line each time.
 //				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
 	//			window.setTimeout(ultraRecorder, 100);
@@ -1328,7 +1353,7 @@
 			function vaUltraRecorder() {
 				var endTime2 = new Date();
 				elapsedTime = endTime2 - startTime;
-				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + va.accel + ", "+ va.lastRole + ", " + va.target.index + ", " + va.behavior + '\n';
+				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + truncate(va.mapProportion, 4) + ", " + va.iAccel + ", "+ va.lastRole + ", " + va.target.index + ", " + va.behavior + '\n';
 				
 //				localStorage.setItem("vaLog", vaLog);
 	//			window.setTimeout(vaUltraRecorder, 100);
