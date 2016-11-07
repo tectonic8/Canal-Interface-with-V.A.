@@ -12,6 +12,13 @@
     TEXT:                  'text',
     UTF_8:                 'UTF-8',
   };
+
+  var DESCRIPTIONS = {
+    INITIAL:       'To verify a tag, first click on the desired tag',
+    BEGIN_VERIFICATION: 'If you think the tag is correct, click the check.<br>If not, click the \'X\'.',
+    PRESSED_INCORRECT: 'If the tag is incorrect, type in what it should be,<br> then click the check. To cancel your entry, click the \'X\'.',
+    DONE_VERIFYING:  'After verifying, you may verify other tags,<br> revise your verification, return to tagging, or finish.'
+  };
   
   var ATTRIBUTES = {
     ALT:   'alt',
@@ -34,6 +41,7 @@
   };
   
   var ELEMENT_IDS = {
+    DESCRIPTION:           'description',
     FINISH_BUTTON:         'finish-button',
     SWITCH_BUTTON:         'switch-button',
     VERIFY_ACTION_WRAPPER: 'verify-action-wrapper',
@@ -63,9 +71,8 @@
   };
   
   var LOCATIONS = {
-    TAG_PRACTICE:      'tag-practice',
-    TAG_PREFERENCE:    'tag-preference',
-    VERIFY_PREFERENCE: 'verify-preference'
+    PRE_PREFERENCE:    'pre-preference',
+    TAG_PRACTICE:      'tag-practice'
   };
   
   var TOPICS = {
@@ -266,6 +273,7 @@
     this.element.classList.add(CSS_CLASSES.ACTIVE);
     this.element.classList.remove(CSS_CLASSES.ACCEPTED);
     this.element.classList.remove(CSS_CLASSES.REJECTED);
+    description.innerHTML = DESCRIPTIONS.BEGIN_VERIFICATION;
     events.publish(TOPICS.BEGIN_VERIFICATION);
     this.acceptSubscriber = events.subscribe(TOPICS.ACCEPT, this.accepted.bind(this));
     this.rejectSubscriber = events.subscribe(TOPICS.REJECT, this.rejected.bind(this));
@@ -314,6 +322,7 @@
     if (event.key === KEYS.ENTER) {
       event.preventDefault();
       event.stopPropagation();
+      description.innerHTML = DESCRIPTIONS.DONE_VERIFYING;
       events.publish(TOPICS.ACCEPT_EDIT);
       events.publish(TOPICS.ENTER_ACCEPT);
     }
@@ -321,6 +330,7 @@
     if (event.key === KEYS.ESCAPE) {
       event.preventDefault();
       event.stopPropagation();
+      description.innerHTML = DESCRIPTIONS.INITIAL;   
       events.publish(TOPICS.REJECT_EDIT);
       events.publish(TOPICS.ESCAPE_REJECT);
     }
@@ -379,11 +389,7 @@
   var FinishButton = function() {
     this.button = document.getElementById(ELEMENT_IDS.FINISH_BUTTON);
     this.button.addEventListener(EVENTS.CLICK, function(event) {
-      if (Math.random > 0.5) {
-        window.location.replace(LOCATIONS.TAG_PREFERENCE);
-      } else {
-        window.location.replace(LOCATIONS.VERIFY_PREFERENCE);
-      }
+      window.location.replace(LOCATIONS.PRE_PREFERENCE);
     });
   };
   
@@ -411,28 +417,36 @@
   
   var acceptActionCallback = function(event) {
     this.hide();
+    description.innerHTML = DESCRIPTIONS.DONE_VERIFYING;
     events.publish(TOPICS.ACCEPT);
   };
   
   var rejectActionCallback = function(event) {
+    description.innerHTML = DESCRIPTIONS.PRESSED_INCORRECT;
     events.publish(TOPICS.REJECT);
     this.setAction(rejectEditActionCallback);
   }
   
   var acceptEditActionCallback = function(event) {
     this.hide();
+    description.innerHTML = DESCRIPTIONS.DONE_VERIFYING;
     this.setAction(acceptActionCallback.bind(this));
     events.publish(TOPICS.ACCEPT_EDIT);
   }
   
   var rejectEditActionCallback = function(event) {
     this.hide();
+    description.innerHTML = DESCRIPTIONS.INITIAL;   
     this.setAction(rejectActionCallback.bind(this));
     events.publish(TOPICS.REJECT_EDIT);
   };
   
   document.addEventListener(EVENTS.DOM_CONTENT_LOADED, function(event) {
     var eventStage = new Wrapper();
+
+    var description = document.getElementById(ELEMENT_IDS.DESCRIPTION);
+
+    description.innerHTML = DESCRIPTIONS.INITIAL;
     
     var acceptAction = new VerifyAction(STRINGS.ACCEPT_SRC, STRINGS.ACCEPT_ALT, acceptActionCallback);
     var rejectAction = new VerifyAction(STRINGS.REJECT_SRC, STRINGS.REJECT_ALT, rejectActionCallback);
