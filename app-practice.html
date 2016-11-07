@@ -207,6 +207,9 @@
           targetsVerified = parseInt(readCookie("targetsVerified"));
           tagCount = parseInt(readCookie("tagCount"));
           verifyCount = parseInt(readCookie("verifyCount"));
+          userT = parseFloat(readCookie("userT"));
+          userT0 = userT;
+          userTPrev = userT;
                 
           var startTime = parseInt(readCookie("startTime")); //startTime is always the time when the entire program first start.
           var temp = new Date().getTime();
@@ -528,6 +531,7 @@
 //            document.cookie = "vaTargetIndex=" + va.target.index + ";";
 //            document.cookie = "vaTask=" + va.task + ";";
 //            document.cookie = "vaEstimatedTimeLeft=" + va.estimatedTimeLeft + ";";
+            document.cookie = "userT=" + userT + ";";
         }
         function readCookie(key){ //reads the cookie as a string. This was also copied straight from stack overflow so I don't know how it works. But it do.
           var result;

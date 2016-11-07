@@ -75,10 +75,7 @@
               logCookie();
             });
             startTime = new Date().getTime();
-            var f00 = Math.random();
-            var behavior = (f00 < 0.5) ? 0 : 1;
-            console.log('Virtual agent behavior roll is: ' + f00);
-            console.log('Virtual agent behavior is type: ' + behavior);
+            var behavior = (Math.random() < 0.5) ? 0 : 1;
             va = new VirtualAgent(20, 550, 0, behavior);
 			//vaUpdateMap({x: 0, y: 0});
             va.start(true);//true meaning start with the delay.
@@ -428,9 +425,7 @@
 					else {
 						tagTarget = this.closestTag();
 						verifyTarget = this.closestVerify();
-            var ddd = Math.random();
-            console.log('Target roll is: ' + ddd);
-						if (ddd < preferenceData[this.behavior]) {
+						if (Math.random() < preferenceData[this.behavior]) {
 							vaTarget = tagTarget;
 						} else {
 							vaTarget = verifyTarget;
@@ -659,11 +654,6 @@
 		            } 
 		            else {
 		              var currentDistanceToTarget = this.target.mapProportion - this.mapProportion;
-		              if (this.fastForward) {
-		              	console.log('<Fastforwaring> ' + currentDistanceToTarget);
-		              } else {
-			              console.log(currentDistanceToTarget);
-			          }
 		              var speedAtTarget = 0;
 		              if (0 !== this.magnitude0) {
 		                speedAtTarget = this.magnitude0 - this.startingDistanceToTarget * b;
@@ -1298,7 +1288,6 @@
 					var endTime2 = new Date().getTime();
 					var timeToTag = tagTimeData[va.randomTaggingVerifyingTimeIndex]*1000; //there is only one random index for both of these because both arrays are the same size.
 					var timeToVerify = verifyTimeData[va.randomTaggingVerifyingTimeIndex]*1000;
-          console.log('Time tagging: ' + (endTime2 - va.tagAndVerifyDelayStart));
 					if ((va.task == 0)  &&  ((endTime2 - va.tagAndVerifyDelayStart) >= (timeToTag))) {
 						if (tagTargets[va.target.index]) { tagTargets[va.target.index].remove(); }
 						if (targetSprites[va.target.index]) { targetSprites[va.target.index].remove(); }
@@ -1345,7 +1334,7 @@
         } else if (leftAccelButton && !rightAccelButton && !leftAccelButtonPrev) {
           iAccel = 'leftTrigger'
         }
-				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncatre(userT, 4) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + '\n';
+				log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncate(userT, 4) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + '\n';
 				//the += "/n" part allows it to write on a new line each time.
 //				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
 	//			window.setTimeout(ultraRecorder, 100);
