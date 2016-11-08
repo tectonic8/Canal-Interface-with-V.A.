@@ -513,6 +513,14 @@ class VirtualAgent {
     xhr.send("vaRecord=" +  this.log);
   }
 
+  setLog(s) {
+    this.log = s;
+  }
+
+  getLog() {
+    return this.log;
+  }
+
   getElapsedTime() {
     return new Date().getTime() - this.startTime;
   }

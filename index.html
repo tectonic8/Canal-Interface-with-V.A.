@@ -59,7 +59,7 @@
             button.parentElement.removeChild(button);
             window.addEventListener('unload', function(event) {
               localStorage.setItem("userLog", log);
-              localStorage.setItem("vaLog", va.log);
+              localStorage.setItem("vaLog", va.getLog());
               logCookie();
             });
             startTime = new Date().getTime();
@@ -88,8 +88,8 @@
             va.targetValid = false;
           }
 
-          if (va.log === '') {
-            va.log = localStorage.getItem("vaLog");
+          if (va.getLog() === '') {
+            va.setLog(localStorage.getItem("vaLog"));
           }
           
           va.fastForward = true;
@@ -98,7 +98,7 @@
           va.impulseStartTime += timeSpentTaggingVerifying;
 				  for (var t = 0; t < frameCount; ++t) {
 					  va.update(); //fastForwarding
-      		  va.agAndVerify();
+      		  va.tagAndVerify();
             va.now += 1 / 60 * 1000;
 				  }
           var t = va.now - Date.now();
@@ -108,7 +108,7 @@
 					if (targetTracker[va.target.index] == 0) va.task = 0;
 					else if (targetTracker[va.target.index] == 2) va.task = 1;
           
-          localStorage.setItem("vaLog", va.log);
+          localStorage.setItem("vaLog", va.getLog());
           
           updateTargets();
           va.handleFlash();
@@ -202,7 +202,6 @@
         tagTracker = JSON.parse(readCookie("tagTracker"));
 				lastRole = readCookie("lastRole"); //this is for the log I think.
 				log = localStorage.getItem("userLog"); //Cookies can't save things that are multiple lines, so I use localStorage instead.
-        va.log = localStorage.getItem("vaLog");
 				targetsVerified = parseInt(readCookie("targetsVerified"));
 				tagCount = parseInt(readCookie("tagCount"));
 				verifyCount = parseInt(readCookie("verifyCount"));
@@ -223,6 +222,7 @@
 				timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
 				        
 				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseFloat(readCookie("vaD")), parseInt(readCookie("vaBehavior")), startTime); //it is drawn onto the old position.
+        va.setLog(localStorage.getItem("vaLog"));
         va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
         va.sprite.style.transform = "rotate(" + (this.angle? this.angle:0) + "deg)";
 
@@ -442,7 +442,7 @@
             ultraRecorder();
 						logCookie();
             localStorage.setItem("userLog", log);
-            localStorage.setItem("vaLog", va.log);
+            localStorage.setItem("vaLog", va.getLog());
 						window.location.replace('tag.html'); //I stopped using server requests since I stopped using html templates.
 					}
 				}
@@ -459,7 +459,7 @@
 						updateScore();
             ultraRecorder();
 						logCookie();
-						localStorage.setItem("vaLog", va.log);
+						localStorage.setItem("vaLog", va.getLog());
             localStorage.setItem("userLog", log);
 						window.location.replace('verify.html');
 					}
