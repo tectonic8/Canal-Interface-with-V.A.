@@ -365,7 +365,8 @@
             mapProportion0: this.mapProportion0,
             impulseStartTime: this.impulseStartTime,
             now: this.now,
-            impulseIndex: this.impulseIndex
+            impulseIndex: this.impulseIndex,
+            lastTargetIndex: this.lastTargetIndex
           };
         }
 
@@ -396,6 +397,7 @@
           this.impulseStartTime = state.impulseStartTime;
           this.now = state.now;
           this.impulseIndex = state.impulseIndex;
+          this.lastTargetIndex = state.lastTargetIndex;
         }
 
 				start(addDelay) {
@@ -698,6 +700,7 @@
 
 		              if (Math.abs(currentDistanceToTarget) < .0055 && Math.abs(this.magnitude) < 0.015 && this.target.index !== -1) {
 					    this.onTarget = true;
+              
 					    if (this.task === 0) {
 						  this.lastRole = 'tagging';              
 					    }
@@ -1180,6 +1183,7 @@
               divWrapper.appendChild(targetSprites[va.target.index]);
               new Target(targetDCoordinates[va.target.index], 'userVerifyTarget', va.target.index, targetTracker[va.target.index]);
               va.onTarget = false;
+              va.lastTargetIndex = va.target.index;
               va.initialize(true, true);              
               //va.chooseTarget();
             } else if (va.task === 1 && va.framesElapsed >= framesRequiredVerify) {
@@ -1189,6 +1193,7 @@
               targetsVerified += tagTracker[va.target.index];
                     
               va.onTarget = false;
+              va.lastTargetIndex = va.target.index;
               va.initialize(true, true);
               //va.chooseTarget();
             }
@@ -1218,6 +1223,7 @@
 						updateTargets();
 						
             va.onTarget = false;
+            va.lastTargetIndex = va.target.index;
 						va.initialize(true, false); //refreshes all the values for the va, but doesn't restart any of the main functions. True means add the delay. But if it's fastForwarding it won't add the delay (see if statement on line 320). In hindsight, it should still add the delay, just divided by 10.
             //va.chooseTarget();
 					}
@@ -1230,6 +1236,7 @@
 						updateTargets();
 						
             va.onTarget = false;
+            va.lastTargetIndex = va.target.index;
 						va.initialize(true, false);
             //va.chooseTarget();
 					}
@@ -1257,7 +1264,7 @@
 			function vaUltraRecorder() {
 				var endTime2 = new Date();
 				elapsedTime = endTime2 - startTime;
-				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + truncate(va.mapProportion, 4) + ", " + va.iAccel + ", "+ va.lastRole + ", " + va.target.index + ", " + va.behavior + '\n';
+				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + truncate(va.mapProportion, 4) + ", " + va.iAccel + ", "+ va.lastRole + ", " + ", " + va.lastTargetIndex + ", " + va.target.index + ", " + va.behavior + '\n';
 				
 //				localStorage.setItem("vaLog", vaLog);
 	//			window.setTimeout(vaUltraRecorder, 100);
