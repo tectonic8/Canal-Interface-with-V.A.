@@ -635,8 +635,6 @@
 
 				impulse(distSign, towards, slow) { 
 					// forward => target is to the right
-				  this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)]*(slow?4:1);		              		
-		          this.magnitude0 = this.magnitude + 0.01*distSign*(towards?1:-1);
                   if ((distSign == 1?true:false) == towards) {
                     this.iAccel = 'right trigger';
                   } else {
@@ -722,8 +720,6 @@
 		              else { // second part of user behavior
 		              	if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget > 0.01) { // If the virtual agent will overshoot then we hit the brake
 		              	  if (this.burstCD == 0) {
-		              	  	var sign = Math.sign(this.target.mapProportion-this.switchPoint);
-		              		this.impulse(sign,false, false);
 			              } 
 			              else {
 			              	this.slowDown(false, oldD);
