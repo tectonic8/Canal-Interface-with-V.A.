@@ -85,6 +85,10 @@ body {
   width: 127px;
 }
 
+#description {
+  margin-top: 31px;
+}
+
 #next-button {
   margin-top: 63px;
   font-size: 1.25em;

@@ -47,9 +47,8 @@
   };
   
   var LOCATIONS = {
-    TAG_PREFERENCE:    'tag-preference',
-    VERIFY_PRACTICE:   'verify-practice',
-    VERIFY_PREFERENCE: 'verify-preference',
+    PRE_PREFERENCE:    'pre-preference',
+    VERIFY_PRACTICE:   'verify-practice'
   }
   
   var STRINGS = {
@@ -297,11 +296,7 @@
     
     var finishButton = document.getElementById(ELEMENT_IDS.FINISH_BUTTON);
     finishButton.addEventListener(EVENTS.CLICK, function(event) {
-      if (Math.random() > 0.5) {
-        window.location.replace(LOCATIONS.TAG_PREFERENCE);
-      } else {
-        window.location.replace(LOCATIONS.VERIFY_PREFERENCE);
-      }
+      window.location.replace(LOCATIONS.PRE_PREFERENCE);
     });
   });
 })(window, document);

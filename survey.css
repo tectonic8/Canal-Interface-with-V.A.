@@ -53,6 +53,11 @@ input {
   text-align:center;
 }
 
+input[type="submit"] {
+  margin-top: 10px;
+  margin-left: 45%;
+}
+
 #survey-form .likert {
   list-style: none;
 }

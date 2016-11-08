@@ -81,6 +81,10 @@ app.get('/verify-practice', function(req, res) {
   return res.sendFile(__dirname + '/verify-practice.html');
 });
 
+app.get('/pre-preference', function(req, res) {
+  return res.render('pre-preference.pug');
+});
+
 app.get('/verify-preference', function(req, res) {
   var imageId = 1;
   if (undefined !== req.session.verifyImageId) {
