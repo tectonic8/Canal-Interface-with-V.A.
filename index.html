@@ -345,7 +345,7 @@
         leftAccelButtonPrev  = leftAccelButton;
         rightAccelButtonPrev = rightAccelButton;
         userTPrev            = userT;
-        
+        elapsedTime = max(elapsedTime, va.getElapsedTime());
 				if (elapsedTime > 300000) { //data is only logged at the end of the 5 minutes.
 					elapsedTime = 300000;
 					logger();
@@ -548,7 +548,7 @@
 			}
 			
 			function updateClock() {
-        if (va) elapsedTime = Math.max(elapsedTime, va.getElapsedTIme());
+        if (va) elapsedTime = Math.max(elapsedTime, va.getElapsedTime());
 				var minutes = 4 - Math.floor((elapsedTime / 1000)/60);
 				var seconds = 60 - Math.floor((elapsedTime / 1000) % 60);
 				if (seconds == 60) {
