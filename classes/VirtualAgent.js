@@ -54,6 +54,7 @@ class VirtualAgent {
     this.mapProportion0 = d;
     this.fastForward = false;
     this.targetValid = true;
+    this.lastUserTarget = null;
   }
   
   initialize(addDelay, fastForward) {
@@ -71,17 +72,7 @@ class VirtualAgent {
     this.startDelay = addDelay? startDelayData2[Math.floor(Math.random()*startDelayData2.length)] / 60 * 1000 : 0;
     this.theta = 0;
     this.saveSpeed = 0;
-    
-    this.randomAccelIndex = Math.floor(Math.random()*47);
-    if (this.randomAccelIndex >= 1  &&  this.randomAccelIndex <= 15) //This system handles the probabilities of getting each of the 4 representative acceleration patterns.
-      this.randomAccelIndex = 0;
-    else if (this.randomAccelIndex >= 16  &&  this.randomAccelIndex <= 25)
-      this.randomAccelIndex = 1;
-    else if (this.randomAccelIndex >= 26  &&  this.randomAccelIndex <= 43)
-      this.randomAccelIndex = 2;
-    else if (this.randomAccelIndex >= 44  &&  this.randomAccelIndex <= 47)
-      this.randomAccelIndex = 3;
-      
+
     this.chooseTarget();
     this.targetValid = true;  
 
@@ -105,7 +96,6 @@ class VirtualAgent {
       startDelay: this.startDelay,
       theta: this.theta,
       saveSpeed: this.saveSpeed,
-      randomAccelIndex: this.randomAccelIndex,
       target: this.target,
       startingDistanceToTarget: this.startingDistanceToTarget,
       killDistance: this.killDistance,
@@ -125,7 +115,9 @@ class VirtualAgent {
       now: this.now,
       impulseIndex: this.impulseIndex,
       lastTargetIndex: this.lastTargetIndex,
-      startTime: this.startTime
+      startTime: this.startTime,
+      targetValid: this.targetValid,
+      lastUserTarget: this.lastUserTarget
     };
   }
 
@@ -138,7 +130,6 @@ class VirtualAgent {
     this.startDelay = state.startDelay;
     this.theta = state.theta;
     this.saveSpeed = state.saveSpeed;
-    this.randomAccelIndex = state.randomAccelIndex;
     this.target = state.target;
     this.startingDistanceToTarget = state.startingDistanceToTarget;
     this.killDistance = state.killDistance;
@@ -158,6 +149,8 @@ class VirtualAgent {
     this.impulseIndex = state.impulseIndex;
     this.lastTargetIndex = state.lastTargetIndex;
     this.startTime = state.startTime;
+    this.targetValid = state.targetValid;
+    this.lastUserTarget = state.lastUserTarget;
   }
 
   start(addDelay) {
@@ -210,7 +203,7 @@ class VirtualAgent {
     var leastDistance = 10000;
     var nextDistance = 0;
     for (var i = 0; i <= 19; i++) {
-      if (!this.targetValid && i == this.lastTargetIndex) continue;
+      if (!this.targetValid && i == this.target.index) continue;
       if (targetTracker[i] == 0) {
         nextDistance = Math.abs(this.mapProportion - targetDCoordinates[i]);
         if (nextDistance < leastDistance) {
@@ -232,8 +225,8 @@ class VirtualAgent {
     var leastDistance = 10000;
     var nextDistance = 0;
     for (var i = 0; i <= 19; i++) {
-      if (!this.targetValid && i == this.lastTargetIndex) continue;
-      if (i == this.lastTargetIndex && this.fastForward) continue; //don't go after the new verifying point if you're fast forwarding
+      if (!this.targetValid && i == this.target.index) continue;
+      if (i == this.lastUserTarget && this.fastForward) continue; //don't go after the new verifying point if you're fast forwarding
       if (targetTracker[i] == 2) {
         nextDistance = Math.abs(this.mapProportion - targetDCoordinates[i]);
         if (nextDistance < leastDistance) {
@@ -292,11 +285,12 @@ class VirtualAgent {
     this.lastRole = 'navigating';
     this.iAccel = 'no trigger';
     var oldD = this.mapProportion;
-    if (this.targetValid) {
-      if (!this.fastForward) {
-        this.now = Date.now();
-      }
 
+    if (!this.fastForward) {
+      this.now = Date.now();
+    }
+
+    if (this.targetValid) {
       if (this.now - this.startDelayStart < this.startDelay && !this.fastForward) {
         this.ultraRecorder();
         window.setTimeout(this.update.bind(this), (1000 / 60));
@@ -524,4 +518,7 @@ class VirtualAgent {
   getElapsedTime() {
     return new Date().getTime() - this.startTime;
   }
+}
+function updateScore() {
+  scoreDiv.innerHTML = "Verified tags: " + targetsVerified;
 }

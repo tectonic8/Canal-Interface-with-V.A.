@@ -29,27 +29,14 @@
 	</div>
 	<div id="clockDiv"></div>
 	<div id="scoreDiv"></div>
+	<script type="text/javascript" src="/consts/index-consts.js"></script>
+  <script type="text/javascript" src="/util/index-utils.js"></script>
+  <script type="text/javascript" src="/util/map.js"></script>
+  <script type="text/javascript" src="/classes/Target.js"></script>
+	<script type="text/javascript" src="/classes/VirtualAgent.js"></script>
     <script>
 		(function(window, document) {
-		
-			var ELEMENT_IDS = {
-				canvas: "canvas",
-				minimap: "minimap",
-				userSprite: "boatSprite1",
-				buddySprite: "boatSprite2",
-				gowanusMap: "gowanusMap",
-				miniSprite1: "miniSprite1",
-				miniSprite2: "miniSprite2",
-				divWrapper: "bigWrapper",
-				clock: "clockDiv",
-				scoreDiv: "scoreDiv"
-			};
-			var EVENTS = {
-				LOAD:      'load',
-				MOUSEDOWN: 'mousedown',
-				MOUSEMOVE: 'mousemove',
-				MOUSEUP:   'mouseup'
-			};
+
 			var canvas = document.getElementById(ELEMENT_IDS.canvas);
 			var minimap = document.getElementById(ELEMENT_IDS.minimap);
 			var gowanusMap = document.getElementById(ELEMENT_IDS.gowanusMap);
@@ -61,37 +48,8 @@
 			var canvasTopMargin = -4400; //The map is scrolled by changing the top and left margins.
 			var canvasLeftMargin = 0;
 			var loadTime = 0; //Load time is factored into how long the va should fast forward
-			gowanusMap.addEventListener(EVENTS.LOAD, function(event) {
-				ctx.drawImage(this, 0, 0); 
-				canvas.style.marginTop = canvasTopMargin + "px";
-				minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
-        if (!readCookie("gpRecorder0")) {
-          var button = document.createElement('button');
-          button.addEventListener('click', function(event) {
-            button.parentElement.removeChild(button);
-            window.addEventListener('unload', function(event) {
-              localStorage.setItem("userLog", log);
-              localStorage.setItem("vaLog", vaLog);
-              logCookie();
-            });
-            startTime = new Date().getTime();
-            var behavior = (Math.random() < 0.5) ? 0 : 1;
-            va = new VirtualAgent(20, 550, 0, behavior);
-			//vaUpdateMap({x: 0, y: 0});
-            va.start(true);//true meaning start with the delay.
-            interval = setInterval(pollGamepads, 500);
-          });
-          button.textContent = 'start';
-          document.body.appendChild(button);
-        } else {
-          interval = setInterval(pollGamepads, 500);
-          va.startDelayStart = new Date().getTime();
-//			    va.tagAndVerifyDelayStart = new Date().getTime();
-//					va.update();
-          va.update();
-          vaTagAndVerify();
-        }
-			});
+
+      
 
       if (!readCookie('deleted') && readCookie("gpRecorder0") != null) {
         document.addEventListener("DOMContentLoaded", function(event) {//not sure why it doesn't work without this part
@@ -101,8 +59,8 @@
             va.targetValid = false;
           }
 
-          if (vaLog === '') {
-            vaLog = localStorage.getItem("vaLog");
+          if (va.getLog() === '') {
+            va.setLog(localStorage.getItem("vaLog"));
           }
           
           va.fastForward = true;
@@ -111,7 +69,7 @@
           va.impulseStartTime += timeSpentTaggingVerifying;
 				  for (var t = 0; t < frameCount; ++t) {
 					  va.update(); //fastForwarding
-      		  vaTagAndVerify();
+      		  va.tagAndVerify();
             va.now += 1 / 60 * 1000;
 				  }
           var t = va.now - Date.now();
@@ -121,15 +79,10 @@
 					if (targetTracker[va.target.index] == 0) va.task = 0;
 					else if (targetTracker[va.target.index] == 2) va.task = 1;
           
-          localStorage.setItem("vaLog", vaLog);
+          localStorage.setItem("vaLog", va.getLog());
           
           updateTargets();
-          
-          /*va.startDelayStart = new Date().getTime();
-          va.tagAndVerifyDelayStart = new Date().getTime();
-				  va.update();
-          vaTagAndVerify();*/
-          handleFlash();
+          va.handleFlash();
         });
 			}
       
@@ -137,81 +90,24 @@
 			var buddySprite = document.getElementById(ELEMENT_IDS.buddySprite);
 			var miniSprite1 = document.getElementById(ELEMENT_IDS.miniSprite1);
 			var miniSprite2 = document.getElementById(ELEMENT_IDS.miniSprite2);
-			var canalTriacontapentagon = [[0, 2318], [84, 2318], [430, 1755], [552, 1617], [656, 1533], [812, 1499], [1055, 1531], [1292, 1583], [1495, 1265], [1510, 1067], [1899, 327], [1972, 365], [1584, 1101], [1580, 1286], [1623, 1319], [1527, 1474], [1483, 1445], [1344, 1663], [1370, 1754], [1611, 1909], [1566, 1975], [1311, 1817], [1279, 1683], [906, 1583], [766, 1579], [1098, 1797], [1050, 1863], [675, 1626], [569, 1721], [809, 1878], [770, 1948], [525, 1793], [75, 2480], [144, 2626], [0, 2655]]; //this is the polygon of the canal. The tolerance might be a little too high, since I didn't go exactly around the perimeter.
-			var vaCanalTriacontapentagon = [[0, 2318], [84, 2318], [430, 1755], [552, 1617], [656, 1533], [812, 1499], [1055, 1531], [1292, 1583], [1495, 1265], [1510, 1067], [1899, 327], [1972, 365], [1584, 1101], [1580, 1286], [1623, 1319], [1527, 1474], [1483, 1445], [1344, 1663], [1279, 1683], [906, 1583], [766, 1579], [675, 1626], [569, 1721], [525, 1793], [75, 2480], [144, 2626], [0, 2655]]; //this is used just for the va so it can't enter the side canals. Also, it is actually a icosikaiheptagon, not a triacontapentagon, but the former seems a little cumbersome.
-			for (var i = 0; i<= 34; i++) {//The coordinates are multiplied because they were recorded for the map image that was half the size.
-				canalTriacontapentagon[i][0] *= 2;
-				canalTriacontapentagon[i][1] *= 2;
-			}		
-			for (var i = 0; i<= 26; i++) {
-				vaCanalTriacontapentagon[i][0] *= 2;
-				vaCanalTriacontapentagon[i][1] *= 2;
-			}
-			var miniSprite1coords = [500, 690];
-			var miniSprite2coords = [500, 690];
+
 			var rotate = 0;
 			var log = '';
-			var vaLog = '';
+			//var va.log = '';
 			
-			//var targetsCoords = [[227, 4694], [557, 4133], [1045, 3506], [1377, 3121], [2149, 3169], [2605, 3327], [2965, 2694], [3107, 2358], [3333, 1724], [3711, 960], [401, 4409], [708, 3924], [1158, 3256], [1828, 3079], [2786, 3014], [3206, 1962], [3471, 1451], [3600, 1214], [2428, 3215], [863, 3688]]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
-      var targetsCoords = [
-        [ 227, 4694],
-        [ 416, 4394],
-        [ 557, 4133],
-        [ 708, 3924],
-        [ 880, 3711],
-        [1014, 3516],
-        [1175, 3276],
-        [1377, 3121],
-        [1828, 3079],
-        [2154, 3151],
-        [2423, 3265],
-        [2650, 3267],
-        [2811, 3004],
-        [2965, 2694],
-        [3092, 2358],
-        [3194, 1962],
-        [3333, 1724],
-        [3488, 1451],
-        [3600, 1214],
-        [3721,  960]
-      ]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
       
-      var targetDCoordinates = [
-        0.0435, 0.0870, 0.1304, 0.1739, 0.2174, 0.2609, 0.3043, 0.3478, 0.4348,
-        0.4783, 0.5217, 0.5652, 0.6087, 0.6521, 0.6957, 0.7826, 0.8261, 0.8696,
-        0.9130, 0.9565
-      ];
       
-      var anchorPoints = [{x: 1603, y: 3100}, {x: 2605, y: 3277}, {x: 3157, y: 2160}];
-			var tagTargets = [];//One array for each type of target. One array for the minimap sprites.
-			var userVerifyTargets = [];
-			var vaVerifyTargets = [];
-			var targetSprites = [];
+			
 			for (var i = 0; i<= 19; i++) { //this is necessary because the targets are appended to the wrapper, not the document body so they are a little offset I thnk.
 				targetsCoords[i][0] -= 9;
 				targetsCoords[i][1] -= 9;
 			}
-			var targetTracker = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; //0 means untagged, 1 means user verifies, 2 means va verifies, 3 means nonexistant
-      var tagTracker    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // Keep track of how many tags are added to an image
 			
 			var accelerationData = [[0.129, 0.155, 0.168, 0.182, 0.195, 0.209, 0.223, 0.238, 0.252, 0.266, 0.281, 0.295, 0.324, 0.351, 0.364, 0.389, 0.893, 1], [0.513, 0.664, 0.692, 0.841, 0.899, 1], [0.493, 0.471, 0.731, 0.733, 0.734, 0.738, 0.92, 1], [0.72, 1]]; //I haven't implemented making a decreasing progress work. Also, these numbers represent the proportion through the canal at which point the user switched from acceleration to deceleration or vice-versa.
 			var accelerationProportion = [0.768, 0.599, 0.644, 0.72]; //This is how much time is spent accelerating for each of the 4 representative models.
-			var preferenceData = [0.088, 0.696]; //1 in the last index was made by me, it will not be randomly selected, only used when I want it to 100% verify
-			var startDelayData = [500, 3599, 500, 1200, 801, 499, 890, 700, 900, 2700, 2401, 2598, 800, 800, 2701, 1000, 301, 3700, 4100, 4401, 6300, 4101, 4801, 4500, 2101, 6099, 5299, 5100, 3900, 3100, 6300, 4799, 3801, 4800, 4601, 3703, 5000, 9501, 3903, 5899, 4300, 4700];
-			var startDelayData2 = [22,26,29,32,34,37,40,43,48,58]; // Number of frames 
-			var tagTimeData = [26.7, 12.7, 10.4, 27.4, 7.7]; 
-			var verifyTimeData = [6.2, 2.8, 3.2, 8.8, 3.9];
-			var userImpulseData =  [[7,  9,  9, 10, 11, 12, 12, 13, 14, 17],
-									[8, 9, 10, 11, 12, 12, 13, 14, 16, 18],
-									[8, 10, 11, 12, 12, 13, 14, 15, 17, 19],
-									[9, 10, 11, 12, 13, 14, 15, 16, 17, 20],
-									[9, 11, 12, 12, 13, 14, 15, 16, 18, 21],
-									[9, 11, 12, 13, 14, 15, 16, 17, 18, 21],
-									[10, 11, 12, 13, 14, 15, 16, 17, 19, 22],
-									[10, 12, 13, 14, 15, 16, 17, 18, 20, 23],
-									[11, 12, 14, 15, 16, 17, 18, 19, 21, 24],
-									[11, 13, 15, 16, 17, 18, 19, 21, 23, 26]];
+			
+			var startDelayData = [500, 3599, 500, 1200, 801, 499, 890, 700, 900, 2700, 2401, 2598, 800, 800, 2701, 1000, 301, 3700, 4100, 4401, 6300, 4101, 4801, 4500, 2101, 6099, 5299, 5100, 3900, 3100, 6300, 4799, 3801, 4800, 4601, 3703, 5000, 9501, 3903, 5899, 4300, 4700]; // Number of frames 
+			
 			// Going by ratio of the distance to the target
 			var rIntercepts = [-0.27053038, -0.20427559, -0.16486123, -0.13337173, -0.10509578, -0.07772764, -0.04945170, -0.01796220, 0.02145217, 0.08770695];
 
@@ -221,26 +117,7 @@
 			var dIntercepts = [-2.380378, -2.291526, -2.238668, -2.196438, -2.158518, -2.121816, -2.083896,-2.041666, -1.988809, -1.899956];
 			var dSlopes = [0.3676553, 0.4044531, 0.4263438, 0.4438330, 0.4595374, 0.4747377, 0.4904421, 0.5079313, 0.5298220, 0.5666199];
 
- var userSwitchData = [[0.01073028, 0.01550475, 0.01930014, 0.02298981, 0.02690030, 0.03131760, 0.03664462, 0.04365011, 0.05433514, 0.07851171],
- [0.01483318, 0.02143325, 0.02667986, 0.03178034, 0.03718607, 0.04329240, 0.05065629, 0.06034044, 0.07511107, 0.10853194],
- [0.01792642, 0.02590284, 0.03224354, 0.03840766, 0.04494067, 0.05232039, 0.06121991, 0.07292354, 0.09077436, 0.13116466],
- [0.02050489, 0.02962860, 0.03688134, 0.04393208, 0.05140477, 0.05984596, 0.07002555, 0.08341259, 0.10383101, 0.15003091],
- [0.02275768, 0.03288378, 0.04093334, 0.04875872, 0.05705241, 0.06642100, 0.07771898, 0.09257680, 0.11523851, 0.16651420],
- [0.02478088, 0.03580721, 0.04457239, 0.05309346, 0.06212447, 0.07232594, 0.08462834, 0.10080704, 0.12548342, 0.18131762],
- [0.02663117, 0.03848079, 0.04790043, 0.05705773, 0.06676306, 0.07772624, 0.09094720, 0.10833390, 0.13485277, 0.19485589],
- [0.02834528, 0.04095758, 0.05098352, 0.06073022, 0.07106022, 0.08272904, 0.09680096, 0.11530676, 0.14353249, 0.20739768],
- [0.02994857, 0.04327427, 0.05386730, 0.06416531, 0.07507960, 0.08740844, 0.10227632, 0.12182885, 0.15165112, 0.21912871],
- [0.03145946, 0.04545743, 0.05658487, 0.06740241, 0.07886733, 0.09181815, 0.10743610, 0.12797505, 0.15930183, 0.23018363],
- [0.03289178, 0.04752707, 0.05916114, 0.07047119, 0.08245809, 0.09599856, 0.11232758, 0.13380165, 0.16655472, 0.24066371],
- [0.03425626, 0.04949868, 0.06161537, 0.07339461, 0.08587878, 0.09998095, 0.11698736, 0.13935226, 0.17346406, 0.25064737],
- [0.03556139, 0.05138453, 0.06396286, 0.07619087, 0.08915067, 0.10379012, 0.12144447, 0.14466144, 0.18007286, 0.26019679],
- [0.03681404, 0.05319455, 0.06621595, 0.07887469, 0.09229100, 0.10744613, 0.12572235, 0.14975714, 0.18641593, 0.26936222],
- [0.03801986, 0.05493690, 0.06838481, 0.08145818, 0.09531393, 0.11096546, 0.12984030, 0.15466234, 0.19252186, 0.27818499],
- [0.03918355, 0.05661839, 0.07047790, 0.08395142, 0.09823126, 0.11436184, 0.13381440, 0.15939618, 0.19841449, 0.28669957],
- [0.04030910, 0.05824475, 0.07250238, 0.08636292, 0.10105296, 0.11764689, 0.13765822, 0.16397484, 0.20411395, 0.29493502],
- [0.04139989, 0.05982089, 0.07446434, 0.08869996, 0.10378752, 0.12083049, 0.14138334, 0.16841210, 0.20963740, 0.30291615],
- [0.04245885, 0.06135103, 0.07636904, 0.09096878, 0.10644226, 0.12392117, 0.14499973, 0.17271985, 0.21499964, 0.31066433],
- [0.04348849, 0.06283882, 0.07822103, 0.09317482, 0.10902354, 0.12692632, 0.14851605, 0.17690840, 0.22021349, 0.31819810]];
+ 
 
 
 			
@@ -249,519 +126,8 @@
 			var elapsedTime = 0;
 			var timeSpentTaggingVerifying = 0;
 			var lastTargetIndex = null;
-			var targetsVerified = 0; //score
 			var tagCount = 0;
 			var verifyCount = 0;
-		
-			class Target {
-				constructor(d, id, index, type) { //type is 0, 1, or 2, representing tagged, user verify, and va verify.
-					var target = document.getElementById(id + index);
-					target.setAttribute("width", 50);
-					target.setAttribute("height", 50);
-					target.setAttribute("class", "target");
-					target.xPos = d2x(d);
-					target.yPos = d2y(d);
-					target.style.left = target.xPos + "px";
-					target.style.top = target.yPos + "px";
-					
-					var targetSprite = document.getElementById("miniTarget" + index);
-					targetSprite.setAttribute("width", 15);
-					targetSprite.setAttribute("height", 15);
-					targetSprite.setAttribute("class", "target");
-					targetSprite.style.left = (d2x(d)-93)*0.048 + 501 + "px";
-					targetSprite.style.top = (d2y(d)-452)*0.046 + 691 + "px";
-					if (type == 0) {
-						target.setAttribute("src", "target.png");
-						targetSprite.setAttribute("src", "miniTarget.png");
-					}
-					if (type == 1) {
-						target.setAttribute("src", "target2.png");
-						targetSprite.setAttribute("src", "target2.png");
-					}
-					if (type == 2) {
-						target.setAttribute("src", "target3.png");
-						targetSprite.setAttribute("src", "target3.png");
-					}
-				}
-			}
-
-			class VirtualAgent {
-				constructor(x, y, d, behavior) {
-					this.burstCD = 0;
-					this.behavior = behavior;
-					this.sprite = document.getElementById(ELEMENT_IDS.buddySprite);
-					this.position = {x:d2x(d), y:d2y(d)};
-
-          this.mapProportion = d;
-          this.mapProportion0 = d;
-					this.fastForward = false;
-					this.targetValid = true;
-				}
-				
-				initialize(addDelay, fastForward) {
-					this.magnitude = 0;
-          this.magnitude0 = 0;
-          this.impulseBehavior = true;
-          this.impulseIndex = Math.floor(Math.random()*userImpulseData.length); //accel interval
-					this.onTarget = false;
-					this.counter = 0;
-					this.randomTaggingVerifyingTimeIndex = Math.floor(Math.random()*5);
-					this.tagAndVerifyDelayStart = new Date().getTime();
-					this.task = 0; //0 for tagging, 1 for verifying
-					this.startDelayStart = new Date().getTime();
-					//this.startDelay = addDelay? startDelayData[Math.floor(Math.random()*42)] : 0; //after a target or when the page loads, it initializes with the start delay. If you come back to the page in the middle of its movement, it will not have a start delay.
-					this.startDelay = addDelay? startDelayData2[Math.floor(Math.random()*startDelayData2.length)] / 60 * 1000 : 0;
-					this.theta = 0;
-					this.saveSpeed = 0;
-					
-					this.randomAccelIndex = Math.floor(Math.random()*47);
-					if (this.randomAccelIndex >= 1  &&  this.randomAccelIndex <= 15) //This system handles the probabilities of getting each of the 4 representative acceleration patterns.
-						this.randomAccelIndex = 0;
-					else if (this.randomAccelIndex >= 16  &&  this.randomAccelIndex <= 25)
-						this.randomAccelIndex = 1;
-					else if (this.randomAccelIndex >= 26  &&  this.randomAccelIndex <= 43)
-						this.randomAccelIndex = 2;
-					else if (this.randomAccelIndex >= 44  &&  this.randomAccelIndex <= 47)
-						this.randomAccelIndex = 3;
-						
-					this.chooseTarget();
-					this.targetValid = true;  
-
-          if (fastForward) {
-            this.framesRequiredDelay = this.startDelay / 1000 * 60;
-            this.framesElapsed = 0;
-            this.framesElapsedDelay = 0;
-          }
-				}
-
-        saveState() {
-          var framesElapsed = (new Date().getTime() - va.vaTagAndVerifyDelayStart) * 1000 * 60;
-          var framesElapsedDelay = (new Date().getTime() - va.startDelayStart) * 1000 * 60;
-          var framesRequiredDelay = va.startDelay * 1000 * 60;
-          return {
-            magnitude: this.magnitude,
-            magnitude0: this.magnitude0,
-            counter: this.counter,
-            randomTaggingVerifyingTimeIndex: this.randomTaggingVerifyingTimeIndex,
-            task: this.task,
-            startDelay: this.startDelay,
-            theta: this.theta,
-            saveSpeed: this.saveSpeed,
-            randomAccelIndex: this.randomAccelIndex,
-            target: this.target,
-            startingDistanceToTarget: this.startingDistanceToTarget,
-            killDistance: this.killDistance,
-            angle: this.angle,
-            onTarget: this.onTarget,
-            lastRole: this.lastRole,
-            tagAndVerifyDelayStart: this.tagAndVerifyDelayStart,
-            framesElapsed: framesElapsed,
-            framesElapsedDelay: framesElapsedDelay,
-            framesRequiredDelay: framesRequiredDelay,
-            impulseBehavior: this.impulseBehavior,
-            switchPoint: this.switchPoint,
-            burstCD: this.burstCD,
-            mapProportion: this.mapProportion,
-            mapProportion0: this.mapProportion0,
-            impulseStartTime: this.impulseStartTime,
-            now: this.now,
-            impulseIndex: this.impulseIndex,
-            lastTargetIndex: this.lastTargetIndex
-          };
-        }
-
-        restoreState(state) {
-          this.magnitude = state.magnitude;
-          this.magnitude0 = state.magnitude0;
-          this.counter = state.counter;
-          this.randomTaggingVerifyingTimeIndex = state.randomTaggingVerifyingTimeIndex;
-          this.task = state.task;
-          this.startDelay = state.startDelay;
-          this.theta = state.theta;
-          this.saveSpeed = state.saveSpeed;
-          this.randomAccelIndex = state.randomAccelIndex;
-          this.target = state.target;
-          this.startingDistanceToTarget = state.startingDistanceToTarget;
-          this.killDistance = state.killDistance;
-          this.angle = state.angle;
-          this.onTarget = state.onTarget;
-          this.lastRole = state.lastRole;
-          this.tagAndVerifyDelayStart = state.tagAndVerifyDelayStart;
-          this.framesElapsed = state.framesElapsed;
-          this.framesElapsedDelay = state.framesElapsedDelay;
-          this.impulseBehavior = state.impulseBehavior;
-          this.switchPoint = state.switchPoint;
-          this.burstCD = state.burstCD;
-          this.mapProportion = state.mapProportion;
-          this.mapProportion0 = state.mapProportion0;
-          this.impulseStartTime = state.impulseStartTime;
-          this.now = state.now;
-          this.impulseIndex = state.impulseIndex;
-          this.lastTargetIndex = state.lastTargetIndex;
-        }
-
-				start(addDelay) {
-				/* Choose the first target, then wait for a random amount of time,
-				 * before moving toward the target. For now, just wait 500 ms.
-				 */
-					this.initialize(addDelay, false); //delay is optional, depending on when the va is being started. it's a boolean.
-          //this.chooseTarget();
-					handleFlash();
-					vaTagAndVerify();
-					//if (addDelay) this.update();
-          if (addDelay) this.update();
-				}
-				
-				chooseTarget() {
-				/* Choose the current target for the virtual agent. */
-					var vaTarget = null;
-					var tagTarget = null;
-					var verifyTarget = null;
-					var thereAreNoAvailableTargets = true;
-					for (var i = 0; i <= 19; i++) {
-						if ((targetTracker[i] == 0) || (targetTracker[i] == 2)) thereAreNoAvailableTargets = false;
-					}
-					if (thereAreNoAvailableTargets) {
-						vaTarget = [1000, 3500, -1, 0.2907]; //Just a random location to go when it's done. Otherwise it will search for targets until it breaks.
-					}
-					else {
-						tagTarget = this.closestTag();
-						verifyTarget = this.closestVerify();
-						if (Math.random() < preferenceData[this.behavior]) {
-							vaTarget = tagTarget;
-						} else {
-							vaTarget = verifyTarget;
-						}
-					}
-					this.target = {x: vaTarget[0], y: vaTarget[1], index: vaTarget[2], mapProportion: vaTarget[3]};
-					if (targetTracker[this.target.index] == 0) this.task = 0;
-					else if (targetTracker[this.target.index] == 2) this.task = 1;
-					//this.startingDistanceToTarget = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-          //this.startingDistanceToTarget = this.distanceToTarget();
-          this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-
-          var slope = dSlopes[Math.floor(Math.random()*dSlopes.length)];
-          var intercept = dIntercepts[Math.floor(Math.random()*dIntercepts.length)];
-          //var x = intercept + slope*this.startingDistanceToTarget;
-          //var ratio = Math.exp(x)/(Math.exp(x)+1);
-          //this.switchPoint = this.mapProportion + Math.sign(this.startingDistanceToTarget)*this.startingDistanceToTarget*ratio;
-
-          //var remainingDist = Math.exp(intercept + slope*Math.log(Math.abs(this.startingDistanceToTarget)));
-
-          var switchIndex = (Math.floor(Math.abs(this.startingDistanceToTarget)*100)) % 5;
-
-          var remainingDist = userSwitchData[switchIndex][Math.floor(Math.random()*userSwitchData[switchIndex].length)];
-
-          this.switchPoint = this.target.mapProportion - Math.sign(this.startingDistanceToTarget)*remainingDist;
-
-          //this.switchPoint = this.target.mapProportion + Math.sign(this.mapProportion - this.target.mapProportion)*0.0434; // Temporary
-
-				}
-				
-        distanceToTarget() {
-          /* Case 0: the virtual agent is to the left of all anchor points. */
-          if (this.position.x <= anchorPoints[0].x) {
-            /* Sub case 0: the target is to the left of all anchor points. */
-            if (this.target.x <= anchorPoints[0].x) {
-              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-            /* Sub case 1: the target is between the first and second anchor points. */ 
-            } else if (this.target.x <= anchorPoints[1].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
-                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
-            /* Sub case 2: the target is between the second and third anchor points. */
-            } else if (this.target.x <= anchorPoints[2].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
-                this.distance(anchorPoints[0].x, anchorPoints[0].y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
-            /* Sub case 3: the target is to the right of all anchor points. */
-            } else {
-              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
-                this.distance(anchorPoints[0].x, anchorPoints[0].y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[2].x, anchorPoints[2].y) +
-                this.distance(anchorPoints[2].x, anchorPoints[2].y, this.target.x, this.target.y);
-            }
-          /* Case 1: the virtual agent is between the first and second anchor points. */          
-          } else if (this.position.x <= anchorPoints[1].x) {
-            /* Sub case 0: the target is to the left of all anchor points. */
-            if (this.target.x <= anchorPoints[0].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[0].x, anchorPoints[0].y) +
-                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
-            /* Sub case 1: the target is between the first and second anchor points. */ 
-            } else if (this.target.x <= anchorPoints[1].x) {
-              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-            /* Sub case 2: the target is between the second and third anchor points. */
-            } else if (this.target.x <= anchorPoints[2].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
-            /* Sub case 3: the target is to the right of all anchor points. */
-            } else {
-              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[2].x, anchorPoints[2].y) +
-                this.distance(anchorPoints[2].x, anchorPoints[2].y, this.target.x, this.target.y);
-            }
-          /* Case 2: the virtual agent is between the second and third anchor points. */
-          } else if (this.position.x <= anchorPoints[2].x) {
-            /* Sub case 0: the target is to the left of all anchor points. */
-            if (this.target.x <= anchorPoints[0].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[0].x, anchorPoints[0].y) +
-                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
-            /* Sub case 1: the target is between the first and second anchor points. */ 
-            } else if (this.target.x <= anchorPoints[1].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
-            /* Sub case 2: the target is between the second and third anchor points. */
-            } else if (this.target.x <= anchorPoints[2].x) {
-              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-            /* Sub case 3: the target is to the right of all anchor points. */
-            } else {
-              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
-                this.distance(anchorPoints[2].x, anchorPoints[2].y, this.target.x, this.target.y);
-            }
-          /* Case 3: the virtual agent is to the right of all anchor points. */
-          } else {
-            /* Sub case 0: the target is to the left of all anchor points. */
-            if (this.target.x <= anchorPoints[0].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
-                this.distance(anchorPoints[2].x, anchorPoints[2].y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, anchorPoints[0].x, anchorPoints[0].y) +
-                this.distance(anchorPoints[0].x, anchorPoints[0].y, this.target.x, this.target.y);
-            /* Sub case 1: the target is between the first and second anchor points. */ 
-            } else if (this.target.x <= anchorPoints[1].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
-                this.distance(anchorPoints[2].x, anchorPoints[2].y, anchorPoints[1].x, anchorPoints[1].y) +
-                this.distance(anchorPoints[1].x, anchorPoints[1].y, this.target.x, this.target.y);
-            /* Sub case 2: the target is between the second and third anchor points. */
-            } else if (this.target.x <= anchorPoints[2].x) {
-              return this.distance(this.position.x, this.position.y, anchorPoints[2].x, anchorPoints[2].y) +
-                this.distance(anchorPoints[2].x, anchorPoints[2].y, this.target.x, this.target.y);
-            /* Sub case 3: the target is to the right of all anchor points. */
-            } else {
-              return this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-            }
-          }
-        }
-        
-				closestTag() {
-					var tagTarget = null;
-					var leastDistance = 10000;
-					var nextDistance = 0;
-					for (var i = 0; i <= 19; i++) {
-						if (!va.targetValid && i == lastTargetIndex) continue;
-            			//if (i == lastTargetIndex) continue; // don't go after a point the user is tagging.
-						if (targetTracker[i] == 0) {
-							//nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
-							nextDistance = Math.abs(this.mapProportion - targetDCoordinates[i]);
-							if (nextDistance < leastDistance) {
-								leastDistance = nextDistance;
-								tagTarget = [targetsCoords[i][0], targetsCoords[i][1], i, targetDCoordinates[i]];
-							}
-						}
-					}
-					if (tagTarget === null) { //if there are no tag targets, return a verify target, even if it isn't the preference.
-						return this.closestVerify();
-					}
-					else {
-						return tagTarget;
-					}
-				}
-								
-				closestVerify() {
-					var verifyTarget = null;
-					var leastDistance = 10000;
-					var nextDistance = 0;
-					for (var i = 0; i <= 19; i++) {
-						if (!va.targetValid && i == lastTargetIndex) continue;
-						if (i == lastTargetIndex && this.fastForward) continue; //don't go after the new verifying point if you're fast forwarding
-						if (targetTracker[i] == 2) {
-							//nextDistance = this.distance(this.position.x, this.position.y, targetsCoords[i][0], targetsCoords[i][1]);
-							nextDistance = Math.abs(this.mapProportion - targetDCoordinates[i]);
-							if (nextDistance < leastDistance) {
-								leastDistance = nextDistance;
-								verifyTarget = [targetsCoords[i][0], targetsCoords[i][1], i, targetDCoordinates[i]];
-							}
-						}
-					}
-					if (verifyTarget === null) {//if there are no verify targets, return a tag target, even if it wasn't the original preference.
-						return this.closestTag();
-					}
-					else {
-						return verifyTarget;
-					}
-				}
-				
-				chooseDirection() { //finds the exact angle to the target
-					var angle = Math.atan2((this.target.y - (this.position.y + 4412)) * -1, this.target.x - (this.position.x + 14)); //adding 14 to the x coordinate and 4412 to the y coordinate is how you get from the recorders to the global position. Probably because the canvas starts at roughly that offset.
-					return angle;
-				}
-				
-				findPath() {
-					var options = [];
-					//var startDistance = this.distance(this.position.x, this.position.y, this.target.x, this.target.y);
-          var startDistance = this.distanceToTarget();
-					if (startDistance < 85) { //if va is close to target, just go to the target, don't navigate through canal.
-						return this.chooseDirection();
-					}
-					for (var tryDirection = 0; tryDirection <= 23; tryDirection++){ //This is movement algorithm. Start by looking in 24 evenly spaced directions.
-						if (inside([(this.position.x + this.magnitude * Math.cos(tryDirection * Math.PI / 12)), (this.position.y - this.magnitude * Math.sin(tryDirection * Math.PI / 12))], vaCanalTriacontapentagon)) {
-              for (var steps = 0; steps < 1000; steps += 10) { //see what is the farthest distance you can go in each of those 24 directions
-                if (inside([(this.position.x + steps * Math.cos(tryDirection * Math.PI / 12)), (this.position.y - steps * Math.sin(tryDirection * Math.PI / 12))], vaCanalTriacontapentagon)){ //0.26 is pi/12
-                  //var endDistance = this.distance(this.position.x + steps*Math.cos(tryDirection * Math.PI / 12), this.position.y - steps*Math.sin(tryDirection * Math.PI / 12), this.target.x, this.target.y);
-                  var tmpPos = {x: this.position.x, y: this.position.y};
-                  this.position.x = this.position.x + steps*Math.cos(tryDirection * Math.PI / 12);
-                  this.position.y = this.position.y - steps*Math.sin(tryDirection * Math.PI / 12);
-                  //var endDistance = this.distance(this.position.x + steps*Math.cos(tryDirection * Math.PI / 12), this.position.y - steps*Math.sin(tryDirection * Math.PI / 12), this.target.x, this.target.y);
-                  var endDistance = this.distanceToTarget();
-                  if (endDistance < startDistance) options[tryDirection] = steps; //if it takes va closer, save it.
-                  else options[tryDirection] = 0;
-                  this.position.x = tmpPos.x;
-                  this.position.y = tmpPos.y
-                }
-                else break;
-              }
-            } else {
-              options[tryDirection] = 0;
-            }
-					}
-          if (options.every(function(option) { return 0 === option; })) {
-            return this.chooseDirection();
-          } else {
-            var pathAngle = (options.indexOf(Math.max(...options))) * Math.PI / 12; //save the biggest number in the array, multiply the index by pi/12 to get the angle.
-            return pathAngle;
-          }
-				}
-				
-				distance(vaX, vaY, targetX, targetY) { //just distance formula
-					return Math.sqrt((vaX - targetX)*(vaX - targetX) + (vaY - targetY)*(vaY - targetY));
-				}
-
-				impulse(distSign, towards, slow) { 
-					// forward => target is to the right
-				  this.burstCD = userImpulseData[this.impulseIndex][Math.floor(Math.random()*userImpulseData[this.impulseIndex].length)]*(slow?4:1);		              		
-		          this.magnitude0 = this.magnitude + 0.01*distSign*(towards?1:-1);
-                  if ((distSign == 1?true:false) == towards) {
-                    this.iAccel = 'right trigger';
-                  } else {
-                    this.iAccel = 'left trigger';
-                  }
-		                this.magnitude = this.magnitude0;
-		                this.mapProportion0 = this.mapProportion;
-		                this.impulseStartTime = this.now;
-		                this.startingDistanceToTarget = this.target.mapProportion - this.mapProportion;
-		                vaUpdateMap({x: 0, y: 0});
-				}
-
-				slowDown(initializeAfter, oldD) {
-					if (this.magnitude < 0.005 && this.magnitude > -0.005) {
-	                  this.magnitude = 0;
-	                  if (initializeAfter) 
-	                  	va.initialize(false, this.fastForward);
-	                  vaUpdateMap({x: 0, y: 0});
-	                } 
-	                else {
-						var t = (this.now - this.impulseStartTime) / 1000;
-	                    this.magnitude = this.magnitude0 * Math.exp(-b * t);
-	                    this.mapProportion = Math.min(1, Math.max(0, this.mapProportion0 + this.magnitude0 / b * (1 - Math.exp(-b * t))));
-	                    var x = d2x(this.mapProportion);// + 14;
-	                    var y = d2y(this.mapProportion);// - 4412;
-	                    var dx = x - d2x(oldD);
-	                    var dy = y - d2y(oldD);
-	                    this.position.x = x;
-	                    this.position.y = y;
-	                    vaUpdateMap({x: dx, y: dy});
-	                    this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
-               		 }
-				}
-				
-	        	update() {
-		          this.lastRole = 'navigating';
-                  this.iAccel = 'no trigger';
-		          var oldD = this.mapProportion;
-		          if (this.targetValid) {
-                if (!this.fastForward) {
-  		            this.now = Date.now();
-                }
-
-		            if (this.now - this.startDelayStart < this.startDelay && !this.fastForward) {
-		              vaUltraRecorder();
-		              window.setTimeout(this.update.bind(this), (1000 / 60));
-		              vaUpdateMap({x:0, y:0});
-		              return;
-		            } 
-		            else if (this.fastForward && this.framesElapsedDelay < this.framesRequiredDelay) {
-		              vaUltraRecorder();
-		              this.framesElapsedDelay += 1;
-		              return;
-		            } 
-		            else {
-		              var currentDistanceToTarget = this.target.mapProportion - this.mapProportion;
-		              var speedAtTarget = 0;
-		              if (0 !== this.magnitude0) {
-		                speedAtTarget = this.magnitude0 - this.startingDistanceToTarget * b;
-		              }
-
-		              if (Math.abs(currentDistanceToTarget) < .0055 && Math.abs(this.magnitude) < 0.015 && this.target.index !== -1) {
-					    this.onTarget = true;
-              
-					    if (this.task === 0) {
-						  this.lastRole = 'tagging';              
-					    }
-					    else {
-					  		this.lastRole = 'verifying';
-					    }
-						vaUpdateMap({x: 0, y: 0});
-					  }
-		              else if (this.impulseBehavior) { // Keep impulsing toward target until "close"
-		              	if (this.burstCD == 0) {
-		              		this.impulse(Math.sign(currentDistanceToTarget) , true, false);
-		            	}
-		              	else {
-		              	  this.slowDown(false, oldD);
-		              	}
-		              	if (Math.sign(currentDistanceToTarget)*(this.switchPoint - this.mapProportion) < 0) {
-		              	  this.impulseBehavior = false;
-		              	}
-		              }
-		              else { // second part of user behavior
-		              	if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget > 0.01) { // If the virtual agent will overshoot then we hit the brake
-		              	  if (this.burstCD == 0) {
-		              	  	var sign = Math.sign(this.target.mapProportion-this.switchPoint);
-		              		this.impulse(sign,false, false);
-			              } 
-			              else {
-			              	this.slowDown(false, oldD);
-			              }
-		              	}
-		              	else if (Math.sign(this.target.mapProportion - this.switchPoint)*speedAtTarget < 0.01) { // If the VA isn't fast enough to coast to the target, it will decrease its impulse rate, since it is close, so that it wont overshoot
-			              if (this.burstCD == 0 || (this.magnitude < 0.01 && this.magnitude > -0.01)) {
-		              		this.impulse(Math.sign(currentDistanceToTarget),true,true);
-			              } 
-			              else {
-			              	this.slowDown(false, oldD);
-			              }
-			            }
-			            else if (this.magnitude == 0) {
-			            	this.impulse(Math.sign(currentDistanceToTarget),true,false);
-			            }
-			            else { // The VA will reach the target by coasting 
-		                  this.slowDown(false, oldD);
-		                }
-		              }
-		            }
-		          } else { // VA's target has been taken
-					  this.slowDown(true, oldD);
-		          }
-
-		          if (this.burstCD > 0) this.burstCD -= 1;
-		              
-		          vaUltraRecorder();
-		         
-		          if (!this.fastForward) {
-		            window.setTimeout(this.update.bind(this), 1000 / 60);
-		          }
-		        }
-			}
-
 
 
 			var interval = null; //All the gamepad variables are initialized here.
@@ -774,14 +140,13 @@
       var impulseStartTime = 0;
 			var gamepads = [];
 			var gpIdx = -1;
-      var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
+      
 			var gpSpriteCoords = [50, 470];
 			var magnitude  = 0;
       var magnitude0 = 0;
       var userT     = 0;
       var userTPrev = 0;
       var userT0    = 0;
-      var b = 0.6;
 			var direction = [0, 0];
 			var saveDirection = [0,0];
 			var angle = 1.57;
@@ -807,7 +172,6 @@
         tagTracker = JSON.parse(readCookie("tagTracker"));
 				lastRole = readCookie("lastRole"); //this is for the log I think.
 				log = localStorage.getItem("userLog"); //Cookies can't save things that are multiple lines, so I use localStorage instead.
-        vaLog = localStorage.getItem("vaLog");
 				targetsVerified = parseInt(readCookie("targetsVerified"));
 				tagCount = parseInt(readCookie("tagCount"));
 				verifyCount = parseInt(readCookie("verifyCount"));
@@ -827,7 +191,8 @@
 				var temp2 = parseInt(readCookie("elapsedTime"));
 				timeSpentTaggingVerifying = temp - (temp2 + startTime); //User was tagging/verifying for this long.
 				        
-				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseFloat(readCookie("vaD")), parseInt(readCookie("vaBehavior"))); //it is drawn onto the old position.
+				var va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseFloat(readCookie("vaD")), parseInt(readCookie("vaBehavior")), startTime); //it is drawn onto the old position.
+        va.setLog(localStorage.getItem("vaLog"));
         va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
         va.sprite.style.transform = "rotate(" + (this.angle? this.angle:0) + "deg)";
 
@@ -847,6 +212,45 @@
         targetInitializer(); //targetInitializer creates the targets.
 				updateTargets(); //updateTargets draws the targets.
 			}
+
+      if (gowanusMap.complete) {
+        var gowanusMapLoaded = imageLoaded.bind(gowanusMap);
+        gowanusMapLoaded();
+      }
+      else {
+       gowanusMap.addEventListener(EVENTS.LOAD, imageLoaded);
+      }
+
+      function imageLoaded() {
+        ctx.drawImage(this, 0, 0); 
+        canvas.style.marginTop = canvasTopMargin + "px";
+        minimapContext.drawImage(this, 0, 480, 4066, 5000, 0, 0, 200, 228);
+        if (!readCookie("gpRecorder0")) {
+          var button = document.createElement('button');
+          button.addEventListener('click', function(event) {
+            button.parentElement.removeChild(button);
+            window.addEventListener('unload', function(event) {
+              localStorage.setItem("userLog", log);
+              localStorage.setItem("vaLog", va.getLog());
+              logCookie();
+            });
+            startTime = new Date().getTime();
+            var behavior = (Math.random() < 0.5) ? 0 : 1;
+            va = new VirtualAgent(20, 550, 0, behavior, startTime);
+            va.start(true);//true meaning start with the delay.
+            interval = setInterval(pollGamepads, 500);
+          });
+          button.textContent = 'start';
+          document.body.appendChild(button);
+        } else {
+          interval = setInterval(pollGamepads, 500);
+          va.startDelayStart = new Date().getTime();
+//          va.tagAndVerifyDelayStart = new Date().getTime();
+//          va.update();
+          va.update();
+          va.tagAndVerify();
+        }
+      }
 			
 			function targetInitializer() { //I never really figured out how to use the Target class properly, so now I just use this method in conjunction with the class.
 				for (var i = 0; i <= 19; i++) { //The way this is set up, each of the three target arrays are all length 20, they are just blank in the indices for which there is no target of that type. This is important for how the arrays are handled in other functions.
@@ -950,28 +354,15 @@
         leftAccelButtonPrev  = leftAccelButton;
         rightAccelButtonPrev = rightAccelButton;
         userTPrev            = userT;
-        
+        elapsedTime = Math.max(elapsedTime, va.getElapsedTime());
 				if (elapsedTime > 300000) { //data is only logged at the end of the 5 minutes.
 					elapsedTime = 300000;
 					logger();
-					vaLogger(true);
+					va.logger(true);
 				} else {
 					window.setTimeout(gameLoop, (1000/60));
 				}
 			}
-      
-      /*function rotateUser(clockwise) {
-        if  (clockwise) {
-          angle -= 2;
-          if (angle <= -90) angle += 180;
-        }
-        else {
-          //if (angle >= 178)
-          angle += 2;
-          if (angle >= 90) angle -= 180;
-         }
-        //if (angle < 0)  angle += 360;
-      }*/
 
 	//		socket.on('gpUpdateMap', function(msg) { //I don't really use the msg from the server. It's sort of a vestige from the dragging form of the program. You probably don't need to emit this either, since there's only one user. 
 			function gpUpdateMap(msg) {
@@ -1023,61 +414,6 @@
           miniSprite1.style.top = miniSprite1coords[1] + "px";
 			};
 
-			function t2d(t) { return t; }
-			
-      function d2x(d) {
-          var omega = 4.932;
-          var a0    = 1957;
-          var a     = [-1255, -545.1, -247.1, 21.65, 96.48, 57.33,  9.179,  -21.07];
-          var b     = [-1026, -24.18, 303.9,  187.4, 54.77, -12.83, -31.56, -4.434];
-//          var omega = 4.963;
-//          var a0 = 2141;
-//          var a  = [-968.1, -487.7, -393.6, -163.8, -54.71, -4.298, 2.624, -4.896];
-//          var b  = [-1250 , -303.6, 61.59 , 101.5 , 96.12 , 72.48 , 14.93, 23.2  ];
-          var x = a0;
-          for (var idx = 0; idx < a.length; ++idx) {
-            x += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
-          }
-          return x;
-        };
-      
-        function d2y(d) {
-          var omega = 5.157;
-          var a0    = -1548
-          var a     = [471.4, 837.2, 375.9, 245.6,  98.05, 6.102,  -14.82, -22.15];
-          var b     = [1186,  389.8, 77.28, -161.3, -117,  -94.79, -33.45, -25.23];
-//          var omega = 5.051;
-//          var a0 = 2834;
-//          var a  = [541.7, 872.2, 386.1, 212.3 , 58.69 , 3.367 , -16.64, -10.5 ];
-//          var b  = [1200 , 295.6, 51.12, -200.9, -92.59, -93.36, -4.567, -10.81];
-          var y  = a0;
-          for (var idx = 0; idx < a.length; ++idx) {
-            y += a[idx] * Math.cos((idx + 1) * d * omega) + b[idx] * Math.sin((idx + 1) * d * omega);
-          }
-          return y;
-        };
-      
-			/*
-			*/
-
-			function updateTargets (x, y) { //draws the targets.
-				for (var i = 0; i<=19; i++) {
-					if (targetTracker[i] == 3) continue;
-					if (targetTracker[i] == 0) {
-						tagTargets[i].style.left = tagTargets[i].xPos - gpRecorder[2] + "px";
-						tagTargets[i].style.top = tagTargets[i].yPos - gpRecorder[3] + "px";
-					}
-					else if (targetTracker[i] == 1) {
-						userVerifyTargets[i].style.left = userVerifyTargets[i].xPos - gpRecorder[2] + "px";
-						userVerifyTargets[i].style.top = userVerifyTargets[i].yPos - gpRecorder[3] + "px";						
-					}
-					else if (targetTracker[i] == 2 && vaVerifyTargets[i] !== undefined) {
-						vaVerifyTargets[i].style.left = vaVerifyTargets[i].xPos - gpRecorder[2] + "px";
-						vaVerifyTargets[i].style.top = vaVerifyTargets[i].yPos - gpRecorder[3] + "px";	
-					}				
-				}
-			}
-
 			function handleTargets() { //This handles clicking on the targets.
 				for (var i = 0; i <= 19; i++) {
 					if (i == va.target.index  &&  va.onTarget) continue; //You can't steal a target va already started.
@@ -1087,14 +423,13 @@
 						targetTracker[i] = 2; //The target at this index will load as a va verifies target when it restarts.
 						lastRole = "tagging"; //used in the log
 						lastTargetIndex = i; 
+            va.lastUserTarget = i;
 						imageId++;
 						tagCount++; //Used in the log
             ultraRecorder();
 						logCookie();
-						//logger(); //It also logs before targets, not just at the end of the 7 minutes.
-						//vaLogger();
             localStorage.setItem("userLog", log);
-            localStorage.setItem("vaLog", vaLog);
+            localStorage.setItem("vaLog", va.getLog());
 						window.location.replace('tag.html'); //I stopped using server requests since I stopped using html templates.
 					}
 				}
@@ -1105,15 +440,14 @@
 						targetTracker[i] = 3;
 						lastRole = "verifying";
 						lastTargetIndex = i; 
+            va.lastUserTarget = i;
 						imageId++;
 //						targetsVerified++;
 						verifyCount++;
 						updateScore();
             ultraRecorder();
 						logCookie();
-						//logger();
-						//vaLogger();
-						localStorage.setItem("vaLog", vaLog);
+						localStorage.setItem("vaLog", va.getLog());
             localStorage.setItem("userLog", log);
 						window.location.replace('verify.html');
 					}
@@ -1135,122 +469,6 @@
 				return inside;
 			}
 			
-	//		socket.on("vaUpdateMap", function(msg) {
-			function vaUpdateMap(msg) {
-				va.sprite.style.left = va.position.x - gpRecorder[2] + "px";
-				va.sprite.style.top = va.position.y - gpRecorder[3] + "px";
-				miniSprite2coords[0] += (msg.x*0.047);
-				miniSprite2coords[1] += (msg.y*0.045);
-				miniSprite2.style.left = miniSprite2coords[0] + "px";
-				miniSprite2.style.top = miniSprite2coords[1] + "px";
-				va.sprite.style.transform = "rotate(" + va.angle + "deg)";
-				//va.sprite.style.transform = "rotate(" + va.angle*(180/3.14)*-2 +"deg)"; // I considered having have the va sprite rotate as well, but it looks bad with the current sprite
-			};
-			
-			function handleFlash() { //This makes the va and it's minimap icon flash when its tagging to indicate that it is tagging/verifying. It loops independently of the other things.
-				if (va.onTarget) {
-					if (va.sprite.style.visibility == "hidden") {
-						va.sprite.style.visibility = "visible";
-						miniSprite2.style.visibility = "visible";
-					}
-					else {
-						va.sprite.style.visibility = "hidden";
-						miniSprite2.style.visibility = "hidden";
-					}
-				}
-				else {
-					va.sprite.style.visibility = "visible";
-					miniSprite2.style.visibility = "visible";
-				}
-				window.setTimeout(handleFlash, 500);
-			}
-			
-			function vaTagAndVerify() { //This handle the targets for the va
-        if (va.fastForward) {
-          if (va.onTarget) {
-            var framesRequiredTag = tagTimeData[va.randomTaggingVerifyingTimeIndex] * 60;
-            var framesRequiredVerify = verifyTimeData[va.randomTaggingVerifyingTimeIndex] * 60;
-            // If enough frames elapsed, then update targets / score
-            if (va.task === 0 && va.framesElapsed >= framesRequiredTag) {
-              if (tagTargets[va.target.index]) {
-                tagTargets[va.target.index].remove();
-              }
-              if (targetSprites[va.target.index]) {
-                targetSprites[va.target.index].remove();
-              }
-              targetTracker[va.target.index] = 1;
-              userVerifyTargets [va.target.index] = document.createElement('IMG');
-              userVerifyTargets [va.target.index].setAttribute('id', 'userVerifyTarget' + va.target.index);
-              divWrapper.appendChild(userVerifyTargets[va.target.index]);
-              targetSprites[va.target.index] = document.createElement('IMG');
-              targetSprites[va.target.index].setAttribute('id', 'miniTarget' + va.target.index);
-              divWrapper.appendChild(targetSprites[va.target.index]);
-              new Target(targetDCoordinates[va.target.index], 'userVerifyTarget', va.target.index, targetTracker[va.target.index]);
-              va.onTarget = false;
-              va.lastTargetIndex = va.target.index;
-              va.initialize(true, true);              
-              //va.chooseTarget();
-            } else if (va.task === 1 && va.framesElapsed >= framesRequiredVerify) {
-              vaVerifyTargets[va.target.index].remove();
-              targetSprites[va.target.index].remove();
-              targetTracker[va.target.index] = 3;
-              targetsVerified += tagTracker[va.target.index];
-                    
-              va.onTarget = false;
-              va.lastTargetIndex = va.target.index;
-              va.initialize(true, true);
-              //va.chooseTarget();
-            }
-              va.framesElapsed += 1;
-          }
-          return;
-        }
-				if (!va.onTarget) {
-					va.tagAndVerifyDelayStart = new Date().getTime(); //this time is constantly updated if you are not on the target so you get the exact start time when it is on the target
-				}
-				else if (va.onTarget) {
-					var endTime2 = new Date().getTime();
-					var timeToTag = tagTimeData[va.randomTaggingVerifyingTimeIndex]*1000; //there is only one random index for both of these because both arrays are the same size.
-					var timeToVerify = verifyTimeData[va.randomTaggingVerifyingTimeIndex]*1000;
-					if ((va.task == 0)  &&  ((endTime2 - va.tagAndVerifyDelayStart) >= (timeToTag))) {
-						if (tagTargets[va.target.index]) { tagTargets[va.target.index].remove(); }
-						if (targetSprites[va.target.index]) { targetSprites[va.target.index].remove(); }
-						targetTracker[va.target.index] = 1; //this becomes a user verifies target.
-						
-						userVerifyTargets[va.target.index] = document.createElement("IMG");
-						userVerifyTargets[va.target.index].setAttribute("id", "userVerifyTarget" + va.target.index);
-						divWrapper.appendChild(userVerifyTargets[va.target.index]);
-						targetSprites[va.target.index] = document.createElement("IMG");
-						targetSprites[va.target.index].setAttribute("id", "miniTarget" + va.target.index);
-						divWrapper.appendChild(targetSprites[va.target.index]);
-						new Target(targetDCoordinates[va.target.index], "userVerifyTarget", va.target.index, targetTracker[va.target.index]);
-						updateTargets();
-						
-            va.onTarget = false;
-            va.lastTargetIndex = va.target.index;
-						va.initialize(true, false); //refreshes all the values for the va, but doesn't restart any of the main functions. True means add the delay. But if it's fastForwarding it won't add the delay (see if statement on line 320). In hindsight, it should still add the delay, just divided by 10.
-            //va.chooseTarget();
-					}
-					else if ((va.task == 1)  &&  ((endTime2 - va.tagAndVerifyDelayStart) >= (timeToVerify))) {
-						vaVerifyTargets[va.target.index].remove();
-						targetSprites[va.target.index].remove();
-						targetTracker[va.target.index] = 3;
-						targetsVerified += tagTracker[va.target.index];
-						updateScore();
-						updateTargets();
-						
-            va.onTarget = false;
-            va.lastTargetIndex = va.target.index;
-						va.initialize(true, false);
-            //va.chooseTarget();
-					}
-				}
-				if(!va.fastForward) {
-					window.setTimeout(vaTagAndVerify, 100); //10fps
-        }
-			}
-
-			
 			function ultraRecorder() {
 				endTime = new Date();
 				elapsedTime = endTime - startTime;
@@ -1265,43 +483,15 @@
 //				localStorage.setItem("userLog", log); //data is saved to local storage before it is logged onto the text file.
 	//			window.setTimeout(ultraRecorder, 100);
 			}
-			function vaUltraRecorder() {
-				var endTime2 = new Date();
-				elapsedTime = endTime2 - startTime;
-				vaLog += truncate(elapsedTime, 1) + ", " + truncate(va.position.x, 1) + ", " + truncate(va.position.y, 1) + ", " + truncate(va.mapProportion, 4) + ", " + va.iAccel + ", "+ va.lastRole + ", " + ", " + va.lastTargetIndex + ", " + va.target.index + ", " + va.behavior + '\n';
-				
-//				localStorage.setItem("vaLog", vaLog);
-	//			window.setTimeout(vaUltraRecorder, 100);
-			}
-			function truncate (num, digits) {
-				var numS = num.toString(),
-					decPos = numS.indexOf('.'),
-					substrLength = decPos == -1 ? numS.length : 1 + decPos + digits,
-					trimmedResult = numS.substr(0, substrLength),
-					finalResult = isNaN(trimmedResult) ? 0 : trimmedResult;
-				return parseFloat(finalResult);
-			}
+			
+
 			function logger() {
 				var xhr = new XMLHttpRequest();
 				xhr.open("POST", "/save");
 				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 				xhr.send("record=" +  log);
 			}
-			function vaLogger(done) {
-				var xhr = new XMLHttpRequest();
-				xhr.addEventListener('readystatechange', function(event) {
-					if (xhr.readyState === XMLHttpRequest.DONE) {
-						if (xhr.status === 200) {
-							if (done) {
-								window.location.replace('survey2');
-							}
-						}
-					}
-				});
-				xhr.open("POST", "/vaSave");
-				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-				xhr.send("vaRecord=" +  vaLog);
-			}
+			
 			function logCookie() {
 					document.cookie = "gpRecorder0=" + gpRecorder[0] + ";";
 					document.cookie = "gpRecorder1=" + gpRecorder[1] + ";";
@@ -1346,6 +536,7 @@
 			}
 			
 			function updateClock() {
+        if (va) elapsedTime = Math.max(elapsedTime, va.getElapsedTime());
 				var minutes = 4 - Math.floor((elapsedTime / 1000)/60);
 				var seconds = 60 - Math.floor((elapsedTime / 1000) % 60);
 				if (seconds == 60) {

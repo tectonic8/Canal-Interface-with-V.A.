@@ -6,6 +6,7 @@ var targetSprites = [];
 var targetTracker = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; //0 means untagged, 1 means user verifies, 2 means va verifies, 3 means nonexistant
 var tagTracker    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // Keep track of how many tags are added to an image
 
+var targetsVerified = 0; //score
 var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or the local coordinates. It's the global coordinates with an offset x-14, y-4412. It records all the local movement.
 
 var miniSprite1coords = [500, 690];
