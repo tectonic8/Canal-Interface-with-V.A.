@@ -675,13 +675,14 @@
 				
 	        	update() {
 		          this.lastRole = 'navigating';
-                  this.iAccel = 'no trigger';
+              this.iAccel = 'no trigger';
 		          var oldD = this.mapProportion;
-		          if (this.targetValid) {
-                if (!this.fastForward) {
-  		            this.now = Date.now();
-                }
 
+              if (!this.fastForward) {
+                this.now = Date.now();
+              }
+
+		          if (this.targetValid) {
 		            if (this.now - this.startDelayStart < this.startDelay && !this.fastForward) {
 		              vaUltraRecorder();
 		              window.setTimeout(this.update.bind(this), (1000 / 60));
@@ -1062,16 +1063,26 @@
 
 			function updateTargets (x, y) { //draws the targets.
 				for (var i = 0; i<=19; i++) {
-					if (targetTracker[i] == 3) continue;
+					if (targetTracker[i] == 3) {
+            if (tagTargets[i]) tagTargets[i].remove();
+            if (userVerifyTargets[i]) userVerifyTargets[i].remove();
+            if (vaVerifyTargets[i]) vaVerifyTargets[i].remove();
+          }
 					if (targetTracker[i] == 0) {
+            if (userVerifyTargets[i]) userVerifyTargets[i].remove();
+            if (vaVerifyTargets[i]) vaVerifyTargets[i].remove();
 						tagTargets[i].style.left = tagTargets[i].xPos - gpRecorder[2] + "px";
 						tagTargets[i].style.top = tagTargets[i].yPos - gpRecorder[3] + "px";
 					}
 					else if (targetTracker[i] == 1) {
+            if (tagTargets[i]) tagTargets[i].remove();
+            if (vaVerifyTargets[i]) vaVerifyTargets[i].remove();
 						userVerifyTargets[i].style.left = userVerifyTargets[i].xPos - gpRecorder[2] + "px";
 						userVerifyTargets[i].style.top = userVerifyTargets[i].yPos - gpRecorder[3] + "px";						
 					}
 					else if (targetTracker[i] == 2 && vaVerifyTargets[i] !== undefined) {
+            if (tagTargets[i]) tagTargets[i].remove();
+            if (userVerifyTargets[i]) userVerifyTargets[i].remove();
 						vaVerifyTargets[i].style.left = vaVerifyTargets[i].xPos - gpRecorder[2] + "px";
 						vaVerifyTargets[i].style.top = vaVerifyTargets[i].yPos - gpRecorder[3] + "px";	
 					}				
@@ -1179,10 +1190,10 @@
                 targetSprites[va.target.index].remove();
               }
               targetTracker[va.target.index] = 1;
-              userVerifyTargets [va.target.index] = document.createElement('IMG');
+              userVerifyTargets [va.target.index] = document.createElement("IMG");
               userVerifyTargets [va.target.index].setAttribute('id', 'userVerifyTarget' + va.target.index);
               divWrapper.appendChild(userVerifyTargets[va.target.index]);
-              targetSprites[va.target.index] = document.createElement('IMG');
+              targetSprites[va.target.index] = document.createElement("IMG");
               targetSprites[va.target.index].setAttribute('id', 'miniTarget' + va.target.index);
               divWrapper.appendChild(targetSprites[va.target.index]);
               new Target(targetDCoordinates[va.target.index], 'userVerifyTarget', va.target.index, targetTracker[va.target.index]);
