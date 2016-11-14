@@ -208,7 +208,7 @@ class VirtualAgent {
         nextDistance = Math.abs(this.mapProportion - targetDCoordinates[i]);
         if (nextDistance < leastDistance) {
           leastDistance = nextDistance;
-          tagTarget = [targetsCoords[i][0], targetsCoords[i][1], i, targetDCoordinates[i]];
+          tagTarget = [0, 0, i, targetDCoordinates[i]];
         }
       }
     }
@@ -231,7 +231,7 @@ class VirtualAgent {
         nextDistance = Math.abs(this.mapProportion - targetDCoordinates[i]);
         if (nextDistance < leastDistance) {
           leastDistance = nextDistance;
-          verifyTarget = [targetsCoords[i][0], targetsCoords[i][1], i, targetDCoordinates[i]];
+          verifyTarget = [0, 0, i, targetDCoordinates[i]];
         }
       }
     }

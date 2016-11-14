@@ -12,29 +12,6 @@ var gpRecorder = [50, 470, 0, 0] //gpRecorder is not the global coordinates or t
 var miniSprite1coords = [500, 690];
 var miniSprite2coords = [500, 690];
 
-var targetsCoords = [
-  [ 227, 4694],
-  [ 416, 4394],
-  [ 557, 4133],
-  [ 708, 3924],
-  [ 880, 3711],
-  [1014, 3516],
-  [1175, 3276],
-  [1377, 3121],
-  [1828, 3079],
-  [2154, 3151],
-  [2423, 3265],
-  [2650, 3267],
-  [2811, 3004],
-  [2965, 2694],
-  [3092, 2358],
-  [3194, 1962],
-  [3333, 1724],
-  [3488, 1451],
-  [3600, 1214],
-  [3721,  960]
-]; //absolute positions for 20 targets. See "canal3 with targets.png" in the hide folder to see what this looks like. Also, these aren't really ordered. The first 10 were in order, but the next ten were just put wherever there was space on the map. So target 19 is not necessarily at the end of the canal.
-
 var targetDCoordinates = [
   0.0435, 0.0870, 0.1304, 0.1739, 0.2174, 0.2609, 0.3043, 0.3478, 0.4348,
   0.4783, 0.5217, 0.5652, 0.6087, 0.6521, 0.6957, 0.7826, 0.8261, 0.8696,
