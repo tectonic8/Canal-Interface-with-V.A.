@@ -51,6 +51,7 @@
   var saveDirection = [0,0];
   var angle = 1.57;
   var va = null;
+  var b = 0.6;
 
   if (!readCookie('deleted') && readCookie("gpRecorder0") != null) { //this if-else handles saving the game using cookie. It only follows the cookies path if the user moved, not if there are cookies in general.
     restoreState();
@@ -61,7 +62,7 @@
     lastRole = 'navigating';
     document.cookie = 'deleted=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
     targetInitializer(); //targetInitializer creates the targets.
-    updateTargets(); //updateTargets draws the targets.
+    Map.updateTargets(); //updateTargets draws the targets.
   }
   updateClock();
   updateScore();
@@ -77,45 +78,45 @@
   userSprite.style.top = gpSpriteCoords[1] + "px";
   canvas.style.marginLeft = canvasLeftMargin + "px";
   canvas.style.marginTop = canvasTopMargin + "px";
-  miniSprite1.style.left = miniSprite1coords[0] + "px";
-  miniSprite1.style.top = miniSprite1coords[1] + "px";
-  miniSprite2.style.left = miniSprite2coords[0] + "px";
-  miniSprite2.style.top = miniSprite2coords[1] + "px";
+  miniSprite1.style.left = Map.miniSprite1coords[0] + "px";
+  miniSprite1.style.top = Map.miniSprite1coords[1] + "px";
+  miniSprite2.style.left = Map.miniSprite2coords[0] + "px";
+  miniSprite2.style.top = Map.miniSprite2coords[1] + "px";
 
   function restoreState() {
     console.log("there be cookies");
-    gpRecorder[0] = parseInt(readCookie("gpRecorder0"));
-    gpRecorder[1] = parseInt(readCookie("gpRecorder1")); 
-    gpRecorder[2] = parseInt(readCookie("gpRecorder2")); 
-    gpRecorder[3] = parseInt(readCookie("gpRecorder3")); 
+    Map.gpRecorder[0] = parseInt(readCookie("gpRecorder0"));
+    Map.gpRecorder[1] = parseInt(readCookie("gpRecorder1")); 
+    Map.gpRecorder[2] = parseInt(readCookie("gpRecorder2")); 
+    Map.gpRecorder[3] = parseInt(readCookie("gpRecorder3")); 
     gpSpriteCoords[0] = parseInt(readCookie("gpSpriteCoords0"));
     gpSpriteCoords[1] = parseInt(readCookie("gpSpriteCoords1"));
     canvasLeftMargin = parseInt(readCookie("canvasLeftMargin"));
     canvasTopMargin = parseInt(readCookie("canvasTopMargin"));
-    miniSprite1coords[0] = parseInt(readCookie("miniSprite1coords0"));
-    miniSprite1coords[1] = parseInt(readCookie("miniSprite1coords1"));      
-    miniSprite2coords[0] = parseInt(readCookie("miniSprite2coords0"));
-    miniSprite2coords[1] = parseInt(readCookie("miniSprite2coords1"));
+    Map.miniSprite1coords[0] = parseInt(readCookie("miniSprite1coords0"));
+    Map.miniSprite1coords[1] = parseInt(readCookie("miniSprite1coords1"));      
+    Map.miniSprite2coords[0] = parseInt(readCookie("miniSprite2coords0"));
+    Map.miniSprite2coords[1] = parseInt(readCookie("miniSprite2coords1"));
     userT = parseFloat(readCookie("userT"));
     userTPrev = parseFloat(readCookie("userTPrev"));
     lastTargetIndex = parseInt(readCookie("lastTargetIndex")); //lastTargetIndex is used so va doesn't go after the point you made during fastForwarding
     imageId = parseInt(readCookie("imageId")); 
-    targetTracker = JSON.parse(readCookie("targetTracker"));
-    tagTracker = JSON.parse(readCookie("tagTracker"));
+    Map.targetTracker = JSON.parse(readCookie("targetTracker"));
+    Map.tagTracker = JSON.parse(readCookie("tagTracker"));
     lastRole = readCookie("lastRole"); //this is for the log I think.
     log = localStorage.getItem("userLog"); //Cookies can't save things that are multiple lines, so I use localStorage instead.
-    targetsVerified = parseInt(readCookie("targetsVerified"));
+    Map.targetsVerified = parseInt(readCookie("targetsVerified"));
     tagCount = parseInt(readCookie("tagCount"));
     verifyCount = parseInt(readCookie("verifyCount"));
     
     if (lastRole === "tagging") {
-      tagTracker[lastTargetIndex] = parseInt(readCookie("numTags"));
+      Map.tagTracker[lastTargetIndex] = parseInt(readCookie("numTags"));
     } else if (lastRole === "verifying") {
-      targetsVerified += parseInt(readCookie("numVerifiedTags"));
+      Map.targetsVerified += parseInt(readCookie("numVerifiedTags"));
     }
     lastRole = 'navigating';
     
-    //if (isNaN(targetsVerified)) { targetsVerified = 0; }
+    //if (isNaN(Map.targetsVerified)) { Map.targetsVerified = 0; }
     //if (isNaN(imageId)) { imageId = 15; }
     startTime = parseInt(readCookie("startTime")); //startTime is always the time when the entire program first start.
     var temp = new Date().getTime();
@@ -124,7 +125,7 @@
   }
 
   function restoreVA() {       
-    va = new VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseFloat(readCookie("vaD")), parseInt(readCookie("vaBehavior")), startTime); //it is drawn onto the old position.
+    va = new VA.VirtualAgent(parseInt(readCookie("vaPosX")), parseInt(readCookie("vaPosY")), parseFloat(readCookie("vaD")), parseInt(readCookie("vaBehavior")), startTime); //it is drawn onto the old position.
     va.setLog(localStorage.getItem("vaLog"));
     va.restoreState(JSON.parse(readCookie("vaState"))); // restore va state for fast-forwarding.
     va.sprite.style.transform = "rotate(" + (this.angle? this.angle:0) + "deg)";
@@ -154,12 +155,12 @@
     va.impulseStartTime -= t;
     va.fastForward = false;
 
-    if (targetTracker[va.target.index] == 0) va.task = 0;
-    else if (targetTracker[va.target.index] == 2) va.task = 1;
+    if (Map.targetTracker[va.target.index] == 0) va.task = 0;
+    else if (Map.targetTracker[va.target.index] == 2) va.task = 1;
     
     localStorage.setItem("vaLog", va.getLog());
     
-    updateTargets();
+    Map.updateTargets();
     va.handleFlash();
   }
 
@@ -178,7 +179,7 @@
         });
         startTime = new Date().getTime();
         var behavior = (Math.random() < 0.5) ? 0 : 1;
-        va = new VirtualAgent(20, 550, 0, behavior, startTime);
+        va = new VA.VirtualAgent(20, 550, 0, behavior, startTime);
         va.start(true);//true meaning start with the delay.
         interval = setInterval(pollGamepads, 500);
       });
@@ -194,34 +195,34 @@
   
   function targetInitializer() { //I never really figured out how to use the Target class properly, so now I just use this method in conjunction with the class.
     for (var i = 0; i <= 19; i++) { //The way this is set up, each of the three target arrays are all length 20, they are just blank in the indices for which there is no target of that type. This is important for how the arrays are handled in other functions.
-      if (targetTracker[i] == 0) {
-        tagTargets[i] = document.createElement("IMG");
-        tagTargets[i].setAttribute("id", "tagTarget" + i);
-        divWrapper.appendChild(tagTargets[i]);
-        targetSprites[i] = document.createElement("IMG");
-        targetSprites[i].setAttribute("id", "miniTarget" + i);
-        divWrapper.appendChild(targetSprites[i]); //If you attach it to the document body, it goes under the canvas, so I attached it to the div.
-        new Target(targetDCoordinates[i], "tagTarget", i, targetTracker[i]);
+      if (Map.targetTracker[i] == 0) {
+        Map.tagTargets[i] = document.createElement("IMG");
+        Map.tagTargets[i].setAttribute("id", "tagTarget" + i);
+        divWrapper.appendChild(Map.tagTargets[i]);
+        Map.targetSprites[i] = document.createElement("IMG");
+        Map.targetSprites[i].setAttribute("id", "miniTarget" + i);
+        divWrapper.appendChild(Map.targetSprites[i]); //If you attach it to the document body, it goes under the canvas, so I attached it to the div.
+        new Target(Map.targetDCoordinates[i], "tagTarget", i, Map.targetTracker[i]);
       }        
-      else if (targetTracker[i] == 1) {
-        userVerifyTargets[i] = document.createElement("IMG");
-        userVerifyTargets[i].setAttribute("id", "userVerifyTarget" + i);
-        divWrapper.appendChild(userVerifyTargets[i]);
-        targetSprites[i] = document.createElement("IMG");
-        targetSprites[i].setAttribute("id", "miniTarget" + i);
-        divWrapper.appendChild(targetSprites[i]);
-        new Target(targetDCoordinates[i], "userVerifyTarget", i, targetTracker[i]);
+      else if (Map.targetTracker[i] == 1) {
+        Map.userVerifyTargets[i] = document.createElement("IMG");
+        Map.userVerifyTargets[i].setAttribute("id", "userVerifyTarget" + i);
+        divWrapper.appendChild(Map.userVerifyTargets[i]);
+        Map.targetSprites[i] = document.createElement("IMG");
+        Map.targetSprites[i].setAttribute("id", "miniTarget" + i);
+        divWrapper.appendChild(Map.targetSprites[i]);
+        new Target(Map.targetDCoordinates[i], "userVerifyTarget", i, Map.targetTracker[i]);
       }        
-      else if (targetTracker[i] == 2) {
-        vaVerifyTargets[i] = document.createElement("IMG");
-        vaVerifyTargets[i].setAttribute("id", "vaVerifyTarget" + i);
-        divWrapper.appendChild(vaVerifyTargets[i]);
-        targetSprites[i] = document.createElement("IMG");
-        targetSprites[i].setAttribute("id", "miniTarget" + i);
-        divWrapper.appendChild(targetSprites[i]);
-        new Target(targetDCoordinates[i], "vaVerifyTarget", i, targetTracker[i]);
+      else if (Map.targetTracker[i] == 2) {
+        Map.vaVerifyTargets[i] = document.createElement("IMG");
+        Map.vaVerifyTargets[i].setAttribute("id", "vaVerifyTarget" + i);
+        divWrapper.appendChild(Map.vaVerifyTargets[i]);
+        Map.targetSprites[i] = document.createElement("IMG");
+        Map.targetSprites[i].setAttribute("id", "miniTarget" + i);
+        divWrapper.appendChild(Map.targetSprites[i]);
+        new Target(Map.targetDCoordinates[i], "vaVerifyTarget", i, Map.targetTracker[i]);
       }
-      else if (targetTracker[i] == 3) continue;
+      else if (Map.targetTracker[i] == 3) continue;
     }
   }
   
@@ -270,8 +271,8 @@
         var t = (Date.now() - impulseStartTime) / 1000;
         magnitude = magnitude0 * Math.exp(-b * t);
         userT = Math.min(1, Math.max(0, userT0 + magnitude0 / b * (1 - Math.exp(-b * t))));
-        var dx = d2x(userT) - d2x(userTPrev);
-        var dy = d2y(userT) - d2y(userTPrev);
+        var dx = Map.d2x(userT) - Map.d2x(userTPrev);
+        var dy = Map.d2y(userT) - Map.d2y(userTPrev);
         angle = Math.atan2(dy, dx) * 180 / Math.PI;
       }
     }
@@ -298,60 +299,60 @@
 //    socket.on('gpUpdateMap', function(msg) { //I don't really use the msg from the server. It's sort of a vestige from the dragging form of the program. You probably don't need to emit this either, since there's only one user. 
   function gpUpdateMap(msg) {
     function gpShifter() { //This shifts the canvas based on the local coordinates of the user. It shifts direction depending on what edge or corner you're on.
-      if (gpSpriteCoords[0] < 300 && d2x(userT) < d2x(userTPrev)) {
-        gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+      if (gpSpriteCoords[0] < 300 && Map.d2x(userT) < Map.d2x(userTPrev)) {
+        gpHandleShift(Map.d2x(userT) - Map.d2x(userTPrev), 0);
       }
       
-      if (gpSpriteCoords[0] > 400 && d2x(userT) > d2x(userTPrev)) {
-        gpHandleShift(d2x(userT) - d2x(userTPrev), 0);
+      if (gpSpriteCoords[0] > 400 && Map.d2x(userT) > Map.d2x(userTPrev)) {
+        gpHandleShift(Map.d2x(userT) - Map.d2x(userTPrev), 0);
       }
       
-      if (gpSpriteCoords[1] < 300 && d2y(userT) < d2y(userTPrev)) {
-        gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+      if (gpSpriteCoords[1] < 300 && Map.d2y(userT) < Map.d2y(userTPrev)) {
+        gpHandleShift(0, Map.d2y(userT) - Map.d2y(userTPrev));
       } 
       
-      if (gpSpriteCoords[1] > 400 && d2y(userT) > d2y(userTPrev)) {
-        gpHandleShift(0, d2y(userT) - d2y(userTPrev));
+      if (gpSpriteCoords[1] > 400 && Map.d2y(userT) > Map.d2y(userTPrev)) {
+        gpHandleShift(0, Map.d2y(userT) - Map.d2y(userTPrev));
       }
     };
     
     function gpHandleShift(x, y) {
-      gpRecorder[2] += x; //gpRecorder 2 and 3 are the total x and y shift of the canvas. 
-      gpRecorder[3] += y;
+      Map.gpRecorder[2] += x; //Map.gpRecorder 2 and 3 are the total x and y shift of the canvas. 
+      Map.gpRecorder[3] += y;
       gpSpriteCoords[0] -= x;
       gpSpriteCoords[1] -= y;
-      gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2]; //I only just noticed this adds up to 0. This should get deleted.      
-      gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
+      Map.gpRecorder[0] = gpSpriteCoords[0] + Map.gpRecorder[2]; //I only just noticed this adds up to 0. This should get deleted.      
+      Map.gpRecorder[1] = gpSpriteCoords[1] + Map.gpRecorder[3];
       canvasLeftMargin -= x;
       canvasTopMargin  -= y;
       canvas.style.marginLeft = canvasLeftMargin + "px";
       canvas.style.marginTop = canvasTopMargin + "px";
       userSprite.style.left = gpSpriteCoords[0] + "px";
       userSprite.style.top = gpSpriteCoords[1] + "px";
-      updateTargets();
+      Map.updateTargets();
     };
     
     gpShifter();
-      gpSpriteCoords[0] += d2x(userT) - d2x(userTPrev);
-      gpSpriteCoords[1] += d2y(userT) - d2y(userTPrev);
-      gpRecorder[0] = gpSpriteCoords[0] + gpRecorder[2];  //local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)    
-      gpRecorder[1] = gpSpriteCoords[1] + gpRecorder[3];
+      gpSpriteCoords[0] += Map.d2x(userT) - Map.d2x(userTPrev);
+      gpSpriteCoords[1] += Map.d2y(userT) - Map.d2y(userTPrev);
+      Map.gpRecorder[0] = gpSpriteCoords[0] + Map.gpRecorder[2];  //local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)    
+      Map.gpRecorder[1] = gpSpriteCoords[1] + Map.gpRecorder[3];
       userSprite.style.left = gpSpriteCoords[0] + 'px';
       userSprite.style.top = gpSpriteCoords[1] + 'px';
       userSprite.style.transform = "rotate(" + angle + "deg)"; 
-      miniSprite1coords[0] += (d2x(userT) - d2x(userTPrev)) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
-      miniSprite1coords[1] += (d2y(userT) - d2y(userTPrev)) * 0.045;
-      miniSprite1.style.left = miniSprite1coords[0] + "px";
-      miniSprite1.style.top = miniSprite1coords[1] + "px";
+      Map.miniSprite1coords[0] += (Map.d2x(userT) - Map.d2x(userTPrev)) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
+      Map.miniSprite1coords[1] += (Map.d2y(userT) - Map.d2y(userTPrev)) * 0.045;
+      miniSprite1.style.left = Map.miniSprite1coords[0] + "px";
+      miniSprite1.style.top = Map.miniSprite1coords[1] + "px";
   };
 
   function handleTargets() { //This handles clicking on the targets.
     for (var i = 0; i <= 19; i++) {
       if (i == va.target.index  &&  va.onTarget) continue; //You can't steal a target va already started.
-      if ((targetTracker[i] == 0)  &&  (Math.abs(gpRecorder[0] - tagTargets[i].xPos) < 50)  &&  (Math.abs(gpRecorder[1] - tagTargets[i].yPos) < 50)  &&  (magnitude<1)  &&  (aButton)) { //If it's a tag target, and you're close, and moving slow, and pressing the a button, it executes.
-        tagTargets[i].remove();
-        targetSprites[i].remove();
-        targetTracker[i] = 2; //The target at this index will load as a va verifies target when it restarts.
+      if ((Map.targetTracker[i] == 0)  &&  (Math.abs(Map.gpRecorder[0] - Map.tagTargets[i].xPos) < 50)  &&  (Math.abs(Map.gpRecorder[1] - Map.tagTargets[i].yPos) < 50)  &&  (magnitude<1)  &&  (aButton)) { //If it's a tag target, and you're close, and moving slow, and pressing the a button, it executes.
+        Map.tagTargets[i].remove();
+        Map.targetSprites[i].remove();
+        Map.targetTracker[i] = 2; //The target at this index will load as a va verifies target when it restarts.
         lastRole = "tagging"; //used in the log
         lastTargetIndex = i; 
         va.lastUserTarget = i;
@@ -365,15 +366,15 @@
       }
     }
     for (var i = 0; i <= 19; i++) {
-      if ((targetTracker[i] == 1)  &&  (Math.abs(gpRecorder[0] - userVerifyTargets[i].xPos) < 50)  &&  (Math.abs(gpRecorder[1] - userVerifyTargets[i].yPos) < 50)  &&  (magnitude<1)  &&  (aButton)) {
-        userVerifyTargets[i].remove();
-        targetSprites[i].remove();
-        targetTracker[i] = 3;
+      if ((Map.targetTracker[i] == 1)  &&  (Math.abs(Map.gpRecorder[0] - Map.userVerifyTargets[i].xPos) < 50)  &&  (Math.abs(Map.gpRecorder[1] - Map.userVerifyTargets[i].yPos) < 50)  &&  (magnitude<1)  &&  (aButton)) {
+        Map.userVerifyTargets[i].remove();
+        Map.targetSprites[i].remove();
+        Map.targetTracker[i] = 3;
         lastRole = "verifying";
         lastTargetIndex = i; 
         va.lastUserTarget = i;
         imageId++;
-//            targetsVerified++;
+//            Map.targetsVerified++;
         verifyCount++;
         updateScore();
         ultraRecorder();
@@ -394,7 +395,7 @@
     } else if (leftAccelButton && !rightAccelButton && !leftAccelButtonPrev) {
       iAccel = 'leftTrigger'
     }
-    log += truncate(elapsedTime, 1) + ", "  + truncate(gpRecorder[0], 1) + ", " + truncate(gpRecorder[1], 1) + ", " + truncate(userT, 4) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + '\n';
+    log += truncate(elapsedTime, 1) + ", "  + truncate(Map.gpRecorder[0], 1) + ", " + truncate(Map.gpRecorder[1], 1) + ", " + truncate(userT, 4) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + '\n';
     //the += "/n" part allows it to write on a new line each time.
   }
   
@@ -407,22 +408,22 @@
   }
   
   function logCookie() {
-      document.cookie = "gpRecorder0=" + gpRecorder[0] + ";";
-      document.cookie = "gpRecorder1=" + gpRecorder[1] + ";";
-      document.cookie = "gpRecorder2=" + gpRecorder[2] + ";";
-      document.cookie = "gpRecorder3=" + gpRecorder[3] + ";";
+      document.cookie = "gpRecorder0=" + Map.gpRecorder[0] + ";";
+      document.cookie = "gpRecorder1=" + Map.gpRecorder[1] + ";";
+      document.cookie = "gpRecorder2=" + Map.gpRecorder[2] + ";";
+      document.cookie = "gpRecorder3=" + Map.gpRecorder[3] + ";";
       document.cookie = "gpSpriteCoords0=" + gpSpriteCoords[0] + ";";
       document.cookie = "gpSpriteCoords1=" + gpSpriteCoords[1] + ";";
       document.cookie = "canvasLeftMargin=" + canvasLeftMargin + ";";
       document.cookie = "canvasTopMargin=" + canvasTopMargin + ";";    
-      document.cookie = "miniSprite1coords0=" + miniSprite1coords[0] + ";";    
-      document.cookie = "miniSprite1coords1=" + miniSprite1coords[1] + ";";
-      document.cookie = "miniSprite2coords0=" + miniSprite2coords[0] + ";";    
-      document.cookie = "miniSprite2coords1=" + miniSprite2coords[1] + ";";
-      document.cookie = "targetTracker=" + "[" + targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
-      document.cookie = "tagTracker=" + "[" + tagTracker.join(",") + "]"; // this is to store an array in a cookie. JSON parse to read it.
+      document.cookie = "miniSprite1coords0=" + Map.miniSprite1coords[0] + ";";    
+      document.cookie = "miniSprite1coords1=" + Map.miniSprite1coords[1] + ";";
+      document.cookie = "miniSprite2coords0=" + Map.miniSprite2coords[0] + ";";    
+      document.cookie = "miniSprite2coords1=" + Map.miniSprite2coords[1] + ";";
+      document.cookie = "targetTracker=" + "[" + Map.targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
+      document.cookie = "tagTracker=" + "[" + Map.tagTracker.join(",") + "]"; // this is to store an array in a cookie. JSON parse to read it.
       document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
-      document.cookie = "targetsVerified=" + targetsVerified + ";";
+      document.cookie = "targetsVerified=" + Map.targetsVerified + ";";
       document.cookie = "tagCount=" + tagCount + ";";
       document.cookie = "verifyCount=" + verifyCount + ";";
       document.cookie = "vaPosX=" + va.position.x + ";";
@@ -459,6 +460,6 @@
     window.setTimeout(updateClock, 1000);
   }
   function updateScore() {
-    scoreDiv.innerHTML = "Verified tags: " + targetsVerified;
+    scoreDiv.innerHTML = "Verified tags: " + Map.targetsVerified;
   }
 })(window, document);
