@@ -260,7 +260,8 @@
     
     
     /* Add click event listeners to this element. */
-    this.element.addEventListener(EVENTS.CLICK, this.beginVerification.bind(this));
+    this.clickCallback = this.beginVerification.bind(this);
+    this.element.addEventListener(EVENTS.CLICK, this.clickCallback);
     this.removeSubscriber = events.subscribe(TOPICS.NEXT_IMAGE, this.remove.bind(this));
   };
   
@@ -270,6 +271,7 @@
   };
   
   TagToVerify.prototype.beginVerification = function(event) {
+    this.element.removeEventListener(EVENTS.CLICK, this.clickCallback);
     this.element.classList.add(CSS_CLASSES.ACTIVE);
     this.element.classList.remove(CSS_CLASSES.ACCEPTED);
     this.element.classList.remove(CSS_CLASSES.REJECTED);
