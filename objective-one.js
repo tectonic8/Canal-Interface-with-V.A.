@@ -333,17 +333,17 @@
     };
     
     gpShifter();
-      gpSpriteCoords[0] += Map.d2x(userT) - Map.d2x(userTPrev);
-      gpSpriteCoords[1] += Map.d2y(userT) - Map.d2y(userTPrev);
-      Map.gpRecorder[0] = gpSpriteCoords[0] + Map.gpRecorder[2];  //local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)    
-      Map.gpRecorder[1] = gpSpriteCoords[1] + Map.gpRecorder[3];
-      userSprite.style.left = gpSpriteCoords[0] + 'px';
-      userSprite.style.top = gpSpriteCoords[1] + 'px';
-      userSprite.style.transform = "rotate(" + angle + "deg)"; 
-      Map.miniSprite1coords[0] += (Map.d2x(userT) - Map.d2x(userTPrev)) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
-      Map.miniSprite1coords[1] += (Map.d2y(userT) - Map.d2y(userTPrev)) * 0.045;
-      miniSprite1.style.left = Map.miniSprite1coords[0] + "px";
-      miniSprite1.style.top = Map.miniSprite1coords[1] + "px";
+    gpSpriteCoords[0] += Map.d2x(userT) - Map.d2x(userTPrev);
+    gpSpriteCoords[1] += Map.d2y(userT) - Map.d2y(userTPrev);
+    Map.gpRecorder[0] = gpSpriteCoords[0] + Map.gpRecorder[2];  //local coordinates + canvas offset = relatively global coordinates (+14, +4412 offset)    
+    Map.gpRecorder[1] = gpSpriteCoords[1] + Map.gpRecorder[3];
+    userSprite.style.left = gpSpriteCoords[0] + 'px';
+    userSprite.style.top = gpSpriteCoords[1] + 'px';
+    userSprite.style.transform = "rotate(" + angle + "deg)"; 
+    Map.miniSprite1coords[0] += (Map.d2x(userT) - Map.d2x(userTPrev)) * 0.047; //this changes the coordinates of the minisprite. I tried to do this intelligently by actually finding the ratio from the map to the minimap, but it didn't work so I just tried different numbers until it looked decent enough.
+    Map.miniSprite1coords[1] += (Map.d2y(userT) - Map.d2y(userTPrev)) * 0.045;
+    miniSprite1.style.left = Map.miniSprite1coords[0] + "px";
+    miniSprite1.style.top = Map.miniSprite1coords[1] + "px";
   };
 
   function handleTargets() { //This handles clicking on the targets.
@@ -374,7 +374,6 @@
         lastTargetIndex = i; 
         va.lastUserTarget = i;
         imageId++;
-//            Map.targetsVerified++;
         verifyCount++;
         updateScore();
         ultraRecorder();
@@ -408,35 +407,35 @@
   }
   
   function logCookie() {
-      document.cookie = "gpRecorder0=" + Map.gpRecorder[0] + ";";
-      document.cookie = "gpRecorder1=" + Map.gpRecorder[1] + ";";
-      document.cookie = "gpRecorder2=" + Map.gpRecorder[2] + ";";
-      document.cookie = "gpRecorder3=" + Map.gpRecorder[3] + ";";
-      document.cookie = "gpSpriteCoords0=" + gpSpriteCoords[0] + ";";
-      document.cookie = "gpSpriteCoords1=" + gpSpriteCoords[1] + ";";
-      document.cookie = "canvasLeftMargin=" + canvasLeftMargin + ";";
-      document.cookie = "canvasTopMargin=" + canvasTopMargin + ";";    
-      document.cookie = "miniSprite1coords0=" + Map.miniSprite1coords[0] + ";";    
-      document.cookie = "miniSprite1coords1=" + Map.miniSprite1coords[1] + ";";
-      document.cookie = "miniSprite2coords0=" + Map.miniSprite2coords[0] + ";";    
-      document.cookie = "miniSprite2coords1=" + Map.miniSprite2coords[1] + ";";
-      document.cookie = "targetTracker=" + "[" + Map.targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
-      document.cookie = "tagTracker=" + "[" + Map.tagTracker.join(",") + "]"; // this is to store an array in a cookie. JSON parse to read it.
-      document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
-      document.cookie = "targetsVerified=" + Map.targetsVerified + ";";
-      document.cookie = "tagCount=" + tagCount + ";";
-      document.cookie = "verifyCount=" + verifyCount + ";";
-      document.cookie = "vaPosX=" + va.position.x + ";";
-      document.cookie = "vaPosY=" + va.position.y + ";";
-      document.cookie = "vaD=" + va.mapProportion + ";";
-      document.cookie = "imageId=" + imageId + ";";
-      document.cookie = "lastRole=" + lastRole + ";"; 
-      document.cookie = "startTime=" + startTime + ";";
-      document.cookie = "elapsedTime=" + elapsedTime + ";";
-      document.cookie = "userTPrev=" + userTPrev + ";";
-      document.cookie = "userT=" + userT + ";";
-      document.cookie = "vaBehavior= " + va.behavior + ";";
-      document.cookie = "vaState=" + JSON.stringify(va.saveState()); + ";"
+    document.cookie = "gpRecorder0=" + Map.gpRecorder[0] + ";";
+    document.cookie = "gpRecorder1=" + Map.gpRecorder[1] + ";";
+    document.cookie = "gpRecorder2=" + Map.gpRecorder[2] + ";";
+    document.cookie = "gpRecorder3=" + Map.gpRecorder[3] + ";";
+    document.cookie = "gpSpriteCoords0=" + gpSpriteCoords[0] + ";";
+    document.cookie = "gpSpriteCoords1=" + gpSpriteCoords[1] + ";";
+    document.cookie = "canvasLeftMargin=" + canvasLeftMargin + ";";
+    document.cookie = "canvasTopMargin=" + canvasTopMargin + ";";    
+    document.cookie = "miniSprite1coords0=" + Map.miniSprite1coords[0] + ";";    
+    document.cookie = "miniSprite1coords1=" + Map.miniSprite1coords[1] + ";";
+    document.cookie = "miniSprite2coords0=" + Map.miniSprite2coords[0] + ";";    
+    document.cookie = "miniSprite2coords1=" + Map.miniSprite2coords[1] + ";";
+    document.cookie = "targetTracker=" + "[" + Map.targetTracker.join(",") + "]"; //this is to store an array in a cookie. JSON parse to read it.
+    document.cookie = "tagTracker=" + "[" + Map.tagTracker.join(",") + "]"; // this is to store an array in a cookie. JSON parse to read it.
+    document.cookie = "lastTargetIndex=" + lastTargetIndex + ";";
+    document.cookie = "targetsVerified=" + Map.targetsVerified + ";";
+    document.cookie = "tagCount=" + tagCount + ";";
+    document.cookie = "verifyCount=" + verifyCount + ";";
+    document.cookie = "vaPosX=" + va.position.x + ";";
+    document.cookie = "vaPosY=" + va.position.y + ";";
+    document.cookie = "vaD=" + va.mapProportion + ";";
+    document.cookie = "imageId=" + imageId + ";";
+    document.cookie = "lastRole=" + lastRole + ";"; 
+    document.cookie = "startTime=" + startTime + ";";
+    document.cookie = "elapsedTime=" + elapsedTime + ";";
+    document.cookie = "userTPrev=" + userTPrev + ";";
+    document.cookie = "userT=" + userT + ";";
+    document.cookie = "vaBehavior= " + va.behavior + ";";
+    document.cookie = "vaState=" + JSON.stringify(va.saveState()); + ";"
   }
   function readCookie(key){ //reads the cookie as a string. This was also copied straight from stack overflow so I don't know how it works. But it do.
     var result;
