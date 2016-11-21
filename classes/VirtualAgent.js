@@ -495,6 +495,7 @@ return {
       var endTime2 = new Date();
       var elapsedTime = endTime2.getTime() - this.startTime;
       this.log += truncate(elapsedTime, 1) + ", " + truncate(this.position.x, 1) + ", " + truncate(this.position.y, 1) + ", " + truncate(this.mapProportion, 4) + ", " + this.iAccel + ", "+ this.lastRole + ", " + ", " + this.lastTargetIndex + ", " + this.target.index + ", " + this.behavior + '\n';
+      this.logger2(elapsedTime);
     }
 
     logger(done) {
@@ -511,6 +512,24 @@ return {
       xhr.open("POST", "/vaSave");
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.send("vaRecord=" +  this.log);
+    }
+
+    logger2(elapsedTime) {
+      var xhr = new XMLHttpRequest();
+      var jlog = JSON.stringify({
+        time: truncate(elapsedTime, 1),
+        gpr0: truncate(this.position.x, 1),
+        gpr1: truncate(this.position.y, 1),
+        userT: truncate(this.mapProportion, 4),
+        iAccel: this.iAccel,
+        lastRole: this.lastRole,
+        lastTargetIndex: this.lastTargetIndex,
+        currentTarget: this.target.index,
+        behavior: this.behavior
+      });
+      xhr.open("POST", "/vaLog");
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.send("data=" +  jlog);
     }
 
     setLog(s) {

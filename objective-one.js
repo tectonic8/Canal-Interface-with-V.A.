@@ -392,9 +392,10 @@
     if (rightAccelButton && !leftAccelButton && !rightAccelButtonPrev) {
       iAccel = 'right trigger';
     } else if (leftAccelButton && !rightAccelButton && !leftAccelButtonPrev) {
-      iAccel = 'leftTrigger'
+      iAccel = 'left trigger'
     }
     log += truncate(elapsedTime, 1) + ", "  + truncate(Map.gpRecorder[0], 1) + ", " + truncate(Map.gpRecorder[1], 1) + ", " + truncate(userT, 4) + ", " + iAccel + ", " + lastRole + ", " + lastTargetIndex + '\n';
+    logger2(iAccel);
     //the += "/n" part allows it to write on a new line each time.
   }
   
@@ -404,6 +405,21 @@
     xhr.open("POST", "/save");
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.send("record=" +  log);
+  }
+  function logger2(iAccel) {
+    var xhr = new XMLHttpRequest();
+    var jlog = JSON.stringify({
+      time: truncate(elapsedTime, 1),
+      gpr0: truncate(Map.gpRecorder[0], 1),
+      gpr1: truncate(Map.gpRecorder[1], 1),
+      userT: truncate(userT, 4),
+      iAccel: iAccel,
+      lastRole: lastRole,
+      lastTargetIndex: lastTargetIndex
+    });
+    xhr.open("POST", "/log");
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.send("data=" +  jlog);
   }
   
   function logCookie() {

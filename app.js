@@ -6,6 +6,38 @@ var fs         = require("fs")
 var bodyParser = require('body-parser');
 var pug        = require("pug");
 var sessions   = require('client-sessions');
+var Influx     = require('influx');
+
+var influx = new Influx.InfluxDB({
+  database:'logs_db',
+  host:'192.168.210.128',
+  schema: [
+    {
+      // /measurement: ['log', 'vaLog'],
+      fields: {
+        gpr0: Influx.FieldType.FLOAT,
+        gpr1: Influx.FieldType.FLOAT,
+        userT: Influx.FieldType.FLOAT,
+        iAccel: Influx.FieldType.STRING,
+        lastRole: Influx.FieldType.STRING,
+        lastTargetIndex: Influx.FieldType.INTEGER,
+        currentTarget: Influx.FieldType.INTEGER,
+        behavior: Influx.FieldType.INTEGER
+      },
+      tags: [
+        'user'
+      ]
+    }
+  ]
+});
+
+influx.createDatabase('logs_db').catch(err=> {
+    console.error("Error creating database");
+    console.error(err.stack);
+  });
+
+
+
 
 var imageCount = 1;
 
@@ -129,6 +161,50 @@ app.get('/initialtime', function(req, res) {
   } else {
     res.write('' + req.session.timeRemaining);    
   }
+  return res.end();
+});
+
+app.post('/log', function(req, res) {
+  data = JSON.parse(req.body.data);
+  if (data.lastTargetIndex == null) data.lastTargetIndex = -1;
+  influx.writeMeasurement('log', [
+    {
+      fields: {
+        gpr0: data.gpr0,
+        gpr1: data.gpr1,
+        userT: data.userT,
+        iAccel: data.iAccel,
+        lastRole: data.lastRole,
+        lastTargetIndex: data.lastTargetIndex
+      },
+      timestamp: data.time
+    }
+  ]);
+
+  return res.end();
+});
+
+app.post('/vaLog', function(req, res) {
+  data = JSON.parse(req.body.data);
+  if (data.lastTargetIndex == undefined) data.lastTargetIndex = -1;
+  influx.writeMeasurement('vaLog', [
+    {
+      fields: {
+        gpr0: data.gpr0,
+        gpr1: data.gpr1,
+        userT: data.userT,
+        iAccel: data.iAccel,
+        lastRole: data.lastRole,
+        lastTargetIndex: data.lastTargetIndex,
+        currentTarget: data.currentTarget,
+        behavior: data.behavior
+      },
+      timestamp: data.time
+    }
+  ]).catch(err => {
+    console.error(err);
+  });
+
   return res.end();
 });
 
@@ -362,3 +438,8 @@ var handleSave = function (state, log) {
 	if (log == 0) fs.writeFile('log.txt', string);
 	else if (log == 1) fs.writeFile('vaLog.txt', string);
 };
+
+var handleSave2 = function(log) {
+  if (log == 0) fs.writeFile('log.txt', string);
+  else if (log == 1) fs.writeFile('vaLog.txt', string);
+}
