@@ -494,7 +494,7 @@ return {
     ultraRecorder() {
       var endTime2 = new Date();
       var elapsedTime = endTime2.getTime() - this.startTime;
-      this.log += truncate(elapsedTime, 1) + ", " + truncate(this.position.x, 1) + ", " + truncate(this.position.y, 1) + ", " + truncate(this.mapProportion, 4) + ", " + this.iAccel + ", "+ this.lastRole + ", " + ", " + this.lastTargetIndex + ", " + this.target.index + ", " + this.behavior + '\n';
+      //this.log += truncate(elapsedTime, 1) + ", " + truncate(this.position.x, 1) + ", " + truncate(this.position.y, 1) + ", " + truncate(this.mapProportion, 4) + ", " + this.iAccel + ", "+ this.lastRole + ", " + ", " + this.lastTargetIndex + ", " + this.target.index + ", " + this.behavior + '\n';
       this.logger2(elapsedTime);
     }
 
@@ -511,7 +511,7 @@ return {
       });
       xhr.open("POST", "/vaSave");
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      xhr.send("vaRecord=" +  this.log);
+      //xhr.send("vaRecord=" +  this.log);
     }
 
     logger2(elapsedTime) {

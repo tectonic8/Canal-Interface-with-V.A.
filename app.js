@@ -10,7 +10,7 @@ var Influx     = require('influx');
 
 var influx = new Influx.InfluxDB({
   database:'logs_db',
-  host:'192.168.210.128',
+  host:'192.168.210.131',
   schema: [
     {
       // /measurement: ['log', 'vaLog'],
@@ -201,9 +201,7 @@ app.post('/vaLog', function(req, res) {
       },
       timestamp: data.time
     }
-  ]).catch(err => {
-    console.error(err);
-  });
+  ]);
 
   return res.end();
 });
