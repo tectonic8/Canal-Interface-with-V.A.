@@ -205,7 +205,7 @@ return {
     }
 
     closestTag() {
-      var tagTarget = null;
+      this.tagTarget2 = null;
       var leastDistance = 10000;
       var nextDistance = 0;
       for (var i = 0; i <= 19; i++) {
@@ -214,15 +214,15 @@ return {
           nextDistance = Math.abs(this.mapProportion - Map.targetDCoordinates[i]);
           if (nextDistance < leastDistance) {
             leastDistance = nextDistance;
-            tagTarget = [0, 0, i, Map.targetDCoordinates[i]];
+            this.tagTarget2 = [0, 0, i, Map.targetDCoordinates[i]];
           }
         }
       }
-      if (tagTarget === null) { //if there are no tag targets, return a verify target, even if it isn't the preference.
+      if (this.tagTarget2 === null) { //if there are no tag targets, return a verify target, even if it isn't the preference.
         return this.closestVerify();
       }
       else {
-        return tagTarget;
+        return this.tagTarget2;
       }
     }
             
@@ -232,7 +232,17 @@ return {
       var nextDistance = 0;
       for (var i = 0; i <= 19; i++) {
         if (!this.targetValid && i == this.target.index) continue;
-        if (i == this.lastUserTarget && this.fastForward) continue; //don't go after the new verifying point if you're fast forwarding
+        if (i == this.lastUserTarget && this.fastForward) { //don't go after the new verifying point if you're fast forwarding
+          if (this.tagTarget2 == null) { // but if this is the only target left, then there's no choice
+            var verifyCount = 0;
+            for (var j = 0; j < 20; j++)
+              if (Map.targetTracker[i] == 2)
+                verifyCount++;
+            if (verifyCount == 1)
+              this.waitToVerify = true; 
+          }
+          else continue;
+        }
         if (Map.targetTracker[i] == 2) {
           nextDistance = Math.abs(this.mapProportion - Map.targetDCoordinates[i]);
           if (nextDistance < leastDistance) {
@@ -316,6 +326,7 @@ return {
           }
 
           if (Math.abs(currentDistanceToTarget) < .0055 && Math.abs(this.magnitude) < 0.015 && this.target.index !== -1) {
+            if (this.fastForward && this.waitToVerify) return;
             this.onTarget = true;
 
             if (this.task === 0) {
