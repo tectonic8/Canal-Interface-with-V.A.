@@ -82,7 +82,7 @@ return {
       this.chooseTarget();
       this.targetValid = true;  
 
-      if (fastForward) {
+      if (this.fastForward) {
         this.framesRequiredDelay = this.startDelay / 1000 * 60;
         this.framesElapsed = 0;
         this.framesElapsedDelay = 0;
@@ -90,9 +90,9 @@ return {
     }
 
     saveState() {
-      var framesElapsed = (new Date().getTime() - this.tagAndVerifyDelayStart) * 1000 * 60;
-      var framesElapsedDelay = (new Date().getTime() - this.startDelayStart) * 1000 * 60;
-      var framesRequiredDelay = this.startDelay * 1000 * 60;
+      var framesElapsed = (new Date().getTime() - this.tagAndVerifyDelayStart) * 1 / 1000 * 60;
+      var framesElapsedDelay = (new Date().getTime() - this.startDelayStart) * 1 / 1000 * 60;
+      var framesRequiredDelay = this.startDelay * 1 / 1000 * 60;
       return {
         magnitude: this.magnitude,
         magnitude0: this.magnitude0,
@@ -326,14 +326,15 @@ return {
           }
 
           if (Math.abs(currentDistanceToTarget) < .0055 && Math.abs(this.magnitude) < 0.015 && this.target.index !== -1) {
-            if (this.fastForward && this.waitToVerify) return;
-            this.onTarget = true;
+            if (!(this.fastForward && this.waitToVerify)) {
+              this.onTarget = true;
 
-            if (this.task === 0) {
-             this.lastRole = 'tagging';              
-            }
-            else {
-              this.lastRole = 'verifying';
+              if (this.task === 0) {
+               this.lastRole = 'tagging';              
+              }
+              else {
+                this.lastRole = 'verifying';
+              }
             }
             this.updateMap({x: 0, y: 0});
           }
@@ -435,7 +436,7 @@ return {
             this.initialize(true, true);
             //this.chooseTarget();
           }
-            this.framesElapsed += 1;
+          this.framesElapsed += 1;
         }
         return;
       }
