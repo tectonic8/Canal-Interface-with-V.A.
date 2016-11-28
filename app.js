@@ -8,9 +8,11 @@ var pug        = require("pug");
 var sessions   = require('client-sessions');
 var Influx     = require('influx');
 
-var influx = new Influx.InfluxDB({
-  database:'logs_db',
-  host:'192.168.210.131',
+var DB_HOST = '192.168.210.131';
+
+var logger = new Influx.InfluxDB({
+  database: 'logs_db',
+  host: DB_HOST,
   schema: [
     {
       // /measurement: ['log', 'vaLog'],
@@ -25,16 +27,38 @@ var influx = new Influx.InfluxDB({
         behavior: Influx.FieldType.INTEGER
       },
       tags: [
-        'user'
+        'trial_id'
       ]
     }
   ]
 });
 
-influx.createDatabase('logs_db').catch(err=> {
-    console.error("Error creating database");
+var trialTracker = new Influx.InfluxDB({
+  database:'trials',
+  host: DB_HOST,
+  schema: [
+    {
+      fields: {
+        // timestamp will be the time started
+        completed: Influx.FieldType.BOOLEAN
+      },
+      tags: [
+        'trial_id'
+      ]
+    }
+  ]
+})
+
+logger.createDatabase('logs_db').catch(err=> {
+    console.error("Error creating logs_db");
     console.error(err.stack);
   });
+
+trialTracker.createDatabase('trials').catch(err=> {
+    console.error("Error creating trials");
+    console.error(err.stack);
+  });
+
 
 
 

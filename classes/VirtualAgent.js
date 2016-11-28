@@ -90,9 +90,9 @@ return {
     }
 
     saveState() {
-      var framesElapsed = (new Date().getTime() - this.tagAndVerifyDelayStart) * 1000 * 60;
-      var framesElapsedDelay = (new Date().getTime() - this.startDelayStart) * 1000 * 60;
-      var framesRequiredDelay = this.startDelay * 1000 * 60;
+      var framesElapsed = (new Date().getTime() - this.tagAndVerifyDelayStart) * 1 / 1000 * 60;
+      var framesElapsedDelay = (new Date().getTime() - this.startDelayStart) * 1 / 1000 * 60;
+      var framesRequiredDelay = this.startDelay * 1 / 1000 * 60;
       return {
         magnitude: this.magnitude,
         magnitude0: this.magnitude0,
