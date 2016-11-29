@@ -3,9 +3,10 @@
   <head>
     <title>Objective One</title>
     <style>
-    #bigWrapper {position:fixed; right: 10; bottom: 10; width:700px; height:700px; margin: 0 auto; overflow:hidden; z-index:2}
+    #bigWrapper {position: relative; right: 10; bottom: 10; width:700px; height:700px; margin: 0 auto; overflow:hidden; z-index:2;text-align: center;}
     #clockDiv {position:relative; width:50px; height:50px; margin: 0 auto; overflow:hidden; font-size: 20px; z-index:99; font-family: Arial, Helvetica, sans-serif;}
-    #scoreDiv {position:relative; width:200px; height:50px; margin: 0 auto; padding-left: 127px; overflow:hidden; font-size: 1.5em; z-index:100; font-family: Arial, Helvetica, sans-serif;}
+    #scoreDiv {position:relative; width:200px; height:50px; margin: 0 auto; padding-left: 0px; text-align: center; overflow:hidden; font-size: 1.5em; z-index:100; font-family: Arial, Helvetica, sans-serif;}
+    #infoWrapper {float:right;}
     #boatSprite1 {position:absolute; width:50px; height:35px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
     #boatSprite2 {position:absolute; width:50px; height:35px; left:73.369px; top:449.282px; transition:none; transform-origin: 25px 17.5px; z-index: 95}
     #gowanusMap {position:relative; right: 10px; bottom: 10px; width:700px; height:700px; z-index: 4}
@@ -18,6 +19,10 @@
   </style>
   </head>
   <body>
+  <div id="infoWrapper">
+    <div id="clockDiv"></div>
+    <div id="scoreDiv"></div>
+  </div>
   <div id="bigWrapper">
     <canvas id="minimap" width="200" height="228"></canvas>
     <canvas id="canvas" width="5100" height="6600"></canvas>
@@ -27,8 +32,6 @@
     <img id="miniSprite1" src="miniSprite1.png">
     <img id="miniSprite2" src="miniSprite2.png">
   </div>
-  <div id="clockDiv"></div>
-  <div id="scoreDiv"></div>
   <script type="text/javascript" src="/consts/index-consts.js"></script>
   <script type="text/javascript" src="/util/index-utils.js"></script>
   <script type="text/javascript" src="/util/map.js"></script>
