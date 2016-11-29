@@ -184,7 +184,7 @@
         interval = setInterval(pollGamepads, 500);
       });
       button.textContent = 'start';
-      document.body.appendChild(button);
+      document.getElementById("infoWrapper").appendChild(button);
     } else {
       interval = setInterval(pollGamepads, 500);
       va.startDelayStart = new Date().getTime();
