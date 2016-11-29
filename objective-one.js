@@ -285,15 +285,24 @@
     leftAccelButtonPrev  = leftAccelButton;
     rightAccelButtonPrev = rightAccelButton;
     userTPrev            = userT;
+
+
     
     elapsedTime = Math.max(elapsedTime, va.getElapsedTime());
-    if (elapsedTime > 300000) { //data is only logged at the end of the 5 minutes.
+    if (elapsedTime > 300000 || !userTargetAvailable()) { //data is only logged at the end of the 5 minutes.
       elapsedTime = 300000;
       logger();
       va.logger(true);
     } else {
       window.setTimeout(gameLoop, (1000/60));
     }
+  }
+
+  function userTargetAvailable() { // If there is nothing for the user to do, then the platform can go to the survey
+    for (var i = 0; i < 20; i++)
+      if (Map.targetTracker[i] < 2)
+        return true;
+    return false;
   }
 
 //    socket.on('gpUpdateMap', function(msg) { //I don't really use the msg from the server. It's sort of a vestige from the dragging form of the program. You probably don't need to emit this either, since there's only one user. 
