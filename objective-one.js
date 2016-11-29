@@ -191,6 +191,10 @@
       va.update();
       va.tagAndVerify();
     }
+    if (!userTargetAvailable()) { //data is only logged at the end of the 5 minutes.
+      logger();
+      va.logger(true);
+    }
   }
   
   function targetInitializer() { //I never really figured out how to use the Target class properly, so now I just use this method in conjunction with the class.
@@ -289,7 +293,7 @@
 
     
     elapsedTime = Math.max(elapsedTime, va.getElapsedTime());
-    if (elapsedTime > 300000 || !userTargetAvailable()) { //data is only logged at the end of the 5 minutes.
+    if (elapsedTime > 300000) { //data is only logged at the end of the 5 minutes.
       elapsedTime = 300000;
       logger();
       va.logger(true);
